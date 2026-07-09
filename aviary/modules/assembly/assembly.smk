@@ -580,7 +580,10 @@ if NEEDS_READ_CONCATENATION:
 rule assemble_short_reads:
     input:
         qc_reads = (
-            ["data/short_reads.1.fastq.gz", "data/short_reads.2.fastq.gz"]
+            # Mirror the concatenate_reads_for_stageguard outputs: reads2 only exists
+            # when short_reads_2 is provided (single-end coassembly produces reads1 only).
+            (["data/short_reads.1.fastq.gz"]
+             + (["data/short_reads.2.fastq.gz"] if config["short_reads_2"] != ["none"] else []))
             if NEEDS_READ_CONCATENATION
             else config["short_reads_1"] if config["skip_qc"]
             else "data/short_reads.fastq.gz"

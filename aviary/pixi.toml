@@ -31,6 +31,7 @@ env = { PYTHONNOUSERSITE = "1" }
 
 [tasks]
 postinstall-base = { cmd = "pip install --no-build-isolation --no-deps --disable-pip-version-check -e ..", cwd = "aviary" }
+install-coverm-env = { cmd = "coverm --version" }
 server = { cmd = "python server.py", description = "Start the web interface (port 8090)", cwd = "aviary/web" }
 update_deps = { cmd = "python ../admin/build_dep_defs_from_pixi.py", depends-on = ["postinstall"] }
 
@@ -38,7 +39,9 @@ update_deps = { cmd = "python ../admin/build_dep_defs_from_pixi.py", depends-on 
 # install into both standard and dev envs
 depends-on = [
     { task = "postinstall-base", environment = "main" },
-    { task = "postinstall-base", environment = "dev" }
+    { task = "postinstall-base", environment = "dev" },
+    # Pre-install coverm to avoid a race condition when semibin_multi_bams and prepare_binning_files activate it concurrently on first use
+    { task = "install-coverm-env", environment = "coverm" }
 ]
 
 [tasks.run-a-test-base]
@@ -237,6 +240,9 @@ snakemake = ">=7,<8"
 snakemake-executor-plugin-cluster-generic = "*"
 
 [feature.stageguard.pypi-dependencies]
+# On release: publish assembly_checkpointing to PyPI, tag v0.1.0, then replace
+# the git line below with the PyPI spec:
+# assembly-checkpointing = ">=0.1.0"
 assembly-checkpointing = { git = "https://github.com/SNH-star/assembly_checkpointing.git", branch = "assembly-stageguard" }
 
 [feature.pysam.dependencies]

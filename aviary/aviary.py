@@ -1337,16 +1337,18 @@ def main():
 
 def manage_env_vars(args):
     try:
-        if args.gtdb_path is None:
-            args.gtdb_path = Config.get_software_db_path('GTDBTK_DATA_PATH', '--gtdb-path')
-        if args.eggnog_db_path is None:
-            args.eggnog_db_path = Config.get_software_db_path('EGGNOG_DATA_DIR', '--eggnog-db-path')
+        binning_only = getattr(args, 'binning_only', False)
         if args.checkm2_db_path is None:
             args.checkm2_db_path = Config.get_software_db_path('CHECKM2DB', '--checkm2-db-path')
-        if args.singlem_metapackage_path is None:
-            args.singlem_db_path = Config.get_software_db_path('SINGLEM_METAPACKAGE_PATH', '--singlem-metapackage-path')
-        if args.metabuli_db_path is None:
-            args.metabuli_db_path = Config.get_software_db_path('METABULI_DB_PATH', '--metabuli-db-path')
+        if not binning_only:
+            if args.gtdb_path is None:
+                args.gtdb_path = Config.get_software_db_path('GTDBTK_DATA_PATH', '--gtdb-path')
+            if args.eggnog_db_path is None:
+                args.eggnog_db_path = Config.get_software_db_path('EGGNOG_DATA_DIR', '--eggnog-db-path')
+            if args.singlem_metapackage_path is None:
+                args.singlem_db_path = Config.get_software_db_path('SINGLEM_METAPACKAGE_PATH', '--singlem-metapackage-path')
+            if args.metabuli_db_path is None:
+                args.metabuli_db_path = Config.get_software_db_path('METABULI_DB_PATH', '--metabuli-db-path')
     except AttributeError:
         pass
 
