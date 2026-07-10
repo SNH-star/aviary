@@ -60,6 +60,7 @@ class TestsQsub(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
             f"-2 {data}/wgsim.2.fq.gz "
@@ -90,6 +91,7 @@ class TestsQsub(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {output_dir}/assembly.fasta "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
@@ -267,6 +269,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
             f"-2 {data}/wgsim.2.fq.gz "
@@ -304,6 +307,7 @@ class Tests(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz {output_dir}/wgsim_0.1.fq.gz {output_dir}/wgsim_1.1.fq.gz {output_dir}/wgsim_2.1.fq.gz "
             f"-2 {data}/wgsim.2.fq.gz {output_dir}/wgsim_0.2.fq.gz {output_dir}/wgsim_1.2.fq.gz {output_dir}/wgsim_2.2.fq.gz "
@@ -335,6 +339,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
             f"-2 {data}/wgsim.2.fq.gz "
@@ -364,6 +369,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"-o {output_dir}/aviary_out "
             f"-l {data}/pbsim.fq.gz "
             f"--longread-type ont "
@@ -392,6 +398,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {data}/assembly.fasta "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
@@ -423,6 +430,7 @@ class Tests(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {data}/assembly.fasta "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz {output_dir}/wgsim2.1.fq.gz "
@@ -468,6 +476,7 @@ class Tests(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {data}/assembly.fasta {assembly2} "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz {output_dir}/wgsim2.1.fq.gz "
@@ -535,6 +544,7 @@ class Tests(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {output_dir}/assembly.fasta "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
@@ -570,6 +580,7 @@ class Tests(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {output_dir}/assembly.fasta "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
@@ -615,6 +626,7 @@ class Tests(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {output_dir}/assembly.fasta "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
@@ -661,6 +673,7 @@ class Tests(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {output_dir}/assembly.fasta "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
@@ -690,6 +703,7 @@ class Tests(unittest.TestCase):
 
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {data}/assembly.fasta "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
@@ -717,6 +731,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"--assembly {data}/assembly.fasta "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/tiny_sample.1.fq "
@@ -737,6 +752,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
             f"-2 {data}/wgsim.2.fq.gz "
@@ -762,6 +778,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
         cmd = (
             f"aviary complete "
+            f"--min-completeness 25 --max-contamination 65 "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/wgsim.1.fq.gz "
             f"-2 {data}/wgsim.2.fq.gz "
@@ -814,6 +831,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
         cmd = (
             f"aviary recover "
+            f"--min-completeness 25 --max-contamination 65 "
             f"-o {output_dir}/aviary_out "
             f"-1 {data}/tiny_sample_bad.1.fq "
             f"-2 {data}/tiny_sample.2.fq "
