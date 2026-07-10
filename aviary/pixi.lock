@@ -4213,7 +4213,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/yarl-1.24.2-py312h8a5da7c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/yte-1.9.4-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
-      - pypi: /mnt/hpccs01/home/herholdt/assembly_checkpointing
+      - pypi: git+https://github.com/SNH-star/assembly_checkpointing.git?branch=assembly-stageguard#646bdb47546a74d783bf4109fc46d52a82c88d71
   taxvamb:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -4949,10 +4949,9 @@ packages:
   license_family: MIT
   size: 46190
   timestamp: 1766921745306
-- pypi: /mnt/hpccs01/home/herholdt/assembly_checkpointing
+- pypi: git+https://github.com/SNH-star/assembly_checkpointing.git?branch=assembly-stageguard#646bdb47546a74d783bf4109fc46d52a82c88d71
   name: assembly-checkpointing
   version: '0.0'
-  sha256: 9174236683bf7e0ed402bde8b65af3525f37c483c25e3a6d8a6959aa85f82d3a
   requires_dist:
   - snakemake>=7,<8
   - snakemake-executor-plugin-cluster-generic
