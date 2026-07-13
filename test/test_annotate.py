@@ -52,7 +52,6 @@ class Tests(unittest.TestCase):
             f"-o {output_dir}/aviary_out "
             f"--genome-fasta-directory test/data/bins1 "
             f"-n 32 -t 32 "
-            f"--min-completeness 25 --max-contamination 65 "
         )
         subprocess.run(cmd, shell=True, check=True)
 

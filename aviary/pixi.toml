@@ -162,16 +162,14 @@ pggb = ["pggb", "cpu"]
 metabuli = "~=1.1.0"
 
 [feature.singlem.dependencies]
-singlem = ">=0.20.3"
+singlem = ">=0.21.3"
 diamond = ">=2.1.21"
 
 [feature.singlem.pypi-dependencies]
 bird-tool-utils = "*"
 
 [feature.singlem-appraise.dependencies]
-# We use singlem v0.19 here because 0.20 introduced a major performance
-# regression for --genome-fasta-files input.
-singlem = "==0.19.0"
+singlem = "==0.21.3"
 
 [feature.chopper.dependencies]
 chopper = ">=0.6"
@@ -242,7 +240,11 @@ agtools = ">=1.0.0"
 
 [feature.stageguard.dependencies]
 python = ">=3.8"
-pixi = "*"
+# assembly_checkpointing makes a nested `pixi run` against this manifest, so the
+# in-env pixi must be new enough to parse the rich-platform tables (cuda on
+# platforms entries). Unpinned "*" let a stale 0.69.0 in, which failed with
+# "expected a string, found table". Match [feature.main] >=0.71.
+pixi = ">=0.71"
 snakemake = ">=7,<8"
 snakemake-executor-plugin-cluster-generic = "*"
 
@@ -349,7 +351,7 @@ parallel = "*"
 [feature.gtdbtk.dependencies]
 # When updating GTDB-Tk, please also update admin/set_env_vars.sh accordingly.
 # and configure?
-gtdbtk = ">=2.6.1" # Required given R226 data is used, and 
+gtdbtk = ">=2.7.2" # Required given R232 data is used, and 
 # numpy = "==2.2.6" # Required because of https://github.com/Ecogenomics/GTDBTk/issues/641
 fastani = "*"
 

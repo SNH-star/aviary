@@ -32,7 +32,7 @@ if os.path.exists(MQSUB_OUT):
 # Assembly checkpointing tests
 print("mqsub assembly_checkpointing tests ..")
 cmd = "mqsub -t32 --segregated-log-files --bg --hours 2 -m 64 -- " \
-    "bash -c \"'cd /home/herholdt/assembly_checkpointing && rm -rf test/tmp && pixi run pytest'\" " \
+    "bash -c 'cd /home/herholdt/assembly_checkpointing && rm -rf test/tmp && pixi run pytest' " \
     f"&>>{MQSUB_OUT}"
 extern.run(cmd)
 time.sleep(30)
@@ -41,7 +41,7 @@ time.sleep(30)
 print("mqsub GPU testing - taxvamb ..")
 cmd = "mqsub -t32 --A100 --segregated-log-files --bg --hours 4 -m 128 -- " \
     "pixi run -e dev " \
-    "bash -c \"'export TEST_REQUEST_GPU=1 && echo gtdb=$GTDBTK_DATA_PATH && python test/test_integration.py Tests.test_short_read_recovery_taxvamb'\" " \
+    "bash -c 'export TEST_REQUEST_GPU=1 && echo gtdb=$GTDBTK_DATA_PATH && python test/test_integration.py Tests.test_short_read_recovery_taxvamb' " \
     f"&>>{MQSUB_OUT}"
 extern.run(cmd)
 time.sleep(30)
@@ -50,7 +50,7 @@ time.sleep(30)
 print("mqsub GPU testing - comebin ..")
 cmd = "mqsub -t32 --A100 --segregated-log-files --bg --hours 4 -m 128 -- " \
     "pixi run -e dev " \
-    "bash -c \"'export TEST_REQUEST_GPU=1 && echo gtdb=$GTDBTK_DATA_PATH && python test/test_integration.py Tests.test_short_read_recovery_comebin'\" " \
+    "bash -c 'export TEST_REQUEST_GPU=1 && echo gtdb=$GTDBTK_DATA_PATH && python test/test_integration.py Tests.test_short_read_recovery_comebin' " \
     f"&>>{MQSUB_OUT}"
 extern.run(cmd)
 time.sleep(30)
@@ -59,7 +59,7 @@ time.sleep(30)
 print("mqsub GPU testing - semibin ..")
 cmd = "mqsub -t32 --A100 --segregated-log-files --bg --hours 4 -m 128 -- " \
     "pixi run -e dev " \
-    "bash -c \"'export TEST_REQUEST_GPU=1 && echo gtdb=$GTDBTK_DATA_PATH && python test/test_integration.py Tests.test_short_read_recovery_semibin'\" " \
+    "bash -c 'export TEST_REQUEST_GPU=1 && echo gtdb=$GTDBTK_DATA_PATH && python test/test_integration.py Tests.test_short_read_recovery_semibin' " \
     f"&>>{MQSUB_OUT}"
 extern.run(cmd)
 
