@@ -2,6 +2,13 @@
 authors = ["Rhys Newell <rhys.newell94@gmail.com>"]
 channels = ["conda-forge", "bioconda"]
 name = "aviary"
+platforms = [
+  "linux-64",
+  { name = "linux-64-cuda121", platform = "linux-64", cuda = "12.1" },
+  { name = "linux-64-cuda118", platform = "linux-64", cuda = "11.8" },
+]
+
+[feature.cpu]
 platforms = ["linux-64"]
 
 [feature.main.dependencies]
@@ -17,7 +24,7 @@ pigz = ">=2.6"
 parallel = "*"
 extern = "*"
 pyopenssl = ">22.1.0"
-pixi = "*"
+pixi = ">=0.71" # Must understand rich platforms (cuda on platforms entries)
 pip = "*"
 setuptools = "*"
 bird_tool_utils_python = "*"
@@ -32,7 +39,7 @@ env = { PYTHONNOUSERSITE = "1" }
 [tasks]
 postinstall-base = { cmd = "pip install --no-build-isolation --no-deps --disable-pip-version-check -e ..", cwd = "aviary" }
 server = { cmd = "python server.py", description = "Start the web interface (port 8090)", cwd = "aviary/web" }
-update_deps = { cmd = "python ../admin/build_dep_defs_from_pixi.py", default-environment = "dev", depends-on = ["postinstall"] }
+update_deps = { cmd = "python ../admin/build_dep_defs_from_pixi.py", depends-on = ["postinstall"] }
 
 [tasks.postinstall]
 # install into both standard and dev envs
@@ -43,7 +50,7 @@ depends-on = [
 
 [tasks.run-a-test-base]
 args = ["test_name"]
-cmd = "pytest --import-mode=importlib test /home/herholdt/assembly_checkpointing/test --run-expensive -k {{ test_name }}"
+cmd = "pytest test --run-expensive -k {{ test_name }}"
 depends-on = [
     {task = "postinstall-base", environment = "dev" }
 ]
@@ -86,12 +93,29 @@ depends-on = [
     { task = "run-tests-at-cmr-base", environment = "dev" }
 ]
 
+[tasks.run-test-aviary-download-base]
+# Downloads the databases (into the repo db/ dir by default; override with
+# AVIARY_TEST_DB_DIR) and runs the full aviary walkthrough on them.
+# Run this from an INTERACTIVE session: --profile aqua makes aviary submit each
+# download/pipeline rule to the PBS queue while pytest coordinates. Do NOT wrap
+# this in mqsub (that would nest submission). Heavy + resumable: re-run to
+# resume after an OOM/walltime kill. Build is required so the per-db pixi envs
+# (checkm2, gtdbtk, ...) exist for the downloads + `aviary complete`.
+cmd = "pytest test/test_aviary_download.py --run-download --profile aqua -v"
+depends-on = [
+    {task="build", environment = "dev"}
+]
+
+[tasks.run-test-aviary-download]
+depends-on = [
+    { task = "run-test-aviary-download-base", environment = "dev" }
+]
+
 [feature.dev.dependencies]
 pytest = "*"
 ipython = "*"
-# Build tooling (build_dep_defs_from_pixi.py imports bird_tool_utils.pixi_deps).
-# Kept dev-scoped; bump once a release ships pixi_deps (>0.6.0).
-bird_tool_utils_python = ">=0.6.0"
+toml = "*"
+bird_tool_utils_python = "*"
 snakemake-executor-plugin-cluster-generic = "*" # for run-tests-at-cmr
 
 [feature.dev.activation]
@@ -100,57 +124,55 @@ snakemake-executor-plugin-cluster-generic = "*" # for run-tests-at-cmr
 scripts = ["admin/set_env_vars.sh"]
 
 [environments]
-default = ["main"]
-dev = ["dev", "main"]
-web = ["web"]
+default = ["main", "cpu"]
+dev = ["dev", "main", "cpu"]
+web = ["web", "cpu"]
 # Overall environments
-metabuli = ['metabuli']
-singlem = ['singlem']
-singlem-appraise = ['singlem-appraise']
+metabuli = ['metabuli', "cpu"]
+singlem = ['singlem', "cpu"]
+singlem-appraise = ['singlem-appraise', "cpu"]
 # QC
-chopper = ["chopper"]
-rastqc = ["rastqc"]
-rastqc-long = ["rastqc-long"]
-nanoplot = ["nanoplot"]
-quast = ["quast"]
-bbmap = ["bbmap"]
+chopper = ["chopper", "cpu"]
+rastqc = ["rastqc", "cpu"]
+rastqc-long = ["rastqc-long", "cpu"]
+nanoplot = ["nanoplot", "cpu"]
+quast = ["quast", "cpu"]
+bbmap = ["bbmap", "cpu"]
 # Assembly
-flye = ["flye"]
-myloasm = ["myloasm"]
-polishing = ["polishing"]
-pilon = ["pilon"]
-dnaapler = ["dnaapler"]
-minimap2 = ["minimap2"]
-spades = ["spades"]
-megahit = ["spades"]
-stageguard = ["stageguard"]
-pysam = ["pysam"]
-mfqe = ["mfqe"]
-final-assembly = ["final-assembly"]
+flye = ["flye", "cpu"]
+myloasm = ["myloasm", "cpu"]
+polishing = ["polishing", "cpu"]
+pilon = ["pilon", "cpu"]
+dnaapler = ["dnaapler", "cpu"]
+minimap2 = ["minimap2", "cpu"]
+spades = ["spades", "cpu"]
+pysam = ["pysam", "cpu"]
+mfqe = ["mfqe", "cpu"]
+final-assembly = ["final-assembly", "cpu"]
 # Binning
-seqkit = ["seqkit"]
-metabat2 = ["metabat2"]
-checkm2 = ["checkm2"]
-coverm = ["coverm"]
-das-tool = ["das-tool"]
-rosella = ["rosella"]
-maxbin2 = ["maxbin2"]
-concoct = ["concoct"]
-vamb = ["vamb"]
-taxvamb = ["vamb"]
+seqkit = ["seqkit", "cpu"]
+metabat2 = ["metabat2", "cpu"]
+checkm2 = ["checkm2", "cpu"]
+coverm = ["coverm", "cpu"]
+das-tool = ["das-tool", "cpu"]
+rosella = ["rosella", "cpu"]
+maxbin2 = ["maxbin2", "cpu"]
+concoct = ["concoct", "cpu"]
+vamb = ["vamb", "cpu"]
+taxvamb = ["vamb", "cpu"]
 taxvamb-gpu = ["vamb", "vamb-gpu"]
-semibin = ["semibin"]
+semibin = ["semibin", "cpu"]
 semibin-gpu = ["semibin","semibin-gpu"]
-comebin = ["comebin"]
+comebin = ["comebin", "cpu"]
 comebin-gpu = ["comebin", "comebin-gpu"]
 # Annotation
-eggnog = ["eggnog"]
-gtdbtk = ["gtdbtk"]
+eggnog = ["eggnog", "cpu"]
+gtdbtk = ["gtdbtk", "cpu"]
 # Clustering
-pggb = ["pggb"]
+pggb = ["pggb", "cpu"]
 
 [feature.metabuli.dependencies]
-metabuli = "~=1.1.0"
+metabuli = "~=1.2.0"
 
 [feature.singlem.dependencies]
 singlem = ">=0.21.3"
@@ -229,15 +251,6 @@ pyyaml = ">=6.0.2"
 joblib = ">=1.4.2"
 agtools = ">=1.0.0"
 
-[feature.stageguard.dependencies]
-python = ">=3.8"
-pixi = "*"
-snakemake = ">=7,<8"
-snakemake-executor-plugin-cluster-generic = "*"
-
-[feature.stageguard.pypi-dependencies]
-assembly-checkpointing = { git = "https://github.com/SNH-star/assembly_checkpointing.git", branch = "assembly-stageguard" }
-
 [feature.pysam.dependencies]
 python = ">=3.6"
 pysam = ">=0.16"
@@ -298,8 +311,9 @@ samtools = "*"
 vamb = ">=5.0.0"
 
 [feature.vamb-gpu]
-system-requirements = { cuda = "12.1" }
+platforms = ["linux-64-cuda121"]
 channels = ["pytorch", "nvidia"]
+
 
 [feature.vamb-gpu.dependencies]
 pytorch-gpu = "*"
@@ -308,7 +322,8 @@ pytorch-gpu = "*"
 semibin = ">=2.1.0"
 
 [feature.semibin-gpu]
-system-requirements = { cuda = "12.1" }
+platforms = ["linux-64-cuda121"]
+
 
 [feature.semibin-gpu.dependencies]
 pytorch-gpu = "*"
@@ -317,9 +332,10 @@ pytorch-gpu = "*"
 comebin = ">=1.0.0"
 
 [feature.comebin-gpu]
-system-requirements = { cuda = "11.8" }
+platforms = ["linux-64-cuda118"]
 channels = ["nvidia", "pytorch"]
 channel-priority = "disabled"
+
 
 [feature.comebin-gpu.dependencies]
 # Pin mkl to <2024.1 to fix iJIT_NotifyEvent symbol error
