@@ -451,7 +451,56 @@ class Tests(unittest.TestCase):
         self.assertEqual(num_lines, 3)
 
         self.assertFalse(os.path.isfile(f"{output_dir}/aviary_out/data/final_contigs.fasta"))
-    
+
+    def test_short_read_recovery_semibin_multi(self):
+        """Real end-to-end SemiBin2 multi_easy_bin run: two assemblies, two
+        read sets, --semibin-mode multi.
+
+        Deliberately uses two assemblies with IDENTICAL (colliding) contig
+        names -- a copy of assembly.fasta, not a pre-uniquified variant --
+        because that is what a real co-assembly scenario looks like (contigs
+        named NODE_1, k141_1, etc. repeat across samples). This is the case
+        that actually exercises SemiBin2 concatenate_fasta's per-sample
+        prefixing and filter_contigs_by_size's prefix-stripping; a
+        pre-uniquified second assembly would pass even if that name
+        reconciliation were broken, and prove nothing.
+        """
+        suffix = "_gpu" if os.environ.get("TEST_REQUEST_GPU") == "1" else ""
+        output_dir = os.path.join("example", f"test_short_read_recovery_semibin_multi{suffix}")
+        setup_output_dir(output_dir)
+
+        cmd = (
+            f"cp {data}/assembly.fasta {output_dir}/assembly2.fasta && "
+            f"ln -sr {data}/wgsim.1.fq.gz {output_dir}/wgsim2.1.fq.gz && "
+            f"ln -sr {data}/wgsim.2.fq.gz {output_dir}/wgsim2.2.fq.gz"
+        )
+        subprocess.run(cmd, shell=True, check=True)
+
+        cmd = (
+            f"aviary recover "
+            f"--assembly {data}/assembly.fasta {output_dir}/assembly2.fasta "
+            f"-o {output_dir}/aviary_out "
+            f"-1 {data}/wgsim.1.fq.gz {output_dir}/wgsim2.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz {output_dir}/wgsim2.2.fq.gz "
+            f"--semibin-mode multi "
+            f"--binning-only "
+            f"--skip-binners rosella vamb metabat "
+            f"{request_gpu} "
+            f"--skip-qc "
+            f"--refinery-max-iterations 0 "
+            f"-n 32 -t 32 "
+            f"--strict "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+
+        bin_info_path = f"{output_dir}/aviary_out/bins/bin_info.tsv"
+        self.assertTrue(os.path.isfile(bin_info_path))
+        with open(bin_info_path) as f:
+            num_lines = sum(1 for _ in f)
+        self.assertTrue(num_lines > 1)
+
+        self.assertFalse(os.path.isfile(f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+
     def test_short_read_recovery_vamb(self):
         output_dir = os.path.join("example", "test_short_read_recovery_vamb")
         setup_output_dir(output_dir)
