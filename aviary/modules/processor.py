@@ -438,6 +438,14 @@ class Processor:
                     "to use multi-sample mode properly."
                 )
         elif self.assembly is None:
+            if self.semibin_mode == "multi":
+                logging.error(
+                    "--semibin-mode multi requires at least two assemblies passed with "
+                    "--assembly A.fasta B.fasta, but no assembly was provided. Reads-only "
+                    "runs assemble a single set of contigs, which multi-sample binning "
+                    "cannot use. Provide multiple assemblies, or drop --semibin-mode multi."
+                )
+                sys.exit(-1)
             self.assembly = 'none'
             logging.warning("No assembly provided, assembly will be created using available reads...")
         if self.pe1 != "none":

@@ -649,19 +649,16 @@ def main():
 
     binning_options.add_argument(
         '--semibin-mode', '--semibin_mode',
-        help='SemiBin2 mode to use. "single" uses single_easy_bin; "multi" uses multi_easy_bin. '
-             'Multi mode ignores --semibin-model as pre-trained environments are not supported.',
+        help='SemiBin2 binning mode. "single" (default) runs single_easy_bin on one assembly. '
+             '"multi" runs multi_easy_bin to co-bin several assemblies together, letting SemiBin2 '
+             'learn across samples; provide the assemblies as multiple --assembly files. Contig names '
+             'that collide across assemblies (e.g. NODE_1 in each) are kept distinct internally by a '
+             'per-sample prefix, so identically-named contigs from different samples are handled '
+             'correctly. Multi mode ignores --semibin-model, as pre-trained environments are not '
+             'supported for multi-sample binning.',
         dest='semibin_mode',
         choices=['single', 'multi'],
         default='single'
-    )
-
-    binning_options.add_argument(
-        '--semibin-multi', '--semibin_multi',
-        help=argparse.SUPPRESS,
-        dest='semibin_mode',
-        action='store_const',
-        const='multi'
     )
 
     binning_options.add_argument(
