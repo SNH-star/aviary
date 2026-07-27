@@ -1,8 +1,8 @@
-[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/aviary/README.html)
-![](https://anaconda.org/bioconda/aviary/badges/license.svg)
-![](https://anaconda.org/bioconda/aviary/badges/version.svg)
-![](https://anaconda.org/bioconda/aviary/badges/latest_release_relative_date.svg)
-![](https://anaconda.org/bioconda/aviary/badges/platforms.svg)
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](https://bioconda.github.io/)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/aviary/badges/license.svg)](https://anaconda.org/bioconda/aviary)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/aviary/badges/version.svg)](https://anaconda.org/bioconda/aviary)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/aviary/badges/latest_release_relative_date.svg)](https://anaconda.org/bioconda/aviary)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/aviary/badges/platforms.svg)](https://anaconda.org/bioconda/aviary)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10806928.svg)](https://doi.org/10.5281/zenodo.10806928)
 
 
@@ -74,7 +74,7 @@ cd aviary
 ```
 
 #### Create aviary/.pixi (possibly symlinked to faster disk)
-In the source directory, create the `aviary/.pixi` directory to hold pixi environments. Without this, `.pixi` is symlinked to `aviary/.pixi` within the checkout, which does not exist. So `pixi run ..` trips over that dead link.
+In the source directory, create the `aviary/.pixi` directory to hold pixi environments. Without this, `.pixi` is symlinked to `aviary/.pixi` within the checkout, which does not exist. So `pixi run ..`[...]
 
 This can be done by simply running:
 ```bash
@@ -89,7 +89,7 @@ Then run postinstall so `aviary` can be run as a script. The `postinstall` task 
 pixi run postinstall
 ```
 
-When installed from source this way, aviary is installed in an "editable" way (similar to `pip install -e .`), meaning that any changes made to aviary source are immediately available via the `aviary` command. This is useful for development and debugging.
+When installed from source this way, aviary is installed in an "editable" way (similar to `pip install -e .`), meaning that any changes made to aviary source are immediately available via the `aviary`[...]
 
 If you see something like the following error, you might have missed the previous step?
 ```
@@ -104,7 +104,7 @@ pixi run aviary --help
 ```
 
 #### Databases when running from source
-As well as the standard method for defining database paths (e.g. `CHECKM2DB`), databases can be symlinked from a `db/` directory in the aviary repository. An activation hook then ensures that these are available when in the pixi environments. To do this, create a `db/` directory in the aviary repository and symlink the required databases into it. For example, as of writing:
+As well as the standard method for defining database paths (e.g. `CHECKM2DB`), databases can be symlinked from a `db/` directory in the aviary repository. An activation hook then ensures that these ar[...]
 
 ```bash
 $ ls db -l

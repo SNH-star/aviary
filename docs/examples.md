@@ -43,6 +43,38 @@ aviary assemble -1 *.1.fq.gz -2 *.2.fq.gz --longreads *.nanopore.fastq.gz --long
 ```
 NOTE: The space after `--cluster qsub ` is required due to a strange quirk in how python's `argparse` module works.
 
+## SemiBin2 multi-sample binning
+
+By default Aviary runs SemiBin2 in **single-sample** mode (`single_easy_bin`), binning one assembly on its
+own. When you have several related samples — for example a time series, or multiple samples from the same
+environment — SemiBin2 can instead be run in **multi-sample** mode (`multi_easy_bin`), where it co-bins all
+of the assemblies at once and learns features across samples. This can improve binning for samples that share
+organisms.
+
+Enable it with `--semibin-mode multi` and pass **more than one assembly** via `--assembly`:
+
+```
+aviary recover \
+  --assembly sample1.fasta sample2.fasta sample3.fasta \
+  -1 s1.1.fq.gz s2.1.fq.gz s3.1.fq.gz \
+  -2 s1.2.fq.gz s2.2.fq.gz s3.2.fq.gz \
+  --semibin-mode multi \
+  --output multi_out/ -n 24 -t 24
+```
+
+Notes:
+
+- **Only SemiBin2 uses multi mode.** The other binners run per-assembly as usual; multi mode changes how
+  SemiBin2 itself bins, not the rest of the workflow.
+- **`--semibin-model` is ignored in multi mode.** SemiBin2 does not support pre-trained environment models for
+  multi-sample binning, so the `--semibin-model` value has no effect when `--semibin-mode multi` is set.
+- **Colliding contig names are handled automatically.** Assemblies produced by the same assembler routinely
+  reuse contig names (`NODE_1`, `k141_1`, …) across samples. Aviary keeps them distinct internally with a
+  per-sample `sample:contig` prefix throughout binning, refinement, and DAS_Tool, so identically-named contigs
+  from different samples are never confused. You do not need to rename contigs yourself.
+- **Single mode remains the default.** If `--semibin-mode` is omitted, or only one assembly is provided, Aviary
+  runs single-sample binning as before.
+
 ## HPC cluster submission
 
 Often users are required to send long running jobs off on to high performance clusters. Aviary and snakemake are

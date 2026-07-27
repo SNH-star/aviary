@@ -131,6 +131,7 @@ class Processor:
 
             self.coverage_samples_per_job = args.coverage_samples_per_job
             self.semibin_model = args.semibin_model
+            self.semibin_mode = args.semibin_mode
             self.refinery_max_iterations = args.refinery_max_iterations
             self.refinery_max_retries = args.refinery_max_retries
             self.skip_abundances = args.skip_abundances
@@ -177,6 +178,7 @@ class Processor:
             self.coverage_split = False
             self.coverage_samples_per_job = 5
             self.semibin_model = 'global'
+            self.semibin_mode = 'single'
             self.refinery_max_iterations = 5
             self.refinery_max_retries = 3
             self.skip_binners = ["none"]
@@ -421,7 +423,29 @@ class Processor:
 
         if self.assembly != "none" and self.assembly is not None:
             self.assembly = list(dict.fromkeys([os.path.abspath(p) for p in self.assembly]))
+            if len(self.assembly) > 1 and self.semibin_mode != "multi":
+                logging.error(
+                    "Multiple assemblies provided but --semibin-mode is not 'multi'. "
+                    "Pass --semibin-mode multi to enable SemiBin2 multi-sample binning, "
+                    "or provide a single pre-concatenated assembly."
+                )
+                sys.exit(-1)
+            if len(self.assembly) == 1 and self.semibin_mode == "multi":
+                logging.warning(
+                    "--semibin-mode multi was requested but only one assembly was provided. "
+                    "SemiBin2 will run but multi-sample binning requires at least two assemblies "
+                    "to be meaningful. Pass multiple assemblies with --assembly A.fasta B.fasta "
+                    "to use multi-sample mode properly."
+                )
         elif self.assembly is None:
+            if self.semibin_mode == "multi":
+                logging.error(
+                    "--semibin-mode multi requires at least two assemblies passed with "
+                    "--assembly A.fasta B.fasta, but no assembly was provided. Reads-only "
+                    "runs assemble a single set of contigs, which multi-sample binning "
+                    "cannot use. Provide multiple assemblies, or drop --semibin-mode multi."
+                )
+                sys.exit(-1)
             self.assembly = 'none'
             logging.warning("No assembly provided, assembly will be created using available reads...")
         if self.pe1 != "none":
@@ -454,6 +478,7 @@ class Processor:
         conf["skip_singlem"] = self.skip_singlem
         conf["binning_only"] = self.binning_only
         conf["semibin_model"] = self.semibin_model
+        conf["semibin_mode"] = self.semibin_mode
         conf["coverage_split"] = self.coverage_split
         conf["coverage_samples_per_split"] = self.coverage_samples_per_job
         conf["refinery_max_iterations"] = self.refinery_max_iterations
