@@ -7,7 +7,7 @@ dist
 .snakemake
 binsnek.egg-info
 aviary_genome.egg-info
-
+aviary/pixi.lock    
 example/
 test/data/.conda
 test/data/wgsim.metaspades.assembly.fna.fai
