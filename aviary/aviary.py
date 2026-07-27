@@ -82,7 +82,7 @@ Metagenome assembly, binning, and annotation:
                     using Galah
 
 Isolate assembly, binning, and annotation:
-        isolate   - Perform isolate assembly **PARTIALLY COMPLETED**
+        isolate   - Perform isolate assembly **Functional**
         
 Utility modules:
         build - Build the pixi environments used by Aviary
