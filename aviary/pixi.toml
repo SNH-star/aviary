@@ -38,6 +38,7 @@ env = { PYTHONNOUSERSITE = "1" }
 
 [tasks]
 postinstall-base = { cmd = "pip install --no-build-isolation --no-deps --disable-pip-version-check -e ..", cwd = "aviary" }
+install-coverm-env = { cmd = "coverm --version" }
 server = { cmd = "python server.py", description = "Start the web interface (port 8090)", cwd = "aviary/web" }
 update_deps = { cmd = "python ../admin/build_dep_defs_from_pixi.py", depends-on = ["postinstall"] }
 
@@ -45,12 +46,14 @@ update_deps = { cmd = "python ../admin/build_dep_defs_from_pixi.py", depends-on 
 # install into both standard and dev envs
 depends-on = [
     { task = "postinstall-base", environment = "main" },
-    { task = "postinstall-base", environment = "dev" }
+    { task = "postinstall-base", environment = "dev" },
+    # Pre-install coverm to avoid a race condition when semibin_multi_bams and prepare_binning_files activate it concurrently on first use
+    { task = "install-coverm-env", environment = "coverm" }
 ]
 
 [tasks.run-a-test-base]
 args = ["test_name"]
-cmd = "pytest test --run-expensive -k {{ test_name }}"
+cmd = "pytest --import-mode=importlib test /home/herholdt/assembly_checkpointing/test --run-expensive -k {{ test_name }}"
 depends-on = [
     {task = "postinstall-base", environment = "dev" }
 ]
@@ -146,6 +149,11 @@ pilon = ["pilon", "cpu"]
 dnaapler = ["dnaapler", "cpu"]
 minimap2 = ["minimap2", "cpu"]
 spades = ["spades", "cpu"]
+<<<<<<< HEAD
+=======
+megahit = ["spades", "cpu"]
+stageguard = ["stageguard", "cpu"]
+>>>>>>> origin/multi_stageguard
 pysam = ["pysam", "cpu"]
 mfqe = ["mfqe", "cpu"]
 final-assembly = ["final-assembly", "cpu"]
@@ -182,7 +190,11 @@ diamond = ">=2.1.21"
 bird-tool-utils = "*"
 
 [feature.singlem-appraise.dependencies]
+<<<<<<< HEAD
 singlem = ">=0.21.3"
+=======
+singlem = "==0.21.3"
+>>>>>>> origin/multi_stageguard
 
 [feature.chopper.dependencies]
 chopper = ">=0.6"
@@ -250,6 +262,22 @@ megahit = ">=1.2.9"
 pyyaml = ">=6.0.2"
 joblib = ">=1.4.2"
 agtools = ">=1.0.0"
+
+[feature.stageguard.dependencies]
+python = ">=3.8"
+# assembly_checkpointing makes a nested `pixi run` against this manifest, so the
+# in-env pixi must be new enough to parse the rich-platform tables (cuda on
+# platforms entries). Unpinned "*" let a stale 0.69.0 in, which failed with
+# "expected a string, found table". Match [feature.main] >=0.71.
+pixi = ">=0.71"
+snakemake = ">=7,<8"
+snakemake-executor-plugin-cluster-generic = "*"
+
+[feature.stageguard.pypi-dependencies]
+# On release: publish assembly_checkpointing to PyPI, tag v0.1.0, then replace
+# the git line below with the PyPI spec:
+# assembly-checkpointing = ">=0.1.0"
+assembly-checkpointing = { git = "https://github.com/SNH-star/assembly_checkpointing.git", branch = "assembly-stageguard" }
 
 [feature.pysam.dependencies]
 python = ">=3.6"
@@ -323,7 +351,10 @@ semibin = ">=2.1.0"
 
 [feature.semibin-gpu]
 platforms = ["linux-64-cuda121"]
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/multi_stageguard
 
 [feature.semibin-gpu.dependencies]
 pytorch-gpu = "*"
@@ -351,7 +382,11 @@ parallel = "*"
 [feature.gtdbtk.dependencies]
 # When updating GTDB-Tk, please also update admin/set_env_vars.sh accordingly.
 # and configure?
+<<<<<<< HEAD
 gtdbtk = ">=2.7.2" # Required given R232 data is used, and
+=======
+gtdbtk = ">=2.7.2" # Required given R232 data is used, and 
+>>>>>>> origin/multi_stageguard
 # numpy = "==2.2.6" # Required because of https://github.com/Ecogenomics/GTDBTk/issues/641
 fastani = "*"
 

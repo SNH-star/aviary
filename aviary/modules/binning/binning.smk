@@ -323,6 +323,7 @@ rule vamb_jgi_filter:
         coverm_out.to_csv("data/coverm.filt.cov", sep='\t', index=False)
 
 
+<<<<<<< HEAD
 # Single source of truth for whether the SemiBin2-concatenated FASTA is the
 # reference for this run. Keyed off get_semibin_mode() (the user's explicit
 # --semibin-mode), NOT a separate len(fasta)>1 check, so filter_contigs_by_size
@@ -342,6 +343,23 @@ def _filter_contigs_input(wildcards):
     if _use_concatenated_assembly():
         return "data/semibin_multi_prep/concatenated.fa"
     return ancient(config["fasta"])
+=======
+def _filter_contigs_input(wildcards):
+    """
+    When multiple assemblies are provided, use the SemiBin2-concatenated FASTA
+    (which has unique sample:contig headers) so all binners work from a single
+    deduplicated reference. For a single assembly, use it directly.
+    """
+    fasta = config["fasta"]
+    if fasta != "none" and isinstance(fasta, list) and len(fasta) > 1:
+        return "data/semibin_multi_prep/concatenated.fa"
+    return ancient(fasta)
+
+
+def _is_multi_assembly():
+    fasta = config["fasta"]
+    return fasta != "none" and isinstance(fasta, list) and len(fasta) > 1
+>>>>>>> origin/multi_stageguard
 
 
 rule filter_contigs_by_size:
@@ -352,9 +370,14 @@ rule filter_contigs_by_size:
         fasta = "data/large_contigs.fasta",
     params:
         min_contig_size = config["min_contig_size"],
+        # SemiBin2 concatenate_fasta prefixes contigs as "samplename:contigname" in
+        # concatenated.fa, but outputs bins using bare contig names (with _sN suffix
+        # for sample N>1). Strip the prefix so large_contigs.fasta matches bin naming.
+        strip_prefix_cmd = "| sed 's/^>[^:]*:/>/' " if _is_multi_assembly() else "",
     resources:
         log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/filter_contigs_by_size", attempt),
     shell:
+<<<<<<< HEAD
         # Do NOT strip the "samplename:" prefix concatenate_fasta adds in multi
         # mode. An earlier version stripped it, believing SemiBin2 re-suffixed
         # bin contigs some other way -- it does not. Two assemblies produced by
@@ -370,6 +393,11 @@ rule filter_contigs_by_size:
         f"{pixi_run} -e seqkit "
         "seqkit seq --only-id -m {params.min_contig_size} {input.fasta} "
         "> {output.fasta} 2> {resources.log_path}"
+=======
+        f"{pixi_run} -e seqkit "
+        "seqkit seq --only-id -m {params.min_contig_size} {input.fasta} "
+        "{params.strip_prefix_cmd}> {output.fasta} 2> {resources.log_path}"
+>>>>>>> origin/multi_stageguard
 
 
 rule semibin_multi_prepare:
@@ -772,6 +800,7 @@ rule semibin:
         "> {resources.log_path} 2>&1 "
         "&& if [ \"{params.semibin_subcommand}\" = \"multi_easy_bin\" ]; then "
         "bins_found=0; "
+<<<<<<< HEAD
         # Per sample, prefer the reclustered bins; fall back to output_bins ONLY
         # when a sample has no recluster bins. Globbing both dirs together would
         # copy the same contigs twice (recluster is the refined superset of
@@ -786,6 +815,13 @@ rule semibin:
         "cp \"$f\" \"data/semibin_bins/output_bins/${{sample}}_$(basename \"$f\")\"; "
         "done; "
         "done; "
+=======
+        "for f in data/semibin_bins/samples/*/output_recluster_bins/*.fa data/semibin_bins/samples/*/output_bins/*.fa; do "
+        "[ -e \"$f\" ] || continue; bins_found=1; "
+        "sample=$(basename \"$(dirname \"$(dirname \"$f\")\")\"); "
+        "cp \"$f\" \"data/semibin_bins/output_bins/${{sample}}_$(basename \"$f\")\"; "
+        "done; "
+>>>>>>> origin/multi_stageguard
         "if [ \"$bins_found\" -eq 0 ]; then "
         "echo \"SemiBin2 multi_easy_bin did not produce bins in samples/*/output_recluster_bins or samples/*/output_bins\" >> {resources.log_path}; "
         "exit 1; "

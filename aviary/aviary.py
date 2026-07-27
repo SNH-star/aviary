@@ -649,6 +649,7 @@ def main():
 
     binning_options.add_argument(
         '--semibin-mode', '--semibin_mode',
+<<<<<<< HEAD
         help='SemiBin2 binning mode. "single" (default) runs single_easy_bin on one assembly. '
              '"multi" runs multi_easy_bin to co-bin several assemblies together, letting SemiBin2 '
              'learn across samples; provide the assemblies as multiple --assembly files. Contig names '
@@ -656,12 +657,27 @@ def main():
              'per-sample prefix, so identically-named contigs from different samples are handled '
              'correctly. Multi mode ignores --semibin-model, as pre-trained environments are not '
              'supported for multi-sample binning.',
+=======
+        help='SemiBin2 mode to use. "single" uses single_easy_bin; "multi" uses multi_easy_bin. '
+             'Multi mode ignores --semibin-model as pre-trained environments are not supported.',
+>>>>>>> origin/multi_stageguard
         dest='semibin_mode',
         choices=['single', 'multi'],
         default='single'
     )
 
     binning_options.add_argument(
+<<<<<<< HEAD
+=======
+        '--semibin-multi', '--semibin_multi',
+        help=argparse.SUPPRESS,
+        dest='semibin_mode',
+        action='store_const',
+        const='multi'
+    )
+
+    binning_options.add_argument(
+>>>>>>> origin/multi_stageguard
         '--refinery-max-iterations', '--refinery_max_iterations',
         help='Maximum number of iterations for Rosella refinery. Set to 0 to skip refinery. Lower values will run faster but may result in lower quality MAGs.',
         dest='refinery_max_iterations',
@@ -1335,16 +1351,18 @@ def main():
 
 def manage_env_vars(args):
     try:
-        if args.gtdb_path is None:
-            args.gtdb_path = Config.get_software_db_path('GTDBTK_DATA_PATH', '--gtdb-path')
-        if args.eggnog_db_path is None:
-            args.eggnog_db_path = Config.get_software_db_path('EGGNOG_DATA_DIR', '--eggnog-db-path')
+        binning_only = getattr(args, 'binning_only', False)
         if args.checkm2_db_path is None:
             args.checkm2_db_path = Config.get_software_db_path('CHECKM2DB', '--checkm2-db-path')
-        if args.singlem_metapackage_path is None:
-            args.singlem_db_path = Config.get_software_db_path('SINGLEM_METAPACKAGE_PATH', '--singlem-metapackage-path')
-        if args.metabuli_db_path is None:
-            args.metabuli_db_path = Config.get_software_db_path('METABULI_DB_PATH', '--metabuli-db-path')
+        if not binning_only:
+            if args.gtdb_path is None:
+                args.gtdb_path = Config.get_software_db_path('GTDBTK_DATA_PATH', '--gtdb-path')
+            if args.eggnog_db_path is None:
+                args.eggnog_db_path = Config.get_software_db_path('EGGNOG_DATA_DIR', '--eggnog-db-path')
+            if args.singlem_metapackage_path is None:
+                args.singlem_db_path = Config.get_software_db_path('SINGLEM_METAPACKAGE_PATH', '--singlem-metapackage-path')
+            if args.metabuli_db_path is None:
+                args.metabuli_db_path = Config.get_software_db_path('METABULI_DB_PATH', '--metabuli-db-path')
     except AttributeError:
         pass
 
