@@ -158,7 +158,7 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 
 **`--skip-binners`** BINNER [BINNER ...]
 
-  Binning algorithms to skip: `rosella`, `semibin`, `metabat1`, `metabat2`, `metabat`, `vamb`, `quickbin`.
+  Binning algorithms to skip: `rosella`, `semibin`, `metabat1`, `metabat2`, `metabat` and `vamb`.
 
 **`--semibin-model`** MODEL
 
