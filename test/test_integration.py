@@ -737,6 +737,73 @@ class Tests(unittest.TestCase):
 
         self.assertFalse(os.path.isfile(f"{output_dir}/aviary_out/data/final_contigs.fasta"))
 
+    def test_short_read_recovery_concoct(self):
+        output_dir = os.path.join("example", "test_short_read_recovery_concoct")
+        setup_output_dir(output_dir)
+
+        cmd = (
+            f"aviary recover "
+            f"--assembly {data}/assembly.fasta "
+            f"-o {output_dir}/aviary_out "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--binning-only "
+            f"--skip-binners rosella semibin metabat vamb "
+            f"--extra-binners concoct "
+            f"--skip-qc "
+            f"--refinery-max-iterations 0 "
+            f"-n 32 -t 32 "
+            f"--strict "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+
+        bin_info_path = f"{output_dir}/aviary_out/bins/bin_info.tsv"
+        self.assertTrue(os.path.isfile(bin_info_path))
+        with open(bin_info_path) as f:
+            num_lines = sum(1 for _ in f)
+        self.assertTrue(num_lines > 2)
+
+        self.assertFalse(os.path.isfile(f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+
+    def test_short_read_recovery_default_mapper(self):
+        # CoverM >=0.7.0 maps with strobealign, which is the path real
+        # short-read runs now take. Reads are .fq.gz deliberately: strobealign
+        # 0.17.0 has an mmap bug on gzipped fastq.
+        output_dir = os.path.join("example", "test_short_read_recovery_default_mapper")
+        setup_output_dir(output_dir)
+
+        cmd = (
+            f"aviary recover "
+            f"--assembly {data}/assembly.fasta "
+            f"-o {output_dir}/aviary_out "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--binning-only "
+            f"--skip-binners rosella semibin vamb quickbin "
+            f"--skip-qc "
+            f"--refinery-max-iterations 0 "
+            f"-n 32 -t 32 "
+            f"--strict "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+
+        short_cov_path = f"{output_dir}/aviary_out/data/coverm.cov"
+        self.assertTrue(os.path.isfile(short_cov_path))
+        with open(short_cov_path) as f:
+            header = f.readline().split("\t")
+            depths = [float(line.split("\t")[2]) for line in f if line.strip()]
+        self.assertIn("totalAvgDepth", [c.strip() for c in header])
+        # A mapper failure yields a table of zeroes rather than no table, so
+        # assert reads actually mapped.
+        self.assertTrue(len(depths) > 1)
+        self.assertTrue(any(d > 0 for d in depths))
+
+        bin_info_path = f"{output_dir}/aviary_out/bins/bin_info.tsv"
+        self.assertTrue(os.path.isfile(bin_info_path))
+        with open(bin_info_path) as f:
+            num_lines = sum(1 for _ in f)
+        self.assertTrue(num_lines > 1)
+
     def test_short_read_recovery_no_bins(self):
         output_dir = os.path.join("example", "test_short_read_recovery_no_bins")
         setup_output_dir(output_dir)
