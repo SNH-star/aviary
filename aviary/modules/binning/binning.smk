@@ -283,10 +283,10 @@ rule concoct:
         "mkdir -p data/concoct_working && "
         "cut_up_fasta.py {input.fasta} -c 10000 -o 0 --merge_last -b data/concoct_working/contigs_10K.bed > data/concoct_working/contigs_10K.fa 2> {resources.log_path} && "
         "concoct_coverage_table.py data/concoct_working/contigs_10K.bed data/binning_bams/*.bam > data/concoct_working/coverage_table.tsv 2>> {resources.log_path} && "
-        "concoct --threads {threads} -l {params.min_contig_size} --composition_file data/concoct_working/contigs_10K.fa --coverage_file data/concoct_working/coverage_table.tsv -b data/concoct_working/ 2>/dev/null && "
+        "concoct --threads {threads} -l {params.min_contig_size} --composition_file data/concoct_working/contigs_10K.fa --coverage_file data/concoct_working/coverage_table.tsv -b data/concoct_working/ 2>> {resources.log_path} && "
         "merge_cutup_clustering.py data/concoct_working/clustering_gt{params.min_contig_size}.csv > data/concoct_working/clustering_merged.csv 2>> {resources.log_path} && "
         "mkdir -p data/concoct_bins && "
-        "extract_fasta_bins.py {input.fasta} data/concoct_working/clustering_merged.csv --output_path data/concoct_bins/ >> {resources.log_path} 2>&1 "
+        "extract_fasta_bins.py {input.fasta} data/concoct_working/clustering_merged.csv --output_path data/concoct_bins/ >> {resources.log_path} 2>&1 ' "
         "&& touch {output[0]} {params.really_done} {params.touch}"
 
 

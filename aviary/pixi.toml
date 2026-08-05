@@ -305,6 +305,15 @@ perl-lwp-simple = "*"
 [feature.concoct.dependencies]
 scikit-learn = ">=1.1.0"
 concoct = ">=1.1.0"
+# concoct 1.1.0 caps numpy<2. scipy >=1.14 self-declares numpy>=2.0.0 in its
+# dist-info, which is what concoct's pkg_resources check reads -- so scipy must
+# be pinned too, or that check fails at runtime rather than at solve time.
+numpy = "<2"
+scipy = "<1.14"
+
+[feature.concoct.activation]
+# Stops a user-site scipy (~/.local) shadowing the pinned one on sys.path.
+env = { PYTHONNOUSERSITE = "1" }
 
 [feature.vamb.dependencies]
 samtools = "*"
