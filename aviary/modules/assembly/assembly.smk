@@ -196,6 +196,11 @@ rule polish_metagenome_flye:
     resources:
         mem_mb = lambda wildcards, attempt: min(int(config["max_memory"])*1024, 512*1024*attempt),
         runtime = lambda wildcards, attempt: 24*60*attempt,
+        # Both keys are deliberate: Snakemake's SLURM executor plugin reads
+        # "gpu", snakemake_mqsub on aqua (PBS) reads "gpus". Dropping either
+        # silently schedules GPU rules onto a CPU node, where the CUDA pixi
+        # env fails to activate before any log file is written.
+        gpu = 1 if config["request_gpu"] else 0,
         gpus = 1 if config["request_gpu"] else 0,
         log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/polish_metagenome_flye", attempt),
     output:
