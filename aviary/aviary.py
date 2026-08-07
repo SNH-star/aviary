@@ -649,7 +649,6 @@ def main():
 
     binning_options.add_argument(
         '--semibin-mode', '--semibin_mode',
-<<<<<<< HEAD
         help='SemiBin2 binning mode. "single" (default) runs single_easy_bin on one assembly. '
              '"multi" runs multi_easy_bin to co-bin several assemblies together, letting SemiBin2 '
              'learn across samples; provide the assemblies as multiple --assembly files. Contig names '
@@ -657,27 +656,12 @@ def main():
              'per-sample prefix, so identically-named contigs from different samples are handled '
              'correctly. Multi mode ignores --semibin-model, as pre-trained environments are not '
              'supported for multi-sample binning.',
-=======
-        help='SemiBin2 mode to use. "single" uses single_easy_bin; "multi" uses multi_easy_bin. '
-             'Multi mode ignores --semibin-model as pre-trained environments are not supported.',
->>>>>>> origin/multi_stageguard
         dest='semibin_mode',
         choices=['single', 'multi'],
         default='single'
     )
 
     binning_options.add_argument(
-<<<<<<< HEAD
-=======
-        '--semibin-multi', '--semibin_multi',
-        help=argparse.SUPPRESS,
-        dest='semibin_mode',
-        action='store_const',
-        const='multi'
-    )
-
-    binning_options.add_argument(
->>>>>>> origin/multi_stageguard
         '--refinery-max-iterations', '--refinery_max_iterations',
         help='Maximum number of iterations for Rosella refinery. Set to 0 to skip refinery. Lower values will run faster but may result in lower quality MAGs.',
         dest='refinery_max_iterations',

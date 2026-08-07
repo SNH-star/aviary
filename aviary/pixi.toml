@@ -149,11 +149,8 @@ pilon = ["pilon", "cpu"]
 dnaapler = ["dnaapler", "cpu"]
 minimap2 = ["minimap2", "cpu"]
 spades = ["spades", "cpu"]
-<<<<<<< HEAD
-=======
 megahit = ["spades", "cpu"]
 stageguard = ["stageguard", "cpu"]
->>>>>>> origin/multi_stageguard
 pysam = ["pysam", "cpu"]
 mfqe = ["mfqe", "cpu"]
 final-assembly = ["final-assembly", "cpu"]
@@ -190,11 +187,8 @@ diamond = ">=2.1.21"
 bird-tool-utils = "*"
 
 [feature.singlem-appraise.dependencies]
-<<<<<<< HEAD
-singlem = ">=0.21.3"
-=======
+
 singlem = "==0.21.3"
->>>>>>> origin/multi_stageguard
 
 [feature.chopper.dependencies]
 chopper = ">=0.6"
@@ -351,10 +345,6 @@ semibin = ">=2.1.0"
 
 [feature.semibin-gpu]
 platforms = ["linux-64-cuda121"]
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/multi_stageguard
 
 [feature.semibin-gpu.dependencies]
 pytorch-gpu = "*"
@@ -382,11 +372,7 @@ parallel = "*"
 [feature.gtdbtk.dependencies]
 # When updating GTDB-Tk, please also update admin/set_env_vars.sh accordingly.
 # and configure?
-<<<<<<< HEAD
-gtdbtk = ">=2.7.2" # Required given R232 data is used, and
-=======
 gtdbtk = ">=2.7.2" # Required given R232 data is used, and 
->>>>>>> origin/multi_stageguard
 # numpy = "==2.2.6" # Required because of https://github.com/Ecogenomics/GTDBTk/issues/641
 fastani = "*"
 

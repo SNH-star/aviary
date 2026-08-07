@@ -2,10 +2,7 @@
 
 import unittest
 import os
-<<<<<<< HEAD
 import shutil
-=======
->>>>>>> origin/multi_stageguard
 import subprocess
 import tempfile
 import extern
@@ -523,7 +520,6 @@ class Tests(unittest.TestCase):
             stderr = result.stderr.decode()
             self.assertIn("--semibin-mode multi", stderr)
             self.assertIn("only one assembly", stderr)
-<<<<<<< HEAD
 
     def test_recover_multiple_assemblies_default_mode_fails_clearly(self):
         """Multiple assemblies without --semibin-mode multi must fail loudly,
@@ -623,8 +619,6 @@ class Tests(unittest.TestCase):
             config = load_configfile(config_path)
             self.assertEqual(config["semibin_mode"], "multi")
             self.assertEqual(len(config["fasta"]), 2)
-=======
->>>>>>> origin/multi_stageguard
 
     def test_recover_config_many_threads(self):
         with tempfile.TemporaryDirectory() as tmpdir:
