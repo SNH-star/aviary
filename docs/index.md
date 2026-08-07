@@ -19,7 +19,7 @@ hide:
     </p>
     <div class="aviary-actions">
       <a href="getting-started/quickstart/" class="md-button md-button--primary">Run your first analysis</a>
-      <a href="pdf/aviary-manual.pdf" class="md-button">Read the PDF manual</a>
+      <a href="https://snh-star.github.io/aviary/pdf/aviary-manual.pdf" class="md-button">Read the PDF manual</a>
     </div>
   </div>
   <div class="aviary-hero__visual" aria-label="Aviary workflow from reads through assembly and genome recovery">

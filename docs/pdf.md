@@ -10,7 +10,7 @@ The Aviary manual combines the website's canonical documentation into a single
 searchable document for offline reading, archiving and sharing alongside an
 analysis.
 
-[Download the current Aviary manual](../pdf/aviary-manual.pdf){ .md-button .md-button--primary }
+[Download the current Aviary manual](https://snh-star.github.io/aviary/pdf/aviary-manual.pdf){ .md-button .md-button--primary }
 
 The PDF is generated during the documentation build from the same Markdown
 pages used by this website. Command behaviour and defaults should still be
