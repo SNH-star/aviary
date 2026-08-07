@@ -56,5 +56,5 @@ The canonical assembly is stored in `data/final_contigs.fasta` and exposed as
 `assembly/final_contigs.fasta`. Reports are written under `www/`; rule logs and
 benchmarks are kept in `logs/` and `benchmarks/`.
 
-See the [`assemble` reference](/usage/assemble) for every option and the
-[output reference](/guides/output) for the run layout.
+See the [`assemble` reference](../usage/assemble.md) for every option and the
+[output reference](../guides/output.md) for the run layout.

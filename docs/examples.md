@@ -94,5 +94,5 @@ aviary annotate \
 ```
 
 Keep the annotation run with the reference database releases used. See the
-[annotation guide](/guide/annotation) for interpretation and the
-[CLI reference](/usage) for advanced controls.
+[annotation guide](guide/annotation.md) for interpretation and the
+[CLI reference](usage/README.md) for advanced controls.

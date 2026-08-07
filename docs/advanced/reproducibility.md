@@ -53,4 +53,4 @@ the default.
 
 Archive the command, environment description, database releases, key logs,
 summaries and checksums with the outputs used in analysis. Cite Aviary and each
-upstream tool used by the selected workflow; see [citations](/citations).
+upstream tool used by the selected workflow; see [citations](../citations.md).

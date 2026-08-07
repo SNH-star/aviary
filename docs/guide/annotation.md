@@ -19,7 +19,7 @@ aviary annotate \
 ```
 
 Use the literal option names shown by `aviary annotate --help` for the installed
-version; the [CLI reference](/usage/annotate) documents aliases and
+version; the [CLI reference](../usage/annotate.md) documents aliases and
 directory/extension controls.
 
 ## Reference data matters
@@ -33,5 +33,5 @@ different releases as if the reference context were identical.
 
 Annotation products are written under `annotation/`, while raw taxonomic output
 may also appear under `taxonomy/` depending on the selected targets. Consult
-the [output reference](/guides/output) and cite the upstream tools used by
-the run using the [citation guide](/citations).
+the [output reference](../guides/output.md) and cite the upstream tools used by
+the run using the [citation guide](../citations.md).

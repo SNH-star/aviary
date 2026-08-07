@@ -8,7 +8,7 @@ title: Aviary Skill File
 Supports short-read, long-read, and hybrid workflows. Each module runs independently or as a chained pipeline.
 
 > **GitHub:** https://github.com/rhysnewell/aviary
-> **Docs:** https://rhysnewell.github.io/aviary
+> **Docs:** https://snh-star.github.io/aviary/
 > **Latest version:** 0.13.0
 
 
@@ -867,4 +867,4 @@ If you use Aviary in your research, please cite:
 ```
 
 You should also cite the individual tools used in your run. A full up-to-date list is at:
-https://rhysnewell.github.io/aviary/citations
+https://snh-star.github.io/aviary/citations/

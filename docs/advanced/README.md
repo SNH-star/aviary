@@ -6,6 +6,6 @@ title: Advanced use
 
 Use these pages when moving from a first successful run to production work:
 
-- [HPC and cluster submission](/guides/hpc)
-- [Performance and resource planning](/advanced/performance)
-- [Reproducible analyses](/advanced/reproducibility)
+- [HPC and cluster submission](../guides/hpc.md)
+- [Performance and resource planning](performance.md)
+- [Reproducible analyses](reproducibility.md)

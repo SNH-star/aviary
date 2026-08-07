@@ -128,5 +128,5 @@ GPU environments are optional and require compatible hardware and drivers:
 aviary build --gpu
 ```
 
-Continue with the [quickstart](/getting-started/quickstart). For production
-clusters, see [HPC and cluster submission](/guides/hpc).
+Continue with the [quickstart](getting-started/quickstart.md). For production
+clusters, see [HPC and cluster submission](guides/hpc.md).

@@ -1,0 +1,129 @@
+site_name: Aviary
+site_description: Metagenomic assembly, genome recovery and annotation
+site_url: https://snh-star.github.io/aviary/
+repo_url: https://github.com/SNH-star/aviary
+repo_name: SNH-star/aviary
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: _include/images/mini_logo.png
+  favicon: _include/images/mini_logo.png
+  font: false
+  language: en
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: aviary-light
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: aviary-dark
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - with-pdf:
+      author: Aviary contributors
+      copyright: Released under GPL-3.0
+      cover: true
+      cover_title: Aviary
+      cover_subtitle: Metagenomic assembly, genome recovery and annotation
+      toc_title: Contents
+      output_path: pdf/aviary-manual.pdf
+      enabled_if_env: ENABLE_PDF_EXPORT
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/SNH-star/aviary
+      name: Aviary on GitHub
+
+copyright: Copyright &copy; Aviary contributors · GPL-3.0
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Overview: getting-started/README.md
+      - Installation: installation.md
+      - Quickstart: getting-started/quickstart.md
+      - First complete analysis: getting-started/first-analysis.md
+  - Guide:
+      - Overview: guide/README.md
+      - Core concepts: concepts.md
+      - Metagenome assembly: guide/assembly.md
+      - Genome recovery: guide/genome-recovery.md
+      - Genome annotation: guide/annotation.md
+      - Workflow control: guides/workflow-control.md
+  - Worked analyses: examples.md
+  - Reference:
+      - Overview: reference/README.md
+      - CLI:
+          - Overview: usage/README.md
+          - Shared options: usage/centralised_commands.md
+          - assemble: usage/assemble.md
+          - recover: usage/recover.md
+          - annotate: usage/annotate.md
+          - complete: usage/complete.md
+          - cluster: usage/cluster.md
+          - isolate: usage/isolate.md
+          - configure: usage/configure.md
+      - Configuration: guides/configuration.md
+      - Input files: reference/inputs.md
+      - Output files: guides/output.md
+  - Advanced:
+      - Overview: advanced/README.md
+      - HPC and clusters: guides/hpc.md
+      - Performance: advanced/performance.md
+      - Reproducibility: advanced/reproducibility.md
+  - Project:
+      - Overview: project/README.md
+      - Troubleshooting: faqs.md
+      - Citations: citations.md
+      - Development: development.md
+      - Download PDF manual: pdf.md

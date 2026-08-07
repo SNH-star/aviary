@@ -107,7 +107,7 @@ limit, or reduce concurrency.
 
 First confirm that no Aviary or Snakemake process is still using the directory.
 Then use the documented `--unlock` workflow option from the
-[workflow-control guide](/guides/workflow-control). Unlocking a live run can
+[workflow-control guide](guides/workflow-control.md). Unlocking a live run can
 allow concurrent processes to corrupt workflow state.
 
 ## No bins were found
@@ -122,7 +122,7 @@ result.
 GPU-enabled binners can use compatible hardware when their environments are
 built. On a cluster, `--request-gpu` marks applicable submitted work for GPU
 resources. It does not accelerate every workflow stage. See
-[performance and resources](/advanced/performance).
+[performance and resources](advanced/performance.md).
 
 ## How do I remove host-associated reads?
 
@@ -135,10 +135,10 @@ remain.
 
 Requirements depend on enabled stages. GTDB-Tk taxonomy, EggNOG functional
 annotation, CheckM2 quality assessment, SingleM analysis and Metabuli-enabled
-workflows each use their own local data. See [installation](/installation) and
-the [`configure` reference](/usage/configure).
+workflows each use their own local data. See [installation](installation.md) and
+the [`configure` reference](usage/configure.md).
 
 ## How should Aviary be cited?
 
-See the [citation guide](/citations). Cite Aviary and the upstream programs used
+See the [citation guide](citations.md). Cite Aviary and the upstream programs used
 by the selected workflow.

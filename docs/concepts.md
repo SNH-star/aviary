@@ -53,7 +53,7 @@ Snakemake determines whether an output is current from its inputs, rules and
 metadata. A repeated Aviary command against the same output directory normally
 continues incomplete work. Options such as `--rerun-triggers`, `--clean` and
 `--unlock` deliberately change this behaviour; use them only after reading the
-[workflow-control guide](/guides/workflow-control).
+[workflow-control guide](guides/workflow-control.md).
 
 ## Inputs and outputs
 
@@ -62,6 +62,6 @@ files are produced internally when reads are mapped to assemblies. Final
 results are presented through stable directories such as `assembly/`, `bins/`,
 `taxonomy/` and `annotation/`; working files remain in `data/`.
 
-Continue with the [assembly guide](/guide/assembly),
-[genome-recovery guide](/guide/genome-recovery), or
-[annotation guide](/guide/annotation).
+Continue with the [assembly guide](guide/assembly.md),
+[genome-recovery guide](guide/genome-recovery.md), or
+[annotation guide](guide/annotation.md).

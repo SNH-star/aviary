@@ -39,7 +39,7 @@ stage GPU accelerated.
 
 SemiBin2 multi-sample mode accepts multiple assemblies and should be used only
 with inputs organised for that mode. See the exact validation and accepted
-values in the [`recover` reference](/usage/recover).
+values in the [`recover` reference](../usage/recover.md).
 
 ## Interpreting results
 
@@ -48,6 +48,6 @@ Use `bins/final_bins/` as the recovered FASTA collection and
 software environment because taxonomy and quality estimates can change with
 reference data and dependency versions.
 
-Continue with [annotation](/guide/annotation), the
-[output reference](/guides/output), or
-[reproducibility guidance](/advanced/reproducibility).
+Continue with [annotation](annotation.md), the
+[output reference](../guides/output.md), or
+[reproducibility guidance](../advanced/reproducibility.md).

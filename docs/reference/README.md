@@ -6,11 +6,11 @@ title: Reference
 
 Use this section for exact, searchable facts:
 
-- [CLI reference](/usage) for command options and defaults
-- [configuration reference](/guides/configuration) for environment and
+- [CLI reference](../usage/README.md) for command options and defaults
+- [configuration reference](../guides/configuration.md) for environment and
   resource settings
-- [input reference](/reference/inputs) for accepted data layouts
-- [output reference](/guides/output) for generated files
+- [input reference](inputs.md) for accepted data layouts
+- [output reference](../guides/output.md) for generated files
 
 For explanations of why and when to use a feature, return to the
-[user guide](/guide).
+[user guide](../guide/README.md).

@@ -10,12 +10,11 @@
 
 # Aviary
 
-An easy to use for wrapper for a robust snakemake pipeline for metagenomic short-read, long-read, and hybrid assembly.
-Aviary also performs binning, annotation, and provides users with an easy way to combine and dereplicate many aviary
-results with rapidity. The pipeline currently includes a series of distinct, yet flexible, modules that can seamlessly
-communicate with each other. Each module can be run independently or as a single pipeline depending on provided input.
+Aviary is a Snakemake workflow for metagenomic short-read, long-read and hybrid
+assembly. It also recovers metagenome-assembled genomes, coordinates taxonomic
+and functional annotation, and dereplicates genomes across completed runs.
 
-[Please refer to the full docs here](https://rhysnewell.github.io/aviary)
+[Read the Aviary documentation](https://snh-star.github.io/aviary/)
 
 ## Quick Installation
 
@@ -215,7 +214,7 @@ You should cite all of these tools as well, or whichever tools you know that you
 we have provided the following list of citations for you to use in alphabetical order. This list will be updated as new
 modules are added to aviary.
 
-A constantly updating list of citations can be found in the [Citations document](https://rhysnewell.github.io/aviary/citations).
+A maintained list of citations can be found in the [citation guide](https://snh-star.github.io/aviary/citations/).
 
 # License
 

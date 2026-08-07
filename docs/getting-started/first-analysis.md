@@ -33,7 +33,7 @@ underlying assembly, binning, quality assessment and annotation algorithms.
 | Both | short- and long-read options | Hybrid assembly and recovery |
 | Existing assembly | `--assembly` plus reads for coverage | Skip de novo assembly and recover MAGs |
 
-See the [input reference](/reference/inputs) for pairing rules and accepted
+See the [input reference](../reference/inputs.md) for pairing rules and accepted
 long-read type identifiers.
 
 ## Run in a dedicated output directory
@@ -62,5 +62,5 @@ output directory normally resumes from existing valid outputs. Do not delete
 `.snakemake/` or intermediate files while diagnosing an interrupted run.
 
 For scheduler submission, resource caps and retries, see
-[HPC and cluster submission](/guides/hpc). For precise command options, see
-the [`complete` CLI reference](/usage/complete).
+[HPC and cluster submission](../guides/hpc.md). For precise command options, see
+the [`complete` CLI reference](../usage/complete.md).

@@ -69,11 +69,11 @@ sample_aviary/
 └── logs/
 ```
 
-Read [`bin_info.tsv` and the rest of the output layout](/guides/output)
+Read [`bin_info.tsv` and the rest of the output layout](../guides/output.md)
 before using recovered genomes downstream. If a rule fails, find its log in
-`sample_aviary/logs/` and see [troubleshooting](/faqs).
+`sample_aviary/logs/` and see [troubleshooting](../faqs.md).
 
 ## Next step
 
-The [first complete analysis](/getting-started/first-analysis) explains how the
+The [first complete analysis](first-analysis.md) explains how the
 stages behave and which controls are most important.
