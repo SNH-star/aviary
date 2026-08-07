@@ -1,0 +1,332 @@
+/*
+ * Aviary docs — custom theme layer over mkdocs-material.
+ *
+ * Direction: clean scientific/technical. Deep slate neutrals, one confident
+ * copper/amber accent (not Material's stock teal), a real type scale, and
+ * restrained depth (borders + very soft shadows, not drama). Every override
+ * here has both a light (`[data-md-color-scheme="default"]`) and dark
+ * (`[data-md-color-scheme="slate"]`) value -- this is not a dark-mode-first
+ * site with an afterthought light toggle, or vice versa.
+ */
+
+/* ---------------------------------------------------------------------- */
+/* Palette                                                                 */
+/* ---------------------------------------------------------------------- */
+
+[data-md-color-scheme="default"] {
+  /* Base surface: a warm, slightly cool-neutral off-white -- not stock pure
+     white, which reads flat and template-y next to a technical mono font. */
+  --md-default-bg-color: #f7f7f5;
+  --md-default-fg-color: #1b2027;
+  --md-default-fg-color--light: #454d57;
+  --md-default-fg-color--lighter: #6b7280;
+  --md-default-fg-color--lightest: #d8dbe0;
+
+  /* Header / nav: deep slate, not pure black -- softer, still confident. */
+  --md-primary-fg-color: #171b21;
+  --md-primary-fg-color--light: #2b313a;
+  --md-primary-fg-color--dark: #0f1216;
+  --md-primary-bg-color: #f4ede1;
+  --md-primary-bg-color--light: #f4ede1;
+
+  /* Accent: muted copper/gold. Reads as an instrument, not a warning label. */
+  --md-accent-fg-color: #a8672a;
+  --md-accent-fg-color--transparent: #a8672a1a;
+  --md-accent-bg-color: #fff;
+  --md-accent-bg-color--light: #fff;
+
+  --md-typeset-a-color: #93551f;
+
+  --md-code-bg-color: #eeece5;
+  --md-code-fg-color: #2c2418;
+
+  --md-footer-bg-color: #171b21;
+  --md-footer-bg-color--dark: #0f1216;
+  --md-footer-fg-color: #f4ede1;
+  --md-footer-fg-color--light: #c9cdd3;
+
+  --aviary-surface: #ffffff;
+  --aviary-surface-sunken: #efeee9;
+  --aviary-border: #dfddd6;
+  --aviary-shadow: 0 1px 2px rgba(23, 27, 33, 0.06), 0 4px 14px rgba(23, 27, 33, 0.05);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 220deg;
+
+  /* Base surface: deep slate, not pure black -- keeps contrast comfortable
+     and lets the copper accent glow rather than clash. */
+  --md-default-bg-color: #12161c;
+  --md-default-fg-color: #dfe2e6;
+  --md-default-fg-color--light: #b7bcc3;
+  --md-default-fg-color--lighter: #8b909a;
+  --md-default-fg-color--lightest: #2a303a;
+
+  --md-primary-fg-color: #0d1015;
+  --md-primary-fg-color--light: #1a1f26;
+  --md-primary-fg-color--dark: #0a0c0f;
+  --md-primary-bg-color: #ecdfc9;
+  --md-primary-bg-color--light: #ecdfc9;
+
+  /* Accent brightened relative to light mode for AA contrast on dark bg. */
+  --md-accent-fg-color: #dda15e;
+  --md-accent-fg-color--transparent: #dda15e26;
+  --md-accent-bg-color: #171b21;
+  --md-accent-bg-color--light: #171b21;
+
+  --md-typeset-a-color: #e7b174;
+
+  --md-code-bg-color: #1a1f26;
+  --md-code-fg-color: #dcd3c2;
+
+  --md-footer-bg-color: #0a0c0f;
+  --md-footer-fg-color: #ecdfc9;
+  --md-footer-fg-color--light: #9aa0a8;
+
+  --aviary-surface: #171b21;
+  --aviary-surface-sunken: #0d1015;
+  --aviary-border: #262c35;
+  --aviary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Typography                                                              */
+/* ---------------------------------------------------------------------- */
+
+.md-typeset {
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset h1 {
+  font-size: 2.1rem;
+  margin-bottom: 0.6em;
+}
+
+.md-typeset h2 {
+  font-size: 1.4rem;
+  margin-top: 2em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--aviary-border);
+}
+
+.md-typeset h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.md-typeset code,
+.md-typeset kbd,
+.md-typeset pre {
+  font-size: 0.82em;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Header + nav                                                           */
+/* ---------------------------------------------------------------------- */
+
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.md-header__title {
+  font-weight: 600;
+}
+
+.md-tabs {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.md-nav__link--active,
+.md-nav__link:focus,
+.md-nav__link:hover {
+  color: var(--md-accent-fg-color);
+}
+
+.md-nav__item .md-nav__link--active {
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Announcement bar (docs/overrides/main.html's .aviary-announcement)      */
+/* ---------------------------------------------------------------------- */
+
+.md-banner {
+  background: linear-gradient(90deg, var(--md-accent-fg-color), #c98b3f);
+  color: #171208;
+}
+
+.aviary-announcement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: inherit;
+}
+
+.aviary-announcement strong {
+  font-weight: 700;
+}
+
+.aviary-announcement:hover {
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Buttons                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.md-typeset .md-button {
+  border-radius: 6px;
+  border-width: 1.5px;
+  font-weight: 600;
+  padding: 0.55em 1.2em;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.md-typeset .md-button--primary {
+  background-color: var(--md-accent-fg-color);
+  border-color: var(--md-accent-fg-color);
+  color: #171208;
+}
+
+.md-typeset .md-button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--aviary-shadow);
+  background-color: var(--md-typeset-a-color);
+  border-color: var(--md-typeset-a-color);
+}
+
+.md-typeset .md-button:not(.md-button--primary):hover {
+  transform: translateY(-1px);
+  border-color: var(--md-accent-fg-color);
+  color: var(--md-accent-fg-color);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Code blocks                                                            */
+/* ---------------------------------------------------------------------- */
+
+.md-typeset .highlight,
+.md-typeset pre {
+  border-radius: 8px;
+  border: 1px solid var(--aviary-border);
+}
+
+.md-typeset .highlight > pre,
+.md-typeset > pre {
+  margin: 0;
+}
+
+.md-typeset code {
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Admonitions                                                             */
+/* ---------------------------------------------------------------------- */
+
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: 8px;
+  border-width: 1px;
+  box-shadow: none;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tables (heavily used across the CLI reference)                         */
+/* ---------------------------------------------------------------------- */
+
+.md-typeset table:not([class]) {
+  border-radius: 8px;
+  border: 1px solid var(--aviary-border);
+  box-shadow: none;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--aviary-surface-sunken);
+  font-weight: 600;
+}
+
+.md-typeset table:not([class]) tr:hover {
+  background-color: var(--md-accent-fg-color--transparent);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Grid cards (used on the homepage command overview)                     */
+/* ---------------------------------------------------------------------- */
+
+.md-typeset .grid.cards > ul > li {
+  border-radius: 10px;
+  border: 1px solid var(--aviary-border);
+  background-color: var(--aviary-surface);
+  box-shadow: var(--aviary-shadow);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.md-typeset .grid.cards > ul > li:hover {
+  transform: translateY(-2px);
+  border-color: var(--md-accent-fg-color);
+}
+
+.md-typeset .grid.cards > ul > li > hr {
+  border-color: var(--aviary-border);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Homepage hero                                                          */
+/* ---------------------------------------------------------------------- */
+
+.aviary-hero {
+  padding: 2.2rem 0 1.4rem;
+  border-bottom: 1px solid var(--aviary-border);
+  margin-bottom: 2rem;
+}
+
+.aviary-hero__eyebrow {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--md-accent-fg-color);
+  margin-bottom: 0.6rem;
+}
+
+.aviary-hero h1 {
+  margin: 0 0 0.5rem;
+}
+
+.aviary-hero p {
+  max-width: 46rem;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.95rem;
+}
+
+.aviary-hero .md-typeset .md-button {
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Footer                                                                  */
+/* ---------------------------------------------------------------------- */
+
+.md-footer-meta {
+  background-color: var(--md-footer-bg-color--dark);
+}

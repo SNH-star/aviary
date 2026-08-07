@@ -20,29 +20,46 @@ theme:
   logo: _include/images/mini_logo.png
   favicon: _include/images/mini_logo.png
   language: en
+  font:
+    text: IBM Plex Sans
+    code: IBM Plex Mono
   features:
     - navigation.top
     - navigation.indexes
+    - navigation.sections
+    - navigation.footer
+    - navigation.tracking
     - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - content.tooltips
     - search.suggest
+    - search.highlight
+    - search.share
     - toc.follow
+  # Base palette is 'black'/'custom' only as a structural starting point --
+  # every actual colour (header, links, accents, both schemes) is overridden
+  # in stylesheets/extra.css so the site isn't just Material's stock teal.
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
-      accent: teal
+      primary: black
+      accent: amber
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: teal
-      accent: teal
+      primary: black
+      accent: amber
       toggle:
         icon: material/weather-sunny
         name: Switch to light mode
   icon:
     repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
@@ -62,6 +79,9 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 extra:
   generator: false
