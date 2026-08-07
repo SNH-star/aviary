@@ -32,6 +32,24 @@ def clean_short_reads(
             logf.write(f"cat return: {cat.returncode}\n")
             logf.write(f"sed return: {sed.returncode}\n")
 
+
+# PAF-emitting command per short-read aligner. racon needs PAF, and each
+# aligner spells that differently: minimap2/rammap take a preset with -x,
+# strobealign's -x is a boolean switch, and minibwa needs the "map"
+# subcommand with -f. Keys are the CoverM -p values that --short-read-mapper
+# resolves to, so this stays in step with the coverage side.
+def short_read_paf_cmd(mapper: str, reference: str, reads: str, threads: int) -> str:
+    if mapper == "strobealign":
+        return f"strobealign -x -t {threads} {reference} {reads}"
+    if mapper == "minimap2-sr":
+        return f"minimap2 -x sr -t {threads} {reference} {reads}"
+    if mapper == "rammap-sr":
+        return f"rammap -x sr -t {threads} {reference} {reads}"
+    if mapper == "minibwa":
+        return f"minibwa map -f -x sr -t {threads} {reference} {reads}"
+    raise ValueError(f"No PAF mode known for short-read mapper {mapper!r}")
+
+
 def minimap2_process(
     minimap2_type: str,
     reference: str,
@@ -39,12 +57,24 @@ def minimap2_process(
     threads: int,
     output_paf: str,
     log: str,
+    mapper: str = "minimap2",
 ):
-    minimap2_cmd = f"minimap2 -x {minimap2_type} -t {threads} {reference} {reads}".split()
+    # rammap is a minimap2-compatible Rust implementation: same -x presets,
+    # same PAF output, which this script parses directly further down. Only
+    # the binary name differs, so --long-read-mapper selects it here too.
+    minimap2_cmd = f"{mapper} -x {minimap2_type} -t {threads} {reference} {reads}".split()
 
     with open(log, "a") as logf:
+        # Logged so the aligner actually used is recoverable from the run.
+        print("Running command:", " ".join(minimap2_cmd), file=logf)
         with open(output_paf, 'w') as out:
-            Popen(minimap2_cmd, stdout=out, stderr=logf).wait()
+            returncode = Popen(minimap2_cmd, stdout=out, stderr=logf).wait()
+        logf.write(f"{mapper} return: {returncode}\n")
+        if returncode != 0:
+            raise RuntimeError(
+                f"{mapper} failed (exit {returncode}) generating {output_paf}; "
+                f"see {log} for details"
+            )
 
 def run_seqkit(
     reads,
@@ -80,7 +110,13 @@ def run_racon(
     with open(log, "a") as logf:
         logf.write(' '.join(racon_cmd))
         with open(output_file, 'w') as out:
-            Popen(racon_cmd, stdout=out, stderr=logf).wait()
+            returncode = Popen(racon_cmd, stdout=out, stderr=logf).wait()
+        logf.write(f"\nracon return: {returncode}\n")
+        if returncode != 0:
+            raise RuntimeError(
+                f"racon failed (exit {returncode}) on {reads} against {paf}/{reference}; "
+                f"see {log} for details"
+            )
 
 
 def run_minimap_with_samtools(
@@ -135,6 +171,8 @@ def run_polish(
     coassemble: bool,
     threads: int,
     log: str,
+    long_read_mapper: str = "rammap",
+    short_read_mapper: str = "strobealign",
 ):
     if not reference or not os.path.exists(reference) or os.path.getsize(reference) == 0:
         os.makedirs(os.path.dirname(output_fasta) or ".", exist_ok=True)
@@ -214,11 +252,24 @@ def run_polish(
             # Generate PAF mapping files
             if not os.path.exists(paf): # Check if mapping already exists
                 if illumina:
-                    minimap2_process("sr", reference, ' '.join(reads), threads, paf, log)
+                    cmd = short_read_paf_cmd(
+                        short_read_mapper, reference, ' '.join(reads), threads)
+                    with open(log, "a") as logf:
+                        logf.write(f"Short-read PAF command: {cmd}\n")
+                        logf.flush()
+                        with open(paf, 'w') as out:
+                            returncode = Popen(cmd.split(), stdout=out, stderr=logf).wait()
+                        logf.write(f"{short_read_mapper} return: {returncode}\n")
+                        if returncode != 0:
+                            raise RuntimeError(
+                                f"{short_read_mapper} failed (exit {returncode}) generating "
+                                f"{paf}; see {log} for details"
+                            )
                 elif long_read_type in ['ont', 'ont_hq']:
                     sys.exit("ONT reads are not supported for racon polishing")
                 else:
-                    minimap2_process("map-pb", reference, reads, threads, paf, log)
+                    minimap2_process("map-pb", reference, reads, threads, paf, log,
+                                     mapper=long_read_mapper)
 
             cov_dict = {}
             # Populate coverage dictionary,
@@ -260,10 +311,15 @@ def run_polish(
                     fields = line.split('\t')
                     qname, qlen, qstart, qstop, strand, ref, rlen, rstart, rstop = fields[:9]
                     qlen, qstart, qstop, rlen, rstart, rstop = map(int, [qlen, qstart, qstop, rlen, rstart, rstop])
-                    # minimap2 -x sr on interleaved PE reads doubles existing /1 /2 suffixes
-                    # (e.g. read/1 -> PAF qname read/1/1). Strip the extra suffix so qnames
-                    # match the original fastq read names for seqkit and racon.
-                    if illumina and (qname.endswith('/1') or qname.endswith('/2')):
+                    # minimap2/rammap -x sr on interleaved PE reads doubles existing /1 /2
+                    # suffixes (e.g. read/1 -> PAF qname read/1/1). Strip the extra suffix so
+                    # qnames match the original fastq read names for seqkit and racon.
+                    # strobealign and minibwa do NOT double the suffix - their qnames already
+                    # match the fastq header, so stripping here would corrupt them instead
+                    # (dropping the real /1 or /2 the fastq already has, breaking the seqkit
+                    # --pattern-file lookup and leaving racon with an empty read set).
+                    mapper_doubles_suffix = short_read_mapper in ("minimap2-sr", "rammap-sr")
+                    if illumina and mapper_doubles_suffix and (qname.endswith('/1') or qname.endswith('/2')):
                         norm_qname = qname[:-2]
                         fields[0] = norm_qname
                         norm_line = '\t'.join(fields)
@@ -384,6 +440,11 @@ if __name__ == "__main__":
     parser.add_argument('--output-fasta', help='Output fasta file')
     parser.add_argument('--rounds', type=int, help='Number of polishing rounds')
     parser.add_argument('--long-read-type', help='Long read type')
+    parser.add_argument('--long-read-mapper', default='rammap',
+                        help='Aligner for long reads (rammap or minimap2)')
+    parser.add_argument('--short-read-mapper', default='strobealign',
+                        help='CoverM -p value for short reads; also selects the '
+                             'aligner used for racon PAF generation')
     parser.add_argument('--medaka-model', help='Medaka model')
     parser.add_argument('--illumina', type=lambda x: x.lower() == 'true', nargs='?', const=True, default=False, help='Use illumina reads')
     parser.add_argument('--max-cov', type=int, default=100, help='Maximum coverage')
@@ -410,6 +471,8 @@ if __name__ == "__main__":
         output_fasta=args.output_fasta,
         polishing_rounds=args.rounds,
         long_read_type=args.long_read_type,
+        long_read_mapper=args.long_read_mapper,
+        short_read_mapper=args.short_read_mapper,
         medaka_model=args.medaka_model,
         illumina=args.illumina,
         max_cov=args.max_cov,

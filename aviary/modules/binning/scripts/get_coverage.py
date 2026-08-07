@@ -12,6 +12,8 @@ def get_coverage(
     short_reads_1,
     short_reads_2,
     long_read_type: str,
+    long_read_mapper: str,
+    short_read_mapper: str,
     input_fasta: str,
     bam_cache: str,
     working_dir: str,
@@ -27,14 +29,14 @@ def get_coverage(
 
     if long_reads != "none" and not path_exists(f"{working_dir}/long_cov.tsv"):
         if long_read_type in ["ont", "ont_hq"]:
-            coverm_cmd = f"coverm contig -t {threads} -r {input_fasta} --single {' '.join(long_reads)} -p minimap2-ont -m length trimmed_mean variance --bam-file-cache-directory {bam_cache} --discard-unmapped --min-read-percent-identity 0.85 --output-file {working_dir}/long_cov.tsv".split()
+            coverm_cmd = f"coverm contig -t {threads} -r {input_fasta} --single {' '.join(long_reads)} -p {long_read_mapper}-ont -m length trimmed_mean variance --bam-file-cache-directory {bam_cache} --discard-unmapped --min-read-percent-identity 0.85 --output-file {working_dir}/long_cov.tsv".split()
             with open(log, "a") as logf:
                 # log the coverm command
                 print("Running command:", " ".join(coverm_cmd), file=logf)
                 run(coverm_cmd, stdout=logf, stderr=STDOUT, check=True)
 
         elif long_read_type in ["rs", "sq", "ccs", "hifi"]:
-            coverm_cmd = f"coverm contig -t {threads} -r {input_fasta} --single {' '.join(long_reads)} -p minimap2-pb -m length trimmed_mean variance --bam-file-cache-directory {bam_cache} --discard-unmapped --min-read-percent-identity 0.9 --output-file {working_dir}/long_cov.tsv".split()
+            coverm_cmd = f"coverm contig -t {threads} -r {input_fasta} --single {' '.join(long_reads)} -p {long_read_mapper}-pb -m length trimmed_mean variance --bam-file-cache-directory {bam_cache} --discard-unmapped --min-read-percent-identity 0.9 --output-file {working_dir}/long_cov.tsv".split()
 
             with open(log, "a") as logf:
                 print("Running command:", " ".join(coverm_cmd), file=logf)
@@ -44,13 +46,13 @@ def get_coverage(
             raise Exception("Unexpected long_read_type: {}".format(long_read_type))
 
     if short_reads_2 != 'none' and not path_exists(f"{working_dir}/short_cov.tsv"):
-        coverm_cmd = f"coverm contig -t {threads} -r {input_fasta} -1 {' '.join(short_reads_1)} -2 {' '.join(short_reads_2)} -m metabat --bam-file-cache-directory {bam_cache} --discard-unmapped --output-file {working_dir}/short_cov.tsv".split()
+        coverm_cmd = f"coverm contig -t {threads} -r {input_fasta} -1 {' '.join(short_reads_1)} -2 {' '.join(short_reads_2)} -p {short_read_mapper} -m metabat --bam-file-cache-directory {bam_cache} --discard-unmapped --output-file {working_dir}/short_cov.tsv".split()
         with open(log, "a") as logf:
             print("Running command:", " ".join(coverm_cmd), file=logf)
             run(coverm_cmd, stdout=logf, stderr=STDOUT, check=True)
 
     elif short_reads_1  != 'none' and not path_exists(f"{working_dir}/short_cov.tsv"):
-        coverm_cmd = f"coverm contig -t {threads} -r {input_fasta} --interleaved {' '.join(short_reads_1)} -m metabat --bam-file-cache-directory {bam_cache} --discard-unmapped --output-file {working_dir}/short_cov.tsv".split()
+        coverm_cmd = f"coverm contig -t {threads} -r {input_fasta} --interleaved {' '.join(short_reads_1)} -p {short_read_mapper} -m metabat --bam-file-cache-directory {bam_cache} --discard-unmapped --output-file {working_dir}/short_cov.tsv".split()
 
         with open(log, "a") as logf:
             print("Running command:", " ".join(coverm_cmd), file=logf)
@@ -186,6 +188,10 @@ if __name__ == '__main__':
     parser.add_argument("--short-reads-1", type=str, nargs='*', required=True, help="Path to first set of short reads.")
     parser.add_argument("--short-reads-2", type=str, nargs='*', required=True, help="Path to second set of short reads.")
     parser.add_argument("--long-read-type", type=str, required=True, help="Type of long reads (e.g., ont, rs, etc.).")
+    parser.add_argument("--long-read-mapper", type=str, default="rammap",
+                        help="Aligner family for long reads; the -x preset is chosen from --long-read-type.")
+    parser.add_argument("--short-read-mapper", type=str, default="strobealign",
+                        help="CoverM -p value for short reads.")
     parser.add_argument("--input-fasta", type=str, required=True, help="Path to input FASTA file.")
     parser.add_argument("--tmpdir", type=str, help="Temporary directory.")
     parser.add_argument("--threads", type=int, required=True, help="Number of threads to use.")
@@ -202,6 +208,8 @@ if __name__ == '__main__':
         short_reads_1="none" if args.short_reads_1 == ["none"] or args.short_reads_1 == [] else args.short_reads_1,
         short_reads_2="none" if args.short_reads_2 == ["none"] or args.short_reads_2 == [] else args.short_reads_2,
         long_read_type=args.long_read_type,
+        long_read_mapper=args.long_read_mapper,
+        short_read_mapper=args.short_read_mapper,
         input_fasta=args.input_fasta,
         bam_cache=args.bam_cache,
         working_dir=args.working_dir,
