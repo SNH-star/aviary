@@ -49,6 +49,8 @@
   --aviary-surface-sunken: #efeee9;
   --aviary-border: #dfddd6;
   --aviary-shadow: 0 1px 2px rgba(23, 27, 33, 0.06), 0 4px 14px rgba(23, 27, 33, 0.05);
+  --aviary-aurora-2: rgba(66, 105, 150, 0.10);
+  --aviary-aurora-3: rgba(168, 103, 42, 0.10);
 }
 
 [data-md-color-scheme="slate"] {
@@ -87,6 +89,8 @@
   --aviary-surface-sunken: #0d1015;
   --aviary-border: #262c35;
   --aviary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.35);
+  --aviary-aurora-2: rgba(94, 138, 190, 0.16);
+  --aviary-aurora-3: rgba(221, 161, 94, 0.12);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -289,38 +293,389 @@
 }
 
 /* ---------------------------------------------------------------------- */
+/* Display font -- headline only. Body copy stays IBM Plex Sans for        */
+/* readability; Space Grotesk gives the hero H1 real character instead of  */
+/* looking like every other Material site's headline.                     */
+/* ---------------------------------------------------------------------- */
+
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500..700&display=swap");
+
+/* ---------------------------------------------------------------------- */
+/* Motion: reduced-motion is the default. Nothing animates until JS       */
+/* confirms (a) it ran and (b) the visitor didn't ask for less motion.    */
+/* This is the opposite of "animate by default, disable for a11y" -- the  */
+/* accessible state is what everyone gets unless proven otherwise.        */
+/* ---------------------------------------------------------------------- */
+
+.aviary-reveal {
+  opacity: 1;
+  transform: none;
+}
+
+html.aviary-motion-ready .aviary-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.aviary-motion-ready .aviary-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Stagger children of a reveal group without extra markup/JS. */
+html.aviary-motion-ready .aviary-bento__item:nth-child(1) { transition-delay: 0.02s; }
+html.aviary-motion-ready .aviary-bento__item:nth-child(2) { transition-delay: 0.08s; }
+html.aviary-motion-ready .aviary-bento__item:nth-child(3) { transition-delay: 0.14s; }
+html.aviary-motion-ready .aviary-bento__item:nth-child(4) { transition-delay: 0.2s; }
+html.aviary-motion-ready .aviary-bento__item:nth-child(5) { transition-delay: 0.26s; }
+html.aviary-motion-ready .aviary-bento__item:nth-child(6) { transition-delay: 0.32s; }
+
+/* ---------------------------------------------------------------------- */
 /* Homepage hero                                                          */
 /* ---------------------------------------------------------------------- */
 
 .aviary-hero {
-  padding: 2.2rem 0 1.4rem;
+  position: relative;
+  overflow: hidden;
+  padding: 3.2rem 1.5rem 2.4rem;
+  margin: 0 -1.5rem 2.5rem;
   border-bottom: 1px solid var(--aviary-border);
-  margin-bottom: 2rem;
+  border-radius: 0 0 20px 20px;
+  isolation: isolate;
+}
+
+/* Aurora mesh -- slow-drifting radial gradients behind everything. Pure
+   decoration, sits at z-index -2, never interferes with text contrast
+   because the hero text has its own solid-enough foreground color. */
+.aviary-hero::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  z-index: -2;
+  background:
+    radial-gradient(38% 55% at 12% 15%, var(--md-accent-fg-color--transparent), transparent 70%),
+    radial-gradient(30% 45% at 85% 10%, var(--aviary-aurora-2, rgba(120, 150, 190, 0.14)), transparent 70%),
+    radial-gradient(45% 60% at 60% 90%, var(--aviary-aurora-3, rgba(168, 103, 42, 0.08)), transparent 70%);
+  filter: blur(6px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.aviary-js .aviary-hero::before {
+    animation: aviary-aurora-drift 22s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes aviary-aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-2%, 2%, 0) scale(1.06); }
+}
+
+/* Grain -- a static SVG turbulence texture, blended over the aurora so the
+   gradients don't look like a flat SaaS-hero blob. Subtle on purpose. */
+.aviary-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 160px 160px;
+}
+
+.aviary-hero__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 2.5rem;
+  align-items: center;
+}
+
+@media screen and (max-width: 76.1875em) {
+  .aviary-hero__inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aviary-hero__motif {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.aviary-hero__motif path {
+  fill: none;
+  stroke: var(--md-accent-fg-color);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.aviary-hero__motif circle {
+  fill: var(--md-accent-fg-color);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.aviary-js .aviary-hero__motif path {
+    stroke-dasharray: 700;
+    stroke-dashoffset: 700;
+    animation: aviary-draw 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  html.aviary-js .aviary-hero__motif path:nth-of-type(2) { animation-delay: 0.12s; }
+  html.aviary-js .aviary-hero__motif path:nth-of-type(3) { animation-delay: 0.24s; }
+  html.aviary-js .aviary-hero__motif path:nth-of-type(4) { animation-delay: 0.36s; }
+  html.aviary-js .aviary-hero__motif circle {
+    opacity: 0;
+    animation: aviary-fade-in 0.6s ease forwards;
+    animation-delay: 1.6s;
+  }
+}
+
+@keyframes aviary-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes aviary-fade-in {
+  to { opacity: 1; }
 }
 
 .aviary-hero__eyebrow {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--md-accent-fg-color);
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.aviary-hero__eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--md-accent-fg-color);
+  box-shadow: 0 0 0 3px var(--md-accent-fg-color--transparent);
 }
 
 .aviary-hero h1 {
-  margin: 0 0 0.5rem;
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  font-size: clamp(2.4rem, 4.2vw, 3.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.7rem;
 }
 
 .aviary-hero p {
-  max-width: 46rem;
+  max-width: 42rem;
   color: var(--md-default-fg-color--light);
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .aviary-hero .md-typeset .md-button {
   margin-right: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+/* --- Decorative cycling terminal, hero right-hand column ---------------- */
+
+.aviary-terminal {
+  position: relative;
+  z-index: 1;
+  border-radius: 12px;
+  border: 1px solid var(--aviary-border);
+  background: var(--aviary-surface);
+  box-shadow: var(--aviary-shadow);
+  overflow: hidden;
+}
+
+[data-md-color-scheme="slate"] .aviary-terminal {
+  background: rgba(23, 27, 33, 0.6);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.aviary-terminal__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--aviary-border);
+}
+
+[data-md-color-scheme="slate"] .aviary-terminal__bar {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.aviary-terminal__bar span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--md-default-fg-color--lightest);
+}
+
+.aviary-terminal__body {
+  margin: 0;
+  padding: 1.1rem 1rem 1.3rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  min-height: 6.4rem;
+  color: var(--md-code-fg-color);
+}
+
+.aviary-terminal__prompt {
+  color: var(--md-accent-fg-color);
+  margin-right: 0.4rem;
+}
+
+.aviary-terminal__type::after {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 0.15em;
+  vertical-align: -0.15em;
+  background: var(--md-accent-fg-color);
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.aviary-js .aviary-terminal__type::after {
+    animation: aviary-caret-blink 1s steps(1) infinite;
+  }
+}
+
+@keyframes aviary-caret-blink {
+  50% { opacity: 0; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Bento grid -- "The commands". Deliberately asymmetric: `complete` is    */
+/* the one-command-does-everything entry point, so it gets the featured    */
+/* 2x2 slot instead of sitting in a uniform row of six identical boxes.    */
+/* ---------------------------------------------------------------------- */
+
+.aviary-bento {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(110px, auto);
+  gap: 0.9rem;
+  margin: 1.5rem 0 2.5rem;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .aviary-bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.aviary-bento__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid var(--aviary-border);
+  background: var(--aviary-surface);
+  box-shadow: var(--aviary-shadow);
+  text-decoration: none !important;
+  color: var(--md-default-fg-color) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-md-color-scheme="slate"] .aviary-bento__item {
+  background: rgba(23, 27, 33, 0.5);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.aviary-bento__item:hover {
+  transform: translateY(-3px);
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+}
+
+.aviary-bento__item--feature {
+  grid-column: span 2;
+  grid-row: span 2;
+  justify-content: space-between;
+  padding: 1.4rem;
+  background: linear-gradient(155deg, var(--md-accent-fg-color--transparent), transparent 60%),
+              var(--aviary-surface);
+}
+
+[data-md-color-scheme="slate"] .aviary-bento__item--feature {
+  background: linear-gradient(155deg, var(--md-accent-fg-color--transparent), transparent 60%),
+              rgba(23, 27, 33, 0.5);
+}
+
+.aviary-bento__icon {
+  font-size: 1.6rem;
+  color: var(--md-accent-fg-color);
+}
+
+.aviary-bento__item--feature .aviary-bento__icon {
+  font-size: 2.2rem;
+}
+
+.aviary-bento__item code {
+  background: none;
+  padding: 0;
+  font-size: 0.95em;
+  color: inherit;
+}
+
+.aviary-bento__desc {
+  font-size: 0.78rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.aviary-bento__item--feature .aviary-bento__desc {
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Scrollbar + selection -- small details, but stock browser chrome next   */
+/* to a deliberately-designed page is exactly the kind of seam that reads  */
+/* as unfinished.                                                          */
+/* ---------------------------------------------------------------------- */
+
+::selection {
+  background: var(--md-accent-fg-color);
+  color: #171208;
+}
+
+* {
+  scrollbar-color: var(--md-default-fg-color--lightest) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  border: 3px solid var(--md-default-bg-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--md-accent-fg-color);
 }
 
 /* ---------------------------------------------------------------------- */
