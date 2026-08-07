@@ -9,40 +9,35 @@ site_dir: site
 exclude_docs: |
   SKILL.md
   guides/README.md
+  getting-started/README.md
+  reference/README.md
+  advanced/README.md
+  project/README.md
 
 theme:
   name: material
   custom_dir: docs/overrides
   logo: _include/images/mini_logo.png
   favicon: _include/images/mini_logo.png
-  font: false
   language: en
   features:
-    - navigation.instant
-    - navigation.instant.progress
-    - navigation.tabs
-    - navigation.tabs.sticky
-    - navigation.sections
-    - navigation.indexes
     - navigation.top
-    - navigation.footer
-    - toc.follow
-    - search.suggest
-    - search.highlight
+    - navigation.indexes
     - content.code.copy
-    - content.tabs.link
+    - search.suggest
+    - toc.follow
   palette:
     - media: "(prefers-color-scheme: light)"
-      scheme: aviary-light
-      primary: custom
-      accent: custom
+      scheme: default
+      primary: teal
+      accent: teal
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
-      scheme: aviary-dark
-      primary: custom
-      accent: custom
+      scheme: slate
+      primary: teal
+      accent: teal
       toggle:
         icon: material/weather-sunny
         name: Switch to light mode
@@ -68,9 +63,6 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
 
-extra_css:
-  - stylesheets/extra.css
-
 extra:
   generator: false
   social:
@@ -82,42 +74,34 @@ copyright: Copyright &copy; Aviary contributors · GPL-3.0
 
 nav:
   - Home: index.md
-  - Getting started:
-      - Overview: getting-started/README.md
-      - Installation: installation.md
-      - Quickstart: getting-started/quickstart.md
-      - First complete analysis: getting-started/first-analysis.md
+  - Installation: installation.md
+  - Quickstart: getting-started/quickstart.md
+  - First complete analysis: getting-started/first-analysis.md
   - Guide:
-      - Overview: guide/README.md
+      - Introduction: guide/README.md
       - Core concepts: concepts.md
       - Metagenome assembly: guide/assembly.md
       - Genome recovery: guide/genome-recovery.md
       - Genome annotation: guide/annotation.md
       - Workflow control: guides/workflow-control.md
   - Worked analyses: examples.md
-  - Reference:
-      - Overview: reference/README.md
-      - CLI:
-          - Overview: usage/README.md
-          - Shared options: usage/centralised_commands.md
-          - assemble: usage/assemble.md
-          - recover: usage/recover.md
-          - annotate: usage/annotate.md
-          - complete: usage/complete.md
-          - cluster: usage/cluster.md
-          - isolate: usage/isolate.md
-          - configure: usage/configure.md
-      - Configuration: guides/configuration.md
-      - Input files: reference/inputs.md
-      - Output files: guides/output.md
-  - Advanced:
-      - Overview: advanced/README.md
-      - HPC and clusters: guides/hpc.md
-      - Performance: advanced/performance.md
-      - Reproducibility: advanced/reproducibility.md
-  - Project:
-      - Overview: project/README.md
-      - Troubleshooting: faqs.md
-      - Citations: citations.md
-      - Development: development.md
-      - Download PDF manual: pdf.md
+  - CLI reference:
+      - Overview: usage/README.md
+      - Shared options: usage/centralised_commands.md
+      - assemble: usage/assemble.md
+      - recover: usage/recover.md
+      - annotate: usage/annotate.md
+      - complete: usage/complete.md
+      - cluster: usage/cluster.md
+      - isolate: usage/isolate.md
+      - configure: usage/configure.md
+  - Configuration: guides/configuration.md
+  - Input files: reference/inputs.md
+  - Output files: guides/output.md
+  - HPC and clusters: guides/hpc.md
+  - Performance: advanced/performance.md
+  - Reproducibility: advanced/reproducibility.md
+  - Troubleshooting: faqs.md
+  - Citations: citations.md
+  - Development: development.md
+  - Download PDF manual: pdf.md
