@@ -1,12 +1,23 @@
 /*
  * Aviary docs — custom theme layer over mkdocs-material.
  *
- * Direction: clean scientific/technical. Deep slate neutrals, one confident
- * copper/amber accent (not Material's stock teal), a real type scale, and
- * restrained depth (borders + very soft shadows, not drama). Every override
- * here has both a light (`[data-md-color-scheme="default"]`) and dark
+ * Direction: clean scientific/technical. Deep slate neutrals, Aviary's own
+ * brand green as the accent (not Material's stock teal, not an arbitrary
+ * pick -- sampled directly from docs/_include/images/aviary_logo.png:
+ * true brand green is #4ac58e). A real type scale, and restrained depth
+ * (borders + very soft shadows, not drama). Every override here has both a
+ * light (`[data-md-color-scheme="default"]`) and dark
  * (`[data-md-color-scheme="slate"]`) value -- this is not a dark-mode-first
  * site with an afterthought light toggle, or vice versa.
+ *
+ * The true brand green (#4ac58e) only has ~2:1 contrast against the light
+ * background -- fails WCAG AA for text (needs 4.5:1). So: light mode uses a
+ * deepened shade of the same hue (#1a7a58, 4.93:1) for text/links/accents,
+ * while dark mode uses the true brand green directly (8.35:1 against the
+ * dark background -- plenty of room, and fully on-brand). Button fills use
+ * the true brand green in both themes via --aviary-brand-green, since a
+ * large fill only needs the text sitting on it to be readable, not the fill
+ * color itself (dark text on the true green: 8.24:1, verified).
  */
 
 /* ---------------------------------------------------------------------- */
@@ -29,20 +40,20 @@
   --md-primary-bg-color: #f4ede1;
   --md-primary-bg-color--light: #f4ede1;
 
-  /* Accent: muted copper/gold. Reads as an instrument, not a warning label. */
-  --md-accent-fg-color: #a8672a;
-  --md-accent-fg-color--transparent: #a8672a1a;
+  /* Accent: Aviary's own brand green, deepened for AA text contrast. */
+  --md-accent-fg-color: #1a7a58;
+  --md-accent-fg-color--transparent: #1a7a581a;
   --md-accent-bg-color: #fff;
   --md-accent-bg-color--light: #fff;
 
-  --md-typeset-a-color: #93551f;
+  --md-typeset-a-color: #1a7a58;
 
   --md-code-bg-color: #eeece5;
-  --md-code-fg-color: #2c2418;
+  --md-code-fg-color: #22271f;
 
   --md-footer-bg-color: #171b21;
   --md-footer-bg-color--dark: #0f1216;
-  --md-footer-fg-color: #f4ede1;
+  --md-footer-fg-color: #eef4f0;
   --md-footer-fg-color--light: #c9cdd3;
 
   --aviary-surface: #ffffff;
@@ -50,14 +61,18 @@
   --aviary-border: #dfddd6;
   --aviary-shadow: 0 1px 2px rgba(23, 27, 33, 0.06), 0 4px 14px rgba(23, 27, 33, 0.05);
   --aviary-aurora-2: rgba(66, 105, 150, 0.10);
-  --aviary-aurora-3: rgba(168, 103, 42, 0.10);
+  --aviary-aurora-3: rgba(74, 197, 142, 0.14);
+  /* True brand green -- for button fills and other large decorative
+     surfaces only. Never used as small text (see contrast note above). */
+  --aviary-brand-green: #4ac58e;
+  --aviary-brand-green-ink: #0c1a15;
 }
 
 [data-md-color-scheme="slate"] {
   --md-hue: 220deg;
 
   /* Base surface: deep slate, not pure black -- keeps contrast comfortable
-     and lets the copper accent glow rather than clash. */
+     and lets the brand green glow rather than clash. */
   --md-default-bg-color: #12161c;
   --md-default-fg-color: #dfe2e6;
   --md-default-fg-color--light: #b7bcc3;
@@ -67,22 +82,23 @@
   --md-primary-fg-color: #0d1015;
   --md-primary-fg-color--light: #1a1f26;
   --md-primary-fg-color--dark: #0a0c0f;
-  --md-primary-bg-color: #ecdfc9;
-  --md-primary-bg-color--light: #ecdfc9;
+  --md-primary-bg-color: #e4f4ec;
+  --md-primary-bg-color--light: #e4f4ec;
 
-  /* Accent brightened relative to light mode for AA contrast on dark bg. */
-  --md-accent-fg-color: #dda15e;
-  --md-accent-fg-color--transparent: #dda15e26;
+  /* True brand green -- already 8.35:1 against this dark background, so
+     unlike light mode, no deepening/brightening needed here. */
+  --md-accent-fg-color: #4ac58e;
+  --md-accent-fg-color--transparent: #4ac58e26;
   --md-accent-bg-color: #171b21;
   --md-accent-bg-color--light: #171b21;
 
-  --md-typeset-a-color: #e7b174;
+  --md-typeset-a-color: #4ac58e;
 
   --md-code-bg-color: #1a1f26;
-  --md-code-fg-color: #dcd3c2;
+  --md-code-fg-color: #d6e6db;
 
   --md-footer-bg-color: #0a0c0f;
-  --md-footer-fg-color: #ecdfc9;
+  --md-footer-fg-color: #e4f4ec;
   --md-footer-fg-color--light: #9aa0a8;
 
   --aviary-surface: #171b21;
@@ -90,7 +106,9 @@
   --aviary-border: #262c35;
   --aviary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.35);
   --aviary-aurora-2: rgba(94, 138, 190, 0.16);
-  --aviary-aurora-3: rgba(221, 161, 94, 0.12);
+  --aviary-aurora-3: rgba(74, 197, 142, 0.18);
+  --aviary-brand-green: #4ac58e;
+  --aviary-brand-green-ink: #0c1a15;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -164,8 +182,8 @@
 /* ---------------------------------------------------------------------- */
 
 .md-banner {
-  background: linear-gradient(90deg, var(--md-accent-fg-color), #c98b3f);
-  color: #171208;
+  background: linear-gradient(90deg, var(--aviary-brand-green), #2fa876);
+  color: var(--aviary-brand-green-ink);
 }
 
 .aviary-announcement {
@@ -199,16 +217,20 @@
 }
 
 .md-typeset .md-button--primary {
-  background-color: var(--md-accent-fg-color);
-  border-color: var(--md-accent-fg-color);
-  color: #171208;
+  background-color: var(--aviary-brand-green);
+  border-color: var(--aviary-brand-green);
+  color: var(--aviary-brand-green-ink);
 }
 
 .md-typeset .md-button--primary:hover {
+  /* A fixed shade, not var(--md-accent-fg-color): in dark mode that variable
+     IS --aviary-brand-green (see palette note above), so using it here
+     would make hover indistinguishable from the resting state. */
   transform: translateY(-1px);
   box-shadow: var(--aviary-shadow);
-  background-color: var(--md-typeset-a-color);
-  border-color: var(--md-typeset-a-color);
+  background-color: #3aa877;
+  border-color: #3aa877;
+  color: var(--aviary-brand-green-ink);
 }
 
 .md-typeset .md-button:not(.md-button--primary):hover {
@@ -323,14 +345,6 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
   opacity: 1;
   transform: none;
 }
-
-/* Stagger children of a reveal group without extra markup/JS. */
-html.aviary-motion-ready .aviary-bento__item:nth-child(1) { transition-delay: 0.02s; }
-html.aviary-motion-ready .aviary-bento__item:nth-child(2) { transition-delay: 0.08s; }
-html.aviary-motion-ready .aviary-bento__item:nth-child(3) { transition-delay: 0.14s; }
-html.aviary-motion-ready .aviary-bento__item:nth-child(4) { transition-delay: 0.2s; }
-html.aviary-motion-ready .aviary-bento__item:nth-child(5) { transition-delay: 0.26s; }
-html.aviary-motion-ready .aviary-bento__item:nth-child(6) { transition-delay: 0.32s; }
 
 /* ---------------------------------------------------------------------- */
 /* Homepage hero                                                          */
@@ -482,8 +496,12 @@ html.aviary-motion-ready .aviary-bento__item:nth-child(6) { transition-delay: 0.
 }
 
 .aviary-hero .md-typeset .md-button {
-  margin-right: 0.5rem;
-  margin-top: 0.9rem;
+  margin-right: 1.1rem;
+  margin-top: 1.1rem;
+}
+
+.aviary-hero .md-typeset .md-button:last-child {
+  margin-right: 0;
 }
 
 /* --- Decorative cycling terminal, hero right-hand column ---------------- */
@@ -560,92 +578,138 @@ html.aviary-motion-ready .aviary-bento__item:nth-child(6) { transition-delay: 0.
 }
 
 /* ---------------------------------------------------------------------- */
-/* Bento grid -- "The commands". Deliberately asymmetric: `complete` is    */
-/* the one-command-does-everything entry point, so it gets the featured    */
-/* 2x2 slot instead of sitting in a uniform row of six identical boxes.    */
+/* Scrollytelling -- "The commands". One command reveals per scroll step,  */
+/* strung along a central line like the hero's flight-path/tree motif.     */
+/* Each panel gets real vertical room so scrolling naturally paces through */
+/* them one at a time -- no scroll-jacking/pinning, just min-height +      */
+/* IntersectionObserver (see javascripts/reveal.js), which stays scrollable*/
+/* at the browser's normal speed and degrades to "just show everything"    */
+/* with no JS or reduced-motion at all.                                    */
 /* ---------------------------------------------------------------------- */
 
-.aviary-bento {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-rows: minmax(110px, auto);
-  gap: 0.9rem;
-  margin: 1.5rem 0 2.5rem;
-}
-
-@media screen and (max-width: 44.9375em) {
-  .aviary-bento {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.aviary-bento__item {
+.aviary-scrolly {
   position: relative;
+  max-width: 38rem;
+  margin: 1rem auto 2rem;
+}
+
+.aviary-scrolly::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(to bottom,
+    transparent, var(--aviary-border) 6%, var(--aviary-border) 94%, transparent);
+}
+
+.aviary-scrolly__panel {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 0.35rem;
-  padding: 1.1rem 1.2rem;
-  border-radius: 12px;
-  border: 1px solid var(--aviary-border);
-  background: var(--aviary-surface);
-  box-shadow: var(--aviary-shadow);
-  text-decoration: none !important;
-  color: var(--md-default-fg-color) !important;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.2s ease, box-shadow 0.2s ease;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 44vh;
+  padding: 2rem 1.25rem;
 }
 
-[data-md-color-scheme="slate"] .aviary-bento__item {
-  background: rgba(23, 27, 33, 0.5);
+.aviary-scrolly__panel:first-child {
+  min-height: 30vh;
+}
+
+.aviary-scrolly__panel:last-child {
+  min-height: 0;
+  padding-bottom: 0.5rem;
+}
+
+.aviary-scrolly__node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  background: var(--aviary-surface);
+  border: 2px solid var(--aviary-border);
+  box-shadow: var(--aviary-shadow);
+}
+
+[data-md-color-scheme="slate"] .aviary-scrolly__node {
+  background: rgba(23, 27, 33, 0.75);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border-color: rgba(255, 255, 255, 0.07);
 }
 
-.aviary-bento__item:hover {
-  transform: translateY(-3px);
-  border-color: var(--md-accent-fg-color);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+.aviary-scrolly__title {
+  margin: 0 0 0.3rem;
+  font-size: 1.35rem;
 }
 
-.aviary-bento__item--feature {
-  grid-column: span 2;
-  grid-row: span 2;
-  justify-content: space-between;
-  padding: 1.4rem;
-  background: linear-gradient(155deg, var(--md-accent-fg-color--transparent), transparent 60%),
-              var(--aviary-surface);
+.aviary-scrolly__title code {
+  background: none;
+  padding: 0;
+  font-size: 1em;
 }
 
-[data-md-color-scheme="slate"] .aviary-bento__item--feature {
-  background: linear-gradient(155deg, var(--md-accent-fg-color--transparent), transparent 60%),
-              rgba(23, 27, 33, 0.5);
-}
-
-.aviary-bento__icon {
-  font-size: 1.6rem;
+.aviary-scrolly__tagline {
+  margin: 0 0 0.7rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
   color: var(--md-accent-fg-color);
 }
 
-.aviary-bento__item--feature .aviary-bento__icon {
-  font-size: 2.2rem;
-}
-
-.aviary-bento__item code {
-  background: none;
-  padding: 0;
-  font-size: 0.95em;
-  color: inherit;
-}
-
-.aviary-bento__desc {
-  font-size: 0.78rem;
+.aviary-scrolly__body {
+  margin: 0 0 1rem;
+  max-width: 30rem;
   color: var(--md-default-fg-color--light);
 }
 
-.aviary-bento__item--feature .aviary-bento__desc {
+.aviary-scrolly__link {
+  font-weight: 600;
   font-size: 0.85rem;
+}
+
+/* "Boom": a punchier, overshooting variant of the base .aviary-reveal      */
+/* transition, plus a brief ring-pulse on the node itself. Higher           */
+/* specificity than the generic .aviary-reveal rule (extra class), so it    */
+/* wins regardless of source order.                                        */
+html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal {
+  opacity: 0;
+  transform: translateY(30px) scale(0.85);
+  transition: opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.aviary-motion-ready .aviary-scrolly__panel.is-visible .aviary-scrolly__node {
+    animation: aviary-node-boom 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+@keyframes aviary-node-boom {
+  0% {
+    border-color: var(--md-accent-fg-color);
+    box-shadow: 0 0 0 0 var(--md-accent-fg-color--transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 16px transparent;
+  }
+  100% {
+    border-color: var(--aviary-border);
+    box-shadow: var(--aviary-shadow);
+  }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -655,8 +719,8 @@ html.aviary-motion-ready .aviary-bento__item:nth-child(6) { transition-delay: 0.
 /* ---------------------------------------------------------------------- */
 
 ::selection {
-  background: var(--md-accent-fg-color);
-  color: #171208;
+  background: var(--aviary-brand-green);
+  color: var(--aviary-brand-green-ink);
 }
 
 * {

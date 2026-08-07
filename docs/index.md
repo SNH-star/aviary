@@ -55,43 +55,57 @@ for what each stage does and where its outputs land.
 
 ## The commands
 
-<div class="aviary-bento">
+Scroll — each command in turn, what it does and where to read more.
 
-<a class="aviary-bento__item aviary-bento__item--feature aviary-reveal" href="usage/complete.md">
-  <span class="aviary-bento__icon">🚀</span>
-  <div><strong><code>complete</code></strong></div>
-  <span class="aviary-bento__desc">Reads → annotated MAGs, end to end. One command for the whole pipeline.</span>
-</a>
+<div class="aviary-scrolly">
 
-<a class="aviary-bento__item aviary-reveal" href="usage/assemble.md">
-  <span class="aviary-bento__icon">🧬</span>
-  <div><strong><code>assemble</code></strong></div>
-  <span class="aviary-bento__desc">Reads → contigs</span>
-</a>
+<div class="aviary-scrolly__panel aviary-reveal">
+<span class="aviary-scrolly__node">🚀</span>
+<h3 class="aviary-scrolly__title"><code>aviary complete</code></h3>
+<p class="aviary-scrolly__tagline">Reads → annotated MAGs, end to end</p>
+<p class="aviary-scrolly__body">Performs all steps in the Aviary pipeline: Assembly → Binning → Refinement → Annotation. One command for the whole pipeline — the one used in the example above.</p>
+<a class="aviary-scrolly__link" href="usage/complete/">Read the <code>complete</code> documentation →</a>
+</div>
 
-<a class="aviary-bento__item aviary-reveal" href="usage/recover.md">
-  <span class="aviary-bento__icon">🧩</span>
-  <div><strong><code>recover</code></strong></div>
-  <span class="aviary-bento__desc">Assembly → MAGs</span>
-</a>
+<div class="aviary-scrolly__panel aviary-reveal">
+<span class="aviary-scrolly__node">🧬</span>
+<h3 class="aviary-scrolly__title"><code>aviary assemble</code></h3>
+<p class="aviary-scrolly__tagline">Reads → contigs</p>
+<p class="aviary-scrolly__body">Step-down hybrid assembly using long and short reads, or assembly using only short or long reads.</p>
+<a class="aviary-scrolly__link" href="usage/assemble/">Read the <code>assemble</code> documentation →</a>
+</div>
 
-<a class="aviary-bento__item aviary-reveal" href="usage/annotate.md">
-  <span class="aviary-bento__icon">🏷️</span>
-  <div><strong><code>annotate</code></strong></div>
-  <span class="aviary-bento__desc">MAGs → annotations</span>
-</a>
+<div class="aviary-scrolly__panel aviary-reveal">
+<span class="aviary-scrolly__node">🧩</span>
+<h3 class="aviary-scrolly__title"><code>aviary recover</code></h3>
+<p class="aviary-scrolly__tagline">Assembly → MAGs</p>
+<p class="aviary-scrolly__body">Recover metagenome-assembled genomes (MAGs) from an assembly using multiple binning algorithms, followed by quality assessment and taxonomic classification. If no assembly is provided, Aviary runs the assembly pipeline first.</p>
+<a class="aviary-scrolly__link" href="usage/recover/">Read the <code>recover</code> documentation →</a>
+</div>
 
-<a class="aviary-bento__item aviary-reveal" href="usage/cluster.md">
-  <span class="aviary-bento__icon">👥</span>
-  <div><strong><code>cluster</code></strong></div>
-  <span class="aviary-bento__desc">Dereplicate genomes across samples</span>
-</a>
+<div class="aviary-scrolly__panel aviary-reveal">
+<span class="aviary-scrolly__node">🏷️</span>
+<h3 class="aviary-scrolly__title"><code>aviary annotate</code></h3>
+<p class="aviary-scrolly__tagline">MAGs → annotations</p>
+<p class="aviary-scrolly__body">Annotate a given set of MAGs using EggNOG, GTDB-Tk, and CheckM2.</p>
+<a class="aviary-scrolly__link" href="usage/annotate/">Read the <code>annotate</code> documentation →</a>
+</div>
 
-<a class="aviary-bento__item aviary-reveal" href="usage/isolate.md">
-  <span class="aviary-bento__icon">🧪</span>
-  <div><strong><code>isolate</code></strong></div>
-  <span class="aviary-bento__desc">Assemble and annotate a single isolate genome</span>
-</a>
+<div class="aviary-scrolly__panel aviary-reveal">
+<span class="aviary-scrolly__node">👥</span>
+<h3 class="aviary-scrolly__title"><code>aviary cluster</code></h3>
+<p class="aviary-scrolly__tagline">Dereplicate genomes across samples</p>
+<p class="aviary-scrolly__body">Dereplicate and choose representative genomes from multiple Aviary runs using Galah.</p>
+<a class="aviary-scrolly__link" href="usage/cluster/">Read the <code>cluster</code> documentation →</a>
+</div>
+
+<div class="aviary-scrolly__panel aviary-reveal">
+<span class="aviary-scrolly__node">🧪</span>
+<h3 class="aviary-scrolly__title"><code>aviary isolate</code></h3>
+<p class="aviary-scrolly__tagline">Assemble and annotate a single isolate genome</p>
+<p class="aviary-scrolly__body">Step-down hybrid assembly for isolated pure culture sequencing results — for use with isolate, not metagenomic, sequencing data.</p>
+<a class="aviary-scrolly__link" href="usage/isolate/">Read the <code>isolate</code> documentation →</a>
+</div>
 
 </div>
 
