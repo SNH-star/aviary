@@ -70,6 +70,43 @@ export SINGLEM_METAPACKAGE_PATH=/path/to/singlem_metapackage.smpkg/
 export CHECKM2DB=/path/to/checkm2db/
 ```
 
+### My coverage / abundance numbers differ from an older Aviary version
+
+The default read mappers changed. Aviary now uses **strobealign** for short
+reads and **rammap** for long reads, where previous versions used minimap2
+throughout. Both are faster, and rammap is a minimap2-compatible implementation,
+but a different aligner makes different alignment decisions -- so coverage
+depths, bin abundances and polished contigs will not be bit-identical to those
+from an earlier release.
+
+Nothing needs to change to keep using Aviary: every existing command still runs,
+and no new flag is required.
+
+To reproduce the previous behaviour exactly, ask for minimap2 explicitly:
+
+```
+aviary recover --short-read-mapper minimap2 --long-read-mapper minimap2 ...
+```
+
+This matters most if you are partway through an analysis, or comparing against
+results produced by an earlier version. For new work, the defaults are the
+faster option.
+
+### Which read mapper should I use?
+
+The defaults are a reasonable choice for almost everyone. The alternatives exist
+for continuity and for cases where a particular aligner is preferred:
+
+| Flag | Options |
+|---|---|
+| `--short-read-mapper` | `strobealign` (default), `minimap2`, `rammap`, `minibwa` |
+| `--long-read-mapper` | `rammap` (default), `minimap2` |
+
+The `-x` preset for long reads is still chosen from `--longread-type`, so
+`--long-read-mapper` changes only which aligner runs, not which preset it uses.
+Note that strobealign is short-read only, which is why the two flags are
+separate.
+
 ### Why the name "Aviary"? Why the bird names in general?
 
 Put all your birds in one place.

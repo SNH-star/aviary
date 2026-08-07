@@ -1,5 +1,54 @@
 # Changelog
 
+## v0.13.3 - 2026-07-22
+
+### Added
+
+- **`--short-read-mapper`** — aligner for short-read coverage and abundance:
+  `strobealign` (default), `minimap2`, `rammap` or `minibwa`.
+
+- **`--long-read-mapper`** — aligner for long-read coverage and racon polishing:
+  `rammap` (default) or `minimap2`. The `-x` preset is still chosen from
+  `--long-read-type`, so only the aligner family changes.
+
+### Changed
+
+- **Default aligners are now strobealign (short) and rammap (long)** — CoverM
+  bumped to `>=0.8`, which defaults short reads to strobealign. Aviary now names 
+  its mapper explicitly at every call site rather than relying on that default. 
+  This is to allow the user to specify a non-deafult mapper if need be. 
+
+- **Bin abundances use the same mapper as the binners** — `get_abundances.py`
+  hardcoded `minimap2-sr`, so the binners saw strobealign-derived depths while
+  reported abundances came from minimap2. Both now follow
+  `--short-read-mapper`.
+
+- The coverage, abundance and polishing scripts log the command they run, so the
+  aligner actually used is recoverable from a completed run.
+
+### Fixed
+
+- **GPU rules are scheduled correctly on both SLURM and PBS** — Snakemake has no
+  portable GPU resource, so its SLURM executor plugin reads `gpu` while
+  `snakemake_mqsub` reads `gpus`. Declaring `gpus` causes SLURM to silently schedules the rule onto a CPU node, where the CUDA environment fails to activate before any log file is written. `taxvamb`, `semibin`, `comebin` and `polish_metagenome_flye` now declare both keys neither scheduler is affected by the other's so no conflicting errors.
+ 
+
+- **concoct now runs** — it needs numpy below version 2, but pinning numpy
+  alone was not enough: newer scipy versions ask for numpy 2, which made concoct's own version check fail at runtime. Scipy is now pinned as well, and concoct's error messages go to its log instead of being discarded.
+
+- **`assembly_quality` can be built again** — two rules both produced
+  `www/assembly_stats.txt`, which snakemake refuses, so nothing needing that
+  file could run. Only one is now defined at a time, depending on whether the
+  assembly was supplied or built by aviary.
+
+- **`read_fraction_recovered` now completes** — the rule failed at several
+  points and had never produced output. Its script, output path, arguments and
+  CoverM call have all been corrected. It reports the fraction of reads mapping
+  back to the assembly, and is reached by requesting its output file directly.
+
+
+---
+
 ## v0.13.2 - 2026-07-22
 
 Patch release fixing a crash in Metabuli taxonomy conversion.

@@ -189,6 +189,8 @@ aviary assemble \
 | `-c / --coupled PATH ..`      | Coupled forward/reverse list                              |
 | `-l / --longreads PATH ..`    | Nanopore or PacBio reads                                  |
 | `-z / --longread-type TYPE`   | Read type: `ont` \| `ont_hq` \| `rs` \| `sq` \| `ccs` \| `hifi` (default: `ont`) |
+| `--short-read-mapper NAME`    | Short-read aligner: `strobealign` (default) \| `minimap2` \| `rammap` \| `minibwa` |
+| `--long-read-mapper NAME`     | Long-read aligner: `rammap` (default) \| `minimap2`. Preset comes from `--longread-type` |
 
 ### Assembly flags
 
@@ -333,6 +335,8 @@ aviary recover \
 | `-1 / -2`                         | Short reads for coverage calculation                                | —          |
 | `-l / --longreads`                | Long reads for coverage calculation                                 | —          |
 | `-z / --longread-type`            | Long read type (see Section 5)                                      | `ont`      |
+| `--short-read-mapper`             | Short-read aligner for coverage and abundance                       | `strobealign` |
+| `--long-read-mapper`              | Long-read aligner for coverage and racon polishing                  | `rammap`   |
 | `--request-gpu`                   | Enable GPU-accelerated binners (taxvamb, comebin, semibin)          | off        |
 | `--binning-only`                  | Stop after binning; skip quality check and annotation               | off        |
 | `--strict`                        | Fail immediately if any binner errors                               | off        |
