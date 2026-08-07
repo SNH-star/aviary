@@ -181,7 +181,9 @@ rule read_fraction_recovered:
     input:
         fasta = config["fasta"]
     output:
-        "www/fraction_recovered/short_fraction_recovered" if config['short_reads_1'] != 'none' else "www/fraction_recovered/long_fraction_recovered"
+        # .tsv to match what fraction_recovered.py actually writes; without it
+        # snakemake raises MissingOutputException even on a successful run.
+        "www/fraction_recovered/short_fraction_recovered.tsv" if config['short_reads_1'] != 'none' else "www/fraction_recovered/long_fraction_recovered.tsv"
     threads:
         config["max_threads"]
     resources:
@@ -195,24 +197,32 @@ rule read_fraction_recovered:
         --long-reads {config[long_reads]} \
         --short-reads-1 {config[short_reads_1]} \
         --short-reads-2 {config[short_reads_2]} \
-        --long-read-type {config[long_read_type][0]} \
+        --long-read-type {config[long_read_type]} \
+        --long-read-mapper {config[long_read_mapper]} \
+        --short-read-mapper {config[short_read_mapper]} \
         --threads {threads} \
         --log {resources.log_path}
         """
 
-rule assembly_size:
-    """
-    Uses the bbmap stats.sh script to retun N/L50 values and the distribution of contig sizes
-    """
-    input:
-        fasta = config["fasta"]
-    output:
-        sizes = "www/assembly_stats.txt"
-    resources:
-        log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/assembly_stats", attempt),
-    shell:
-        f"{pixi_run} -e bbmap "
-        "stats.sh {input.fasta} > {output.sizes} 2> {resources.log_path}"
+# Only defined when the user supplied an assembly. Modules receive config
+# before the top-level Snakefile rewrites "none" to assembly/final_contigs.fasta,
+# so "none" here means aviary will assemble -- in which case
+# complete_assembly_with_qc already writes www/assembly_stats.txt with the same
+# stats.sh call, and defining this rule too makes the two ambiguous.
+if config["fasta"] != "none":
+    rule assembly_size:
+        """
+        Uses the bbmap stats.sh script to retun N/L50 values and the distribution of contig sizes
+        """
+        input:
+            fasta = config["fasta"]
+        output:
+            sizes = "www/assembly_stats.txt"
+        resources:
+            log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/assembly_stats", attempt),
+        shell:
+            f"{pixi_run} -e bbmap "
+            "stats.sh {input.fasta} > {output.sizes} 2> {resources.log_path}"
 
 
 rule assembly_quality:
@@ -221,7 +231,9 @@ rule assembly_quality:
     """
     input:
         # "www/metaquast/report.txt",
-        "www/fraction_recovered/short_fraction_recovered" if config['short_reads_1'] != 'none' else "www/fraction_recovered/long_fraction_recovered",
+        # .tsv to match what fraction_recovered.py actually writes; without it
+        # snakemake raises MissingOutputException even on a successful run.
+        "www/fraction_recovered/short_fraction_recovered.tsv" if config['short_reads_1'] != 'none' else "www/fraction_recovered/long_fraction_recovered.tsv",
         "www/assembly_stats.txt"
     log:
         temp('www/assembly_quality_stats')

@@ -93,6 +93,8 @@ rule prepare_binning_files:
         --short-reads-1 {config[short_reads_1]} \
         --short-reads-2 {config[short_reads_2]} \
         --long-read-type {config[long_read_type]} \
+        --long-read-mapper {config[long_read_mapper]} \
+        --short-read-mapper {config[short_read_mapper]} \
         --input-fasta {input.input_fasta} \
         --bam-cache {params.bam_cache} \
         --working-dir {params.working_dir} \
@@ -161,6 +163,8 @@ rule prepare_binning_files_split:
         --short-reads-1 {params.short_reads_1} \
         --short-reads-2 {params.short_reads_2} \
         --long-read-type {config[long_read_type]} \
+        --long-read-mapper {config[long_read_mapper]} \
+        --short-read-mapper {config[short_read_mapper]} \
         --input-fasta {input.input_fasta} \
         --bam-cache {params.bam_cache} \
         --working-dir {params.working_dir} \
@@ -1140,6 +1144,8 @@ rule get_abundances:
         --short-reads-2 {config[short_reads_2]} \
         --bins-dir {input} \
         --long-read-type {config[long_read_type]} \
+        --long-read-mapper {config[long_read_mapper]} \
+        --short-read-mapper {config[short_read_mapper]} \
         --threads {threads} \
         --log {resources.log_path}
         """
@@ -1289,7 +1295,7 @@ rule dereplicate_and_get_abundances_paired:
         log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/coverm_abundances_paired", attempt),
     shell:
         pixi_run + " -e coverm "
-        "coverm genome -t {threads} -d bins/final_bins/ -1 {input.pe_1} -2 {input.pe_2} --min-covered-fraction 0.0 -x fna > bins/coverm_abundances.tsv 2> {resources.log_path}; "
+        "coverm genome -t {threads} -p {config[short_read_mapper]} -d bins/final_bins/ -1 {input.pe_1} -2 {input.pe_2} --min-covered-fraction 0.0 -x fna > bins/coverm_abundances.tsv 2> {resources.log_path}; "
 
 # Special rule to help out with a buggy output
 rule dereplicate_and_get_abundances_interleaved:
@@ -1307,4 +1313,4 @@ rule dereplicate_and_get_abundances_interleaved:
         runtime = lambda wildcards, attempt: 24*60 + 24*60*attempt,
         log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/coverm_abundances_interleaved", attempt),
     shell:
-        pixi_run + " -e coverm coverm genome -t {threads} -d bins/final_bins/ --interleaved {input.pe_1} --min-covered-fraction 0.0 -x fna > bins/coverm_abundances.tsv 2> {resources.log_path}; "
+        pixi_run + " -e coverm coverm genome -t {threads} -p {config[short_read_mapper]} -d bins/final_bins/ --interleaved {input.pe_1} --min-covered-fraction 0.0 -x fna > bins/coverm_abundances.tsv 2> {resources.log_path}; "

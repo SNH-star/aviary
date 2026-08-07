@@ -20,7 +20,7 @@
 import aviary.config.config as Config
 from aviary.modules.processor import Processor
 from aviary.modules.common import pixi_run
-from .__init__ import __version__, MEDAKA_MODELS, LONG_READ_TYPES, LONG_READ_ASSEMBLERS, COVERAGE_JOB_STRATEGIES, COVERAGE_JOB_CUTOFF
+from .__init__ import __version__, MEDAKA_MODELS, LONG_READ_TYPES, LONG_READ_ASSEMBLERS, LONG_READ_MAPPERS, SHORT_READ_MAPPERS, COVERAGE_JOB_STRATEGIES, COVERAGE_JOB_CUTOFF
 __author__ = "Rhys Newell"
 __copyright__ = "Copyright 2022"
 __credits__ = ["Rhys Newell"]
@@ -504,6 +504,17 @@ def main():
 
     ####################################################################
 
+    short_read_group.add_argument(
+        '--short-read-mapper', '--short_read_mapper',
+        help='Aligner used for short-read coverage. CoverM defaults to\n'
+             'strobealign from v0.7.0. minimap2 uses the -x sr preset,\n'
+             'rammap is a minimap2-compatible Rust implementation, and\n'
+             'minibwa is a lightweight bwa. [default: strobealign]',
+        dest='short_read_mapper',
+        default='strobealign',
+        choices=SHORT_READ_MAPPERS,
+    )
+
     long_read_group = argparse.ArgumentParser(formatter_class=CustomHelpFormatter,
                                               add_help=False)
     long_read_input = long_read_group.add_argument_group(title='Input options (long reads)')
@@ -524,6 +535,17 @@ def main():
         dest='longread_type',
         default="ont",
         choices=LONG_READ_TYPES,
+    )
+
+    long_read_group.add_argument(
+        '--long-read-mapper', '--long_read_mapper', '--longread-mapper',
+        help='Aligner used for long reads, both for coverage and for racon\n'
+             'polishing. rammap is a minimap2-compatible Rust implementation;\n'
+             'set to minimap2 to retain the previous behaviour. The -x preset\n'
+             'is chosen from --long-read-type either way. [default: rammap]',
+        dest='long_read_mapper',
+        default='rammap',
+        choices=LONG_READ_MAPPERS,
     )
 
     medaka_default = "r941_min_hac_g507"

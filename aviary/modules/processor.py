@@ -19,6 +19,7 @@
 #                                                                             #
 ###############################################################################
 import aviary.config.config as Config
+from aviary.__init__ import SHORT_READ_MAPPER_TO_COVERM
 __author__ = "Rhys Newell"
 __copyright__ = "Copyright 2020"
 __credits__ = ["Rhys Newell"]
@@ -244,10 +245,14 @@ class Processor:
             self.longread_type = args.longread_type
             self.medaka_model = args.medaka_model
             self.long_read_assembler = getattr(args, "long_read_assembler", "myloasm")
+            self.long_read_mapper = getattr(args, "long_read_mapper", "rammap")
+            self.short_read_mapper = getattr(args, "short_read_mapper", "strobealign")
         except AttributeError:
             self.longread_type = 'none'
             self.medaka_model = 'none'
             self.long_read_assembler = 'myloasm'
+            self.long_read_mapper = 'rammap'
+            self.short_read_mapper = 'strobealign'
         self.guppy_model = getattr(args, 'guppy_model', 'r941_min_hac_g507')
 
         try:
@@ -468,6 +473,11 @@ class Processor:
         conf["long_reads"] = self.longreads
         conf["long_read_type"] = self.longread_type
         conf["long_read_assembler"] = self.long_read_assembler
+        conf["long_read_mapper"] = self.long_read_mapper
+        # Resolved to the value CoverM's -p expects, so the Snakefiles and the
+        # coverage scripts can use it verbatim. Long reads stay as the family
+        # name since their preset depends on --long-read-type.
+        conf["short_read_mapper"] = SHORT_READ_MAPPER_TO_COVERM[self.short_read_mapper]
         conf["medaka_model"] = self.medaka_model
         conf["guppy_model"] = self.guppy_model
         conf["kmer_sizes"] = self.kmer_sizes

@@ -219,6 +219,8 @@ rule polish_metagenome_flye:
         --output-fasta {output.fasta} \
         --rounds {params.rounds} \
         --long-read-type {config[long_read_type]} \
+        --long-read-mapper {config[long_read_mapper]} \
+        --short-read-mapper {config[short_read_mapper]} \
         --medaka-model {config[medaka_model]} \
         --illumina {params.illumina} \
         --max-cov {params.maxcov} \
@@ -319,6 +321,8 @@ rule polish_meta_racon_ill:
         --output-fasta {output.fasta} \
         --rounds {params.rounds} \
         --long-read-type {config[long_read_type]} \
+        --long-read-mapper {config[long_read_mapper]} \
+        --short-read-mapper {config[short_read_mapper]} \
         --medaka-model {config[medaka_model]} \
         --illumina {params.illumina} \
         --max-cov {params.maxcov} \
@@ -621,7 +625,7 @@ rule spades_assembly_coverage:
         "benchmarks/spades_assembly_coverage.benchmark.txt"
     shell:
         pixi_run + \
-        " -e coverm {params.tmpdir} coverm contig -m metabat -t {threads} -r {input.fasta} --interleaved {input.fastq} --bam-file-cache-directory data/cached_bams/ > {output.assembly_cov} 2> {resources.log_path};"
+        " -e coverm {params.tmpdir} coverm contig -m metabat -p {config[short_read_mapper]} -t {threads} -r {input.fasta} --interleaved {input.fastq} --bam-file-cache-directory data/cached_bams/ > {output.assembly_cov} 2> {resources.log_path};"
         "mv data/cached_bams/*.bam {output.bam} && " + \
         pixi_run +\
         " -e coverm samtools index -@ {threads} {output.bam} 2>> {resources.log_path}"
