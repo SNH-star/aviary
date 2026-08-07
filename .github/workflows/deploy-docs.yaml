@@ -8,6 +8,7 @@ on:
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
+      - 'mkdocs-pdf.yml'
       - 'requirements-docs.txt'
       - '.github/workflows/deploy-docs.yaml'
   workflow_dispatch:
@@ -54,9 +55,7 @@ jobs:
         run: mkdocs build --strict
 
       - name: Build website and PDF manual
-        env:
-          ENABLE_PDF_EXPORT: '1'
-        run: mkdocs build
+        run: mkdocs build --config-file mkdocs-pdf.yml
 
       - name: Verify generated manual
         run: test -s site/pdf/aviary-manual.pdf
