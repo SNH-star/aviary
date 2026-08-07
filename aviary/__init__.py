@@ -4,6 +4,21 @@ __version__ = "0.13.2"
 # CONSTANTS
 LONG_READ_TYPES = ["ont", "ont_hq", "rs", "sq", "ccs", "hifi"]
 LONG_READ_ASSEMBLERS = ["myloasm", "flye"]
+# Aligner family used for long reads. rammap is a minimap2-compatible Rust
+# implementation and accepts the same -x presets, so switching families does
+# not change which preset is chosen for a given --long-read-type.
+LONG_READ_MAPPERS = ["rammap", "minimap2"]
+# Short-read aligner family. CoverM defaults to strobealign from v0.7.0;
+# minimap2 selects the '-x sr' preset instead.
+SHORT_READ_MAPPERS = ["strobealign", "minimap2", "rammap", "minibwa"]
+# User-facing family -> the value CoverM's -p expects for short reads. Long
+# reads resolve per --long-read-type instead, so they are not listed here.
+SHORT_READ_MAPPER_TO_COVERM = {
+    "strobealign": "strobealign",
+    "minimap2": "minimap2-sr",
+    "rammap": "rammap-sr",
+    "minibwa": "minibwa",
+}
 MEDAKA_MODELS = [
     "r103_fast_g507", "r103_fast_snp_g507", "r103_fast_variant_g507", "r103_hac_g507", "r103_hac_snp_g507",
     "r103_hac_variant_g507", "r103_min_high_g345", "r103_min_high_g360", "r103_prom_high_g360", "r103_prom_snp_g3210",
