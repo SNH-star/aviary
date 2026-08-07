@@ -48,6 +48,36 @@ def setup_output_dir(output_dir):
         pass
     os.makedirs(output_dir)
 
+
+def assert_mapper_logged(testcase, output_dir, rule_log_dir, expected_flag):
+    """Assert a CoverM call in this rule used the expected -p mapper.
+
+    The coverage scripts print the full command they run, so this checks which
+    aligner was actually invoked rather than inferring it from the output. That
+    distinction matters: a short-read mapper handed long reads, or a mapper
+    that failed to align anything, still produces a well-formed coverage table
+    -- of zeroes. Asserting on the table alone would pass.
+    """
+    pattern = f"{output_dir}/aviary_out/logs/{rule_log_dir}/*/attempt*.log"
+    matches = glob.glob(pattern)
+    testcase.assertTrue(matches, f"no log files matching {pattern}")
+    text = "".join(open(path).read() for path in matches)
+    testcase.assertIn(
+        expected_flag, text,
+        f"expected {expected_flag!r} in {rule_log_dir} log, got:\n{text[:2000]}")
+
+
+def assert_coverage_has_depths(testcase, path):
+    """Assert a CoverM contig-coverage table holds real, non-zero depths."""
+    testcase.assertTrue(os.path.isfile(path), f"missing coverage table {path}")
+    with open(path) as handle:
+        header = [column.strip() for column in handle.readline().split("\t")]
+        depths = [float(line.split("\t")[2]) for line in handle if line.strip()]
+    testcase.assertIn("totalAvgDepth", header)
+    testcase.assertTrue(len(depths) > 1, f"only {len(depths)} contigs in {path}")
+    testcase.assertTrue(any(depth > 0 for depth in depths),
+                        f"all depths zero in {path} -- did any reads map?")
+
 # We have a separate class for qsub tests (tests that run aviary with the CMR
 # aqua snakemake profile) so that there is no need to run other expensive tests
 # when running qsub tests.
@@ -803,6 +833,190 @@ class Tests(unittest.TestCase):
         with open(bin_info_path) as f:
             num_lines = sum(1 for _ in f)
         self.assertTrue(num_lines > 1)
+
+    # ------------------------------------------------------------------
+    # Read-mapper selection (--short-read-mapper / --long-read-mapper).
+    #
+    # CoverM >=0.7.0 defaults short reads to strobealign; aviary defaults long
+    # reads to rammap. Both are overridable. Each test asserts the LOGGED
+    # command as well as the coverage values, because the failure mode here is
+    # silent: a mapper that maps nothing still emits a well-formed table.
+    #
+    # Coverage tests use --binning-only --skip-qc and a single binner so they
+    # exercise get_coverage.py and little else.
+    # ------------------------------------------------------------------
+
+    def _run_short_read_coverage(self, name, mapper_flag, expected_p):
+        output_dir = os.path.join("example", name)
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary recover "
+            f"--assembly {data}/assembly.fasta "
+            f"-o {output_dir}/aviary_out "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"{mapper_flag} "
+            f"--binning-only "
+            f"--skip-binners rosella semibin vamb quickbin "
+            f"--skip-qc "
+            f"--refinery-max-iterations 0 "
+            f"-n 32 -t 32 "
+            f"--strict "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        assert_coverage_has_depths(self, f"{output_dir}/aviary_out/data/coverm.cov")
+        assert_mapper_logged(self, output_dir, "coverm_prepare", f"-p {expected_p}")
+
+    def _run_long_read_coverage(self, name, mapper_flag, expected_p):
+        output_dir = os.path.join("example", name)
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary recover "
+            f"--assembly {data}/assembly.fasta "
+            f"-o {output_dir}/aviary_out "
+            f"-l {data}/pbsim.fq.gz "
+            f"--longread-type ont "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"{mapper_flag} "
+            f"--binning-only "
+            f"--skip-binners rosella semibin vamb quickbin "
+            f"--skip-qc "
+            f"--refinery-max-iterations 0 "
+            f"-n 32 -t 32 "
+            f"--strict "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        assert_coverage_has_depths(self, f"{output_dir}/aviary_out/data/coverm.cov")
+        assert_mapper_logged(self, output_dir, "coverm_prepare", f"-p {expected_p}")
+
+    def test_short_read_coverage_strobealign_default(self):
+        # No flag: proves the CoverM default is what aviary actually uses.
+        self._run_short_read_coverage(
+            "test_short_read_coverage_strobealign_default", "", "strobealign")
+
+    def test_short_read_coverage_minimap2(self):
+        # Proves the whole chain is connected -- CLI, processor.py, config,
+        # Snakefile, script. If any link broke, the default would silently win.
+        self._run_short_read_coverage(
+            "test_short_read_coverage_minimap2",
+            "--short-read-mapper minimap2", "minimap2-sr")
+
+    def test_short_read_coverage_rammap(self):
+        self._run_short_read_coverage(
+            "test_short_read_coverage_rammap",
+            "--short-read-mapper rammap", "rammap-sr")
+
+    def test_short_read_coverage_minibwa(self):
+        self._run_short_read_coverage(
+            "test_short_read_coverage_minibwa",
+            "--short-read-mapper minibwa", "minibwa")
+
+    def test_long_read_coverage_rammap_default(self):
+        # rammap is the new long-read default and nothing else exercises it.
+        self._run_long_read_coverage(
+            "test_long_read_coverage_rammap_default", "", "rammap-ont")
+
+    def test_long_read_coverage_minimap2(self):
+        self._run_long_read_coverage(
+            "test_long_read_coverage_minimap2",
+            "--long-read-mapper minimap2", "minimap2-ont")
+
+    def test_short_read_abundances_use_selected_mapper(self):
+        # get_abundances.py runs only when --binning-only is NOT set. Short-read
+        # abundances moved from a hardcoded minimap2-sr to the selected mapper,
+        # so this pins the new behaviour.
+        output_dir = os.path.join("example", "test_short_read_abundances_mapper")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary recover "
+            f"--assembly {data}/assembly.fasta "
+            f"-o {output_dir}/aviary_out "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--skip-binners rosella semibin vamb quickbin "
+            f"--skip-qc --skip-taxonomy --skip-singlem "
+            f"--refinery-max-iterations 0 "
+            f"-n 32 -t 32 "
+            f"--strict "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/data/coverm_abundances.tsv"))
+        assert_mapper_logged(self, output_dir, "coverm_abundances", "-p strobealign")
+
+    def test_long_read_abundances_use_selected_mapper(self):
+        # Also exercises the run_coverm guard on a real run: long reads must
+        # reach CoverM with a long-read mapper or the script raises.
+        output_dir = os.path.join("example", "test_long_read_abundances_mapper")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary recover "
+            f"--assembly {data}/assembly.fasta "
+            f"-o {output_dir}/aviary_out "
+            f"-l {data}/pbsim.fq.gz "
+            f"--longread-type ont "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"--skip-binners rosella semibin vamb quickbin "
+            f"--skip-qc --skip-taxonomy --skip-singlem "
+            f"--refinery-max-iterations 0 "
+            f"-n 32 -t 32 "
+            f"--strict "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/data/coverm_abundances.tsv"))
+        assert_mapper_logged(self, output_dir, "coverm_abundances", "-p rammap-ont")
+
+    def test_fraction_recovered_uses_selected_mapper(self):
+        # read_fraction_recovered is not part of the default DAG -- nothing in
+        # a normal `recover` run requests its output. It is reached through
+        # `assembly_quality`, which lists it as an input, so it has to be
+        # requested explicitly rather than reached by a normal run.
+        output_dir = os.path.join("example", "test_fraction_recovered_mapper")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary recover "
+            f"--assembly {data}/assembly.fasta "
+            f"-o {output_dir}/aviary_out "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            # Target the output file rather than the assembly_quality rule:
+            # that rule also needs www/assembly_stats.txt, which both
+            # assembly_size and complete_assembly_with_qc can produce, and
+            # snakemake refuses the ambiguity. Requesting the file directly
+            # exercises read_fraction_recovered without touching that.
+            f"-w www/fraction_recovered/short_fraction_recovered.tsv "
+            f"--skip-qc "
+            f"-n 32 -t 32 "
+            f"--strict "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/www/fraction_recovered/short_fraction_recovered.tsv"))
+        assert_mapper_logged(self, output_dir, "fraction_recovered", "-p strobealign")
+
+    def test_long_read_polishing_uses_selected_mapper(self):
+        # polish.py generates racon's PAF itself rather than via CoverM, so the
+        # command shape differs per aligner. This is a full long-read assembly
+        # (no --assembly shortcut) because polishing only runs on one aviary
+        # has assembled, and it is the only test that would catch rammap
+        # emitting PAF racon cannot consume.
+        output_dir = os.path.join("example", "test_long_read_polishing_mapper")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary assemble "
+            f"-o {output_dir}/aviary_out "
+            f"-l {data}/pbsim.fq.gz "
+            f"--longread-type ccs "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+        # ccs routes through racon (ONT would use medaka instead), so a PAF was
+        # generated with the selected long-read mapper.
+        assert_mapper_logged(self, output_dir, "polish_metagenome_flye", "rammap")
 
     def test_short_read_recovery_no_bins(self):
         output_dir = os.path.join("example", "test_short_read_recovery_no_bins")
