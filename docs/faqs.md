@@ -1,89 +1,144 @@
 ---
-title: FAQs & Troubleshooting
+title: Troubleshooting and FAQ
 ---
 
-FAQs & Troubleshooting
-========
+# Troubleshooting and FAQ
 
-This page is just meant for general questions that I notice are asked with some frequency. If you feel like something
-is missing from here and you'd like to see it included, feel free to ask it by raising an issue on GitHub.
+Start with the terminal summary, then inspect the rule-specific files beneath
+`output_dir/logs/`. A failed upstream tool normally writes the useful diagnostic
+there rather than to the top-level Aviary log.
 
+## A rule failed
 
-### I want to perform both MAG recovery and assembly, how do I do that?
+### Cause
 
-If you supply all reads to the `recover` command then Aviary will perform assembly first and then perform MAG recovery. You can perform assembly first by using the `assemble` command and then using the output assembly file as the input to the `recover` command. However, it is much simpler to let aviary handle this process for you.
+Aviary reports the Snakemake rule and, where available, its log path. The cause
+may be invalid input, an upstream-tool error, missing reference data or an
+exhausted scheduler resource.
 
-### An error occurred but I don't know where to look for the error message
+### Resolution
 
-All of the error messages are stored in the `logs/` folder. The error messages are stored in the `logs/` folder with the name of the file corresponding the name of the rule that they originate from. If you had an error occur in the `qc_short_reads` rule then consult the `logs/qc_short_reads.log` file for the error message.
-
-### Is Aviary cluster compatible?
-
-Yes! Consult the examples page for more information.
-
-### I have access to a GPU, can I use it?
-
-Yes! Aviary supports the use of GPUs for the binning process (taxvamb, comebin, semibin). If the GPU is on a local machine, you must first install the `cuda` package into your conda environment. Then, programs that use GPUs should automatically detect its presence.
-
-If you are using a cluster, you can supply the `--request-gpu` flag and Aviary will attempt to place rules that use GPUs on to a machine that has GPUs available.
-
-### Error in prepare_binning_files
-
-This error is almost always caused by the user running out of storage in their `/tmp` folder when `coverm` performs the mapping process. To fix this, you can either increase the amount of storage available to the `/tmp` folder or you can change the location of the temporary folder by setting the `TMPDIR` environment variable to a folder with more storage. Aviary also allows the user to specify the location of the temporary folder by using the `--tmpdir` parameter.
-
-### I wish to remove host contamination from my reads
-
-Aviary supports the removal of host contamination during the assembly process via the `-r`, `--host-filter` parameter. This flag can take one or more compressed or non-compressed fasta files. Aviary will then compare the reads to these references and remove any reads that map to them.
-
-### SPAdes error: "Error code: -9" or other errors
-
-The most likely solution to this is that you are running out of memory. SPAdes is a memory intensive program and will exit unexpectedly if it reaches the maximum memory limit of your machine or supplied by aviary.
-To increase the amount of memory available to SPAdes, you can either increase the amount of memory available to the entire pipeline by using the `-m` parameter.
-
-
-
-### qsub and pysam - ModuleNotFoundError
-
-A known issue with using snakemake + pysam + qsub results in the a break in the pipeline. The issue arises because pysam 
-does not activate correctly when using qsub by default. To fix this you just need to add the `-V ` parameter to your qsub
-command.
-
-### Which databases do I download?
-
-It is probably best to just let Aviary handle the downloading of your databases via the `--download` parameter. But, if you
-would like to set them up yourself, please read ahead
-
-For the GTDB:
-* [GTDB](https://gtdb.ecogenomic.org/downloads) Required for taxonomic annotation
-Download and point the GTDB environment variable to the `db/` folder inside of that download.
-
-The **required** databases are as follows:
-* [EggNog](https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.7#setup).
-Download this database and point to the root folder of the database.
-
-Aviary will ask for the paths to these database files if they don't exist, otherwise you can place these lines into
-the `activate.d/aviary.sh` or `.bashrc` files changing the specific paths:
-```
-export GTDBTK_DATA_PATH=/path/to/gtdb/gtdb_release232/db/ # https://gtdb.ecogenomic.org/downloads
-export EGGNOG_DATA_DIR=/path/to/eggnog-mapper/2.1.3/ # https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.8#setup
-export SINGLEM_METAPACKAGE_PATH=/path/to/singlem_metapackage.smpkg/
-export CHECKM2DB=/path/to/checkm2db/
+```bash
+ls output_dir/logs/
+less output_dir/logs/<rule-name>.log
 ```
 
-### Why the name "Aviary"? Why the bird names in general?
+Correct the underlying problem and repeat the same Aviary command with the same
+output directory. Snakemake normally retains completed valid work.
 
-Put all your birds in one place.
+## `Number of forward reads != Number of reverse reads`
 
-### Where did the logo come from?
+### Cause
 
-I made it (among other bird based + CoverM logos) using [GIMP](https://www.gimp.org/) and based the idea off of this 
-[tutorial](https://www.youtube.com/watch?v=fSOR7mPwb4I). They are very easy to make so just follow that video if you 
-feel like making something similar.
+The `-1` and `-2` lists contain different numbers of files.
 
-### Where's the paper?
+### Resolution
 
-Please cite:
+Provide one reverse file for every forward file and keep sample order aligned:
 
-> Newell RJP, Aroney STN, Zaugg J, Sternes P, Tyson GW, Woodcroft BJ.
-> **Aviary: Hybrid assembly and genome recovery from metagenomes with Aviary.**
-> Zenodo (2024). https://doi.org/10.5281/zenodo.10806928
+```bash
+aviary complete \
+  -1 A_R1.fastq.gz B_R1.fastq.gz \
+  -2 A_R2.fastq.gz B_R2.fastq.gz
+```
+
+## `Cannot read short read file ... Please check permissions.`
+
+### Cause
+
+The path does not exist from the execution host, or the process cannot read it.
+This is common when a path is visible on the login node but not mounted on a
+compute node.
+
+### Resolution
+
+Check spelling, permissions and compute-node visibility. Prefer absolute paths
+for scheduler runs.
+
+## `Multiple readsets detected`
+
+### Cause
+
+More than one read set was supplied without an explicit assembly decision.
+
+### Resolution
+
+Use `--coassemble` to combine supported inputs, or `--coassemble false` to make
+the non-coassembly behaviour explicit. Review the resulting assembly strategy
+in a `--dryrun` before starting a large analysis.
+
+## `File ... exists` for `--log`
+
+### Cause
+
+Aviary refuses to overwrite an existing explicit top-level log file.
+
+### Resolution
+
+Choose a new `--log` path or archive the existing file. Rule-level logs inside
+the output directory follow the workflow's own resume behaviour.
+
+## `prepare_binning_files` fails or temporary storage fills
+
+### Cause
+
+Read mapping and coverage preparation can exhaust the filesystem used for
+temporary files, especially when `TMPDIR` points to a small `/tmp` partition.
+
+### Resolution
+
+Choose a larger temporary filesystem:
+
+```bash
+aviary recover ... --tmpdir /scratch/$USER/aviary-tmp
+```
+
+Create the directory before running and ensure cluster jobs can access it.
+
+## SPAdes exits with code `-9`
+
+An operating-system or scheduler kill commonly indicates that the process
+exceeded an enforced resource limit. Confirm the scheduler accounting record
+and SPAdes log before assuming memory is the cause. If memory was exhausted,
+increase the job allocation and keep `--max-memory` consistent with that hard
+limit, or reduce concurrency.
+
+## The output directory is locked after an interrupted run
+
+First confirm that no Aviary or Snakemake process is still using the directory.
+Then use the documented `--unlock` workflow option from the
+[workflow-control guide](/guides/workflow-control). Unlocking a live run can
+allow concurrent processes to corrupt workflow state.
+
+## No bins were found
+
+This can be a valid result rather than a software failure. Inspect assembly
+quality, read mapping, binner logs, minimum contig/bin sizes and available
+coverage variation. Do not lower quality thresholds solely to force a non-empty
+result.
+
+## Can Aviary use a GPU?
+
+GPU-enabled binners can use compatible hardware when their environments are
+built. On a cluster, `--request-gpu` marks applicable submitted work for GPU
+resources. It does not accelerate every workflow stage. See
+[performance and resources](/advanced/performance).
+
+## How do I remove host-associated reads?
+
+Supply one or more host reference FASTA files with `--host-filter`. Aviary maps
+reads to those references during quality control and removes mapped reads before
+assembly. Record the exact host-reference build because it affects which reads
+remain.
+
+## Which databases are required?
+
+Requirements depend on enabled stages. GTDB-Tk taxonomy, EggNOG functional
+annotation, CheckM2 quality assessment, SingleM analysis and Metabuli-enabled
+workflows each use their own local data. See [installation](/installation) and
+the [`configure` reference](/usage/configure).
+
+## How should Aviary be cited?
+
+See the [citation guide](/citations). Cite Aviary and the upstream programs used
+by the selected workflow.

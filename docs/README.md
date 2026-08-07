@@ -1,43 +1,82 @@
-![](/images/aviary_logo.png)
+---
+title: Aviary
+---
 
-[![Anaconda-Server Badge](https://anaconda.org/bioconda/aviary/badges/license.svg)](https://anaconda.org/bioconda/aviary)
-[![Anaconda-Server Badge](https://anaconda.org/bioconda/aviary/badges/version.svg)](https://anaconda.org/bioconda/aviary)
-[![Anaconda-Server Badge](https://anaconda.org/bioconda/aviary/badges/latest_release_relative_date.svg)](https://anaconda.org/bioconda/aviary)
-[![Anaconda-Server Badge](https://anaconda.org/bioconda/aviary/badges/platforms.svg)](https://anaconda.org/bioconda/aviary)
+![Aviary](/images/aviary_logo.png)
 
-# Aviary
-An easy to use for wrapper for a robust snakemake pipeline for metagenomic hybrid assembly, binning, and annotation. 
-The pipeline currently includes a step-down iterative 
-hybrid assembler, an isolate hybrid assembler, a quality control module and a 
-comprehensive binning pipeline. Each module can be run independently or as a single pipeline depending on provided input.
+# Assemble metagenomes and recover microbial genomes
 
-# Module details
-|__method__ |__description__ |
-| --- | --- |
-|`cluster`|Dereplicate/choose representative genomes from multiple aviary runs|
-|`assemble`|Perform quality control and assembly of provided reads. Will provide hybrid assembly if given long and short reads|
-|`recover`|Recover MAGs from provided assembly using a variety of binning algorithms. Also perform quality checks on recovered MAGs and taxonomic classification.|
-|`annotate`|Provide taxonomic and functional annotations for a given set of MAGs|
-|`complete`|Performs the complete workflow up to last possible rule given the provided inputs|
-|`isolate` |Performs hybrid isolate assembly. For use with isolated pure sequencing results.  |
-|`configure` |Set or reset environment variables used by aviary  |
+Aviary is a Snakemake workflow for quality-controlling sequencing reads,
+assembling metagenomes, recovering metagenome-assembled genomes (MAGs), and
+adding taxonomic and functional annotations. It supports short reads, long
+reads, and hybrid datasets, and can run locally or through a Snakemake HPC
+profile.
 
+## Choose a workflow
 
-## Overview
-![](/figures/aviary_workflow.png)
+| Goal | Command | Start here |
+| --- | --- | --- |
+| Run assembly through annotation | `aviary complete` | [Quickstart](/getting-started/quickstart) |
+| Quality-control and assemble reads | `aviary assemble` | [Assembly guide](/guide/assembly) |
+| Recover MAGs from an assembly | `aviary recover` | [Genome recovery guide](/guide/genome-recovery) |
+| Annotate an existing MAG collection | `aviary annotate` | [Annotation guide](/guide/annotation) |
+| Assemble a cultured isolate | `aviary isolate` | [`isolate` reference](/usage/isolate) |
+| Dereplicate genomes across runs | `aviary cluster` | [`cluster` reference](/usage/cluster) |
 
-## Citation
+## Install
 
-If you use Aviary in your research, please cite:
+Bioconda is the recommended user installation:
 
-> Newell RJP, Aroney STN, Zaugg J, Sternes P, Tyson GW, Woodcroft BJ.
-> **Aviary: Hybrid assembly and genome recovery from metagenomes with Aviary.**
-> Zenodo (2024). https://doi.org/10.5281/zenodo.10806928
+```bash
+conda create -n aviary -c conda-forge -c bioconda aviary
+conda activate aviary
+aviary --version
+```
 
-## License
+Aviary also needs local reference data for the analysis stages you enable.
+See [installation and database setup](/installation) before a
+production run.
 
-Code is GPL-3.0 
+## Smallest complete analysis
 
-## GitHub
+For paired short reads:
 
-[Aviary](https://github.com/rhysnewell/aviary)
+```bash
+aviary complete \
+  -1 sample_R1.fastq.gz \
+  -2 sample_R2.fastq.gz \
+  --output sample_aviary \
+  --max-threads 8 \
+  --n-cores 8
+```
+
+The workflow records rule logs in `sample_aviary/logs/`, resource benchmarks
+in `sample_aviary/benchmarks/`, the final assembly at
+`sample_aviary/assembly/final_contigs.fasta`, and recovered genomes beneath
+`sample_aviary/bins/`.
+
+## What Aviary coordinates
+
+Aviary prepares inputs, selects workflow stages, manages resources and invokes
+specialised upstream tools. Depending on the selected command and options,
+those tools perform read filtering, assembly, coverage calculation, binning,
+bin refinement, quality assessment, taxonomy and functional annotation.
+Snakemake tracks completed outputs so interrupted analyses can normally resume.
+
+![Aviary workflow](/figures/aviary_workflow.png)
+
+## Where next?
+
+- New to Aviary? Follow the [quickstart](/getting-started/quickstart).
+- Planning an analysis? Read [core concepts](/concepts) and the relevant
+  workflow guide.
+- Looking for an exact flag? Use the [CLI reference](/usage).
+- Interpreting a run? See the [output reference](/guides/output).
+- Running on a cluster? See [HPC and scaling](/guides/hpc).
+- Diagnosing a failure? Start with [troubleshooting](/faqs).
+
+## Citation and licence
+
+If you use Aviary in research, cite the software and the upstream tools used by
+your selected workflow. See the [citation guide](/citations) for the
+complete list. Aviary is distributed under the GPL-3.0 licence.

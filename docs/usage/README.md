@@ -1,19 +1,22 @@
 ---
-title: Usage
+title: CLI reference
 ---
 
-# Usage
+# CLI reference
 
-Aviary provides several subcommands for different stages of the metagenomics workflow:
+Aviary exposes eight subcommands. The installed command's `--help` output is
+the final authority for the installed version.
 
-| Subcommand | Description |
+| Command | Purpose |
 | --- | --- |
-| `assemble` | Step-down hybrid assembly using long and short reads, or assembly using only short or long reads |
-| `recover` | Recover MAGs from an assembly using multiple binning algorithms |
-| `annotate` | Annotate a set of MAGs using EggNOG, GTDB-tk, and CheckM2 |
-| `complete` | Run the full pipeline: assembly → binning → refinement → annotation |
-| `cluster` | Dereplicate/choose representative genomes from multiple aviary runs |
-| `isolate` | Hybrid isolate assembly for pure sequencing results |
-| `configure` | Set or reset environment variables used by aviary |
+| [`assemble`](/usage/assemble) | Quality-control reads and assemble contigs |
+| [`recover`](/usage/recover) | Recover and assess MAGs from an assembly |
+| [`annotate`](/usage/annotate) | Annotate a directory of genome FASTA files |
+| [`complete`](/usage/complete) | Run the applicable metagenome stages end to end |
+| [`cluster`](/usage/cluster) | Dereplicate genomes across completed runs |
+| [`isolate`](/usage/isolate) | Assemble reads from a cultured isolate |
+| [`configure`](/usage/configure) | Store reference-data paths and request downloads |
+| `build` | Build dependency environments; add `--gpu` for GPU environments |
 
-Every subcommand also accepts a shared set of performance/output/misc flags (`--max-threads`, `--output`, `--clean`, `--build`, `--dry-run`, etc.) — see [Centralised commands](centralised_commands.md).
+Shared workflow and resource options are explained in
+[centralised commands](centralised_commands.md).

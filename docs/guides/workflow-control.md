@@ -21,6 +21,19 @@ The available rules for each module are defined in the module's Snakefile under 
 
 If an Aviary workflow is interrupted, re-running the same command will resume from the last completed step — Snakemake tracks completed outputs automatically.
 
+If Snakemake reports that the directory is locked, first confirm that no Aviary
+or Snakemake process is still using it. Then pass Snakemake's unlock operation:
+
+```bash
+aviary complete \
+  -1 sample_R1.fastq.gz \
+  -2 sample_R2.fastq.gz \
+  --output output_dir \
+  --snakemake-cmds '--unlock'
+```
+
+Do not unlock an active run.
+
 ## Dry run
 
 Test the workflow order and verify conda environments without executing any rules:
