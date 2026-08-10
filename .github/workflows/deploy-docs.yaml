@@ -2,9 +2,13 @@ name: Deploy documentation site
 
 on:
   push:
+    # Must match the branch name EXACTLY -- there is no fuzzy matching and no
+    # warning when nothing matches, the workflow just silently never runs.
+    # (update-docs and update_docs were both tried here; the branch is
+    # update_doc, singular, underscore.)
     branches:
       - main
-      - update_docs
+      - update_doc
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
