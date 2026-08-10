@@ -457,11 +457,20 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
 /* Homepage hero                                                          */
 /* ---------------------------------------------------------------------- */
 
+/* The negative margin bleeds the hero past the content column, but it must
+   not exceed the gutter it is bleeding into: Material gives
+   .md-content__inner a margin of 0.8rem (1.2rem at wider breakpoints), and
+   nothing between here and <body> clips overflow. At the old -1.5rem the
+   hero stuck ~0.7rem past the page on each side, which made the DOCUMENT
+   wider than the viewport -- and since the announcement banner spans the
+   viewport, not the document, the green bar visibly stopped short of the
+   right-hand edge once that horizontal scroll existed. 0.8rem matches the
+   narrowest gutter, so the bleed is safe at every breakpoint. */
 .aviary-hero {
   position: relative;
   overflow: hidden;
   padding: 3.2rem 1.5rem 2.4rem;
-  margin: 0 -1.5rem 2.5rem;
+  margin: 0 -0.8rem 2.5rem;
   border-bottom: 1px solid var(--aviary-border);
   border-radius: 0 0 20px 20px;
   isolation: isolate;
