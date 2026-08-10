@@ -137,11 +137,23 @@
    `clip` rather than `hidden` on purpose: hidden would make the root a
    scroll container and break the sticky header, clip does not. Wide content
    is unaffected -- Material already puts tables and code blocks in their own
-   scroll wrappers, so nothing legitimately scrollable is being cut off here. */
+   scroll wrappers, so nothing legitimately scrollable is being cut off here.
+
+   A second, distinct cause of the same symptom (2026-08-10 report): the
+   VERTICAL scrollbar itself. On a page tall enough to need one, the
+   scrollbar eats into the viewport width the browser hands out to layout;
+   on a shorter page there's no scrollbar and the full width is available.
+   Since the banner is sized off the viewport (see above), it is a few
+   pixels narrower specifically on pages with a scrollbar -- reading as "the
+   header doesn't extend all the way to the right", but only on some pages.
+   scrollbar-gutter: stable reserves that space UNCONDITIONALLY, so layout
+   width is identical whether or not a given page's content actually
+   triggers a scrollbar. */
 html {
   margin: 0;
   padding: 0;
   clip: rect(0, auto, auto, 0);
+  scrollbar-gutter: stable;
 }
 
 /* ---------------------------------------------------------------------- */
