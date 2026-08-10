@@ -17,19 +17,34 @@
   document.documentElement.classList.add('aviary-motion-ready');
 
   if ('IntersectionObserver' in window) {
-    var observer = new IntersectionObserver(
-      function (entries) {
+    var makeObserver = function (options) {
+      return new IntersectionObserver(function (entries, self) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
             entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
+            self.unobserve(entry.target);
           }
         });
-      },
-      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
-    );
+      }, options);
+    };
+
+    // Generic reveals (hero, cards): fire as soon as they edge into view.
+    var generic = makeObserver({ threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+    // Scrollytelling panels fire much later, and the two settings do
+    // different jobs. rootMargin's -45% bottom shrinks the trigger zone to
+    // the top ~55% of the viewport, so a panel must be scrolled well up the
+    // screen before it counts as visible at all -- that is the "more
+    // scrolling required" part, and unlike threshold it does not scale with
+    // the panel's own height. threshold then asks for 30% of the panel to be
+    // inside that reduced zone. Raising min-height alone (88vh) did not delay
+    // anything, because threshold is a fraction of the panel: a taller panel
+    // reaches 15% of itself at the same point on screen.
+    var scrolly = makeObserver({ threshold: 0.3, rootMargin: '0px 0px -45% 0px' });
+
     document.querySelectorAll('.aviary-reveal').forEach(function (el) {
-      observer.observe(el);
+      var isPanel = el.classList.contains('aviary-scrolly__panel');
+      (isPanel ? scrolly : generic).observe(el);
     });
   } else {
     // No observer support: just show everything, skip the choreography.
