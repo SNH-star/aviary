@@ -139,7 +139,9 @@
    is unaffected -- Material already puts tables and code blocks in their own
    scroll wrappers, so nothing legitimately scrollable is being cut off here. */
 html {
-  overflow-x: clip;
+  margin: 0;
+  padding: 0;
+  clip: rect(0, auto, auto, 0);
 }
 
 /* ---------------------------------------------------------------------- */
