@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - update-docs
+      - update_docs
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
