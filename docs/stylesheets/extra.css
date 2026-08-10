@@ -125,6 +125,24 @@
 }
 
 /* ---------------------------------------------------------------------- */
+/* Layout guard                                                            */
+/* ---------------------------------------------------------------------- */
+
+/* Material lays <body> out as a flex column, so the announcement banner
+   stretches to the body's width -- which is the VIEWPORT width, not the
+   document width. Any element that overflows horizontally therefore makes
+   the page scroll sideways while the green bar stops at the viewport edge,
+   which reads as "the banner doesn't reach the right".
+
+   `clip` rather than `hidden` on purpose: hidden would make the root a
+   scroll container and break the sticky header, clip does not. Wide content
+   is unaffected -- Material already puts tables and code blocks in their own
+   scroll wrappers, so nothing legitimately scrollable is being cut off here. */
+html {
+  overflow-x: clip;
+}
+
+/* ---------------------------------------------------------------------- */
 /* Typography                                                              */
 /* ---------------------------------------------------------------------- */
 
