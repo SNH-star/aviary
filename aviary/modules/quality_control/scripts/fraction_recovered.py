@@ -21,35 +21,40 @@ def get_fraction_recovered(
 
             with open(log, "a") as logf:
                 print("Running command:", " ".join(coverm_cmd), file=logf)
-                run(coverm_cmd, stdout=logf, stderr=STDOUT)
+                run(coverm_cmd, stdout=logf, stderr=STDOUT, check=True)
 
         elif long_read_type in ["rs", "sq", "ccs", "hifi"]:
             coverm_cmd = f"coverm genome -t {threads} --single-genome -r {input_fasta} --single {' '.join(long_reads)} -p {long_read_mapper}-pb --min-read-percent-identity 0.9 -o www/fraction_recovered/long_fraction_recovered.tsv".split()
 
             with open(log, "a") as logf:
                 print("Running command:", " ".join(coverm_cmd), file=logf)
-                run(coverm_cmd, stdout=logf, stderr=STDOUT)
+                run(coverm_cmd, stdout=logf, stderr=STDOUT, check=True)
 
         else:
-            coverm_cmd = f"coverm genome -t {threads} --single-genome -r {input_fasta} --single {' '.join(long_reads)} -p {long_read_mapper}-ont --min-read-percent-identity 0.85 -o www/fraction_recovered/long_fraction_recovered.tsv".split()
-
-            with open(log, "a") as logf:
-                print("Running command:", " ".join(coverm_cmd), file=logf)
-                run(coverm_cmd, stdout=logf, stderr=STDOUT)
+            # Matches get_coverage.py and get_abundances.py, which both raise
+            # here. This branch used to duplicate the ONT command instead, so a
+            # long_read_type outside the two lists above was silently mapped
+            # with the ONT preset and ONT's looser 0.85 identity cutoff -- the
+            # PacBio branch deliberately uses 0.9. That produced a well-formed
+            # fraction_recovered table computed on the wrong settings rather
+            # than an error. Unreachable via the CLI (argparse validates
+            # against LONG_READ_TYPES, and the two branches cover all six),
+            # but it would fire the moment a seventh read type is added.
+            raise Exception("Unexpected long_read_type: {}".format(long_read_type))
 
     if short_reads_2 != 'none' and not os.path.exists("data/short_cov.tsv"):
         coverm_cmd = f"coverm genome -t {threads} --single-genome -r {input_fasta} -1 {' '.join(short_reads_1)} -2 {' '.join(short_reads_2)} -p {short_read_mapper} -o www/fraction_recovered/short_fraction_recovered.tsv".split()
 
         with open(log, "a") as logf:
             print("Running command:", " ".join(coverm_cmd), file=logf)
-            run(coverm_cmd, stdout=logf, stderr=STDOUT)
+            run(coverm_cmd, stdout=logf, stderr=STDOUT, check=True)
 
     elif short_reads_1 != 'none' and not os.path.exists("data/short_cov.tsv"):
         coverm_cmd = f"coverm genome -t {threads} --single-genome -r {input_fasta} --interleaved {' '.join(short_reads_1)} -p {short_read_mapper} -o www/fraction_recovered/short_fraction_recovered.tsv".split()
 
         with open(log, "a") as logf:
             print("Running command:", " ".join(coverm_cmd), file=logf)
-            run(coverm_cmd, stdout=logf, stderr=STDOUT)
+            run(coverm_cmd, stdout=logf, stderr=STDOUT, check=True)
 
 
 if __name__ == '__main__':

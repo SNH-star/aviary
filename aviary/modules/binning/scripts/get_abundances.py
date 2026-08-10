@@ -41,7 +41,12 @@ def run_coverm(
         # Logged so the mapper actually used is recoverable from the run, the
         # same as get_coverage.py does.
         print("Running command:", " ".join(coverm_cmd), file=logf)
-        run(coverm_cmd, stdout=logf, stderr=STDOUT)
+        # check=True because CoverM creates its --output-file before it fails:
+        # a mid-run crash leaves a 0-byte abundance table behind, which
+        # satisfies snakemake's missing-output check, so the rule is marked
+        # successful and finalise_stats folds an empty table into bin_info.tsv.
+        # Verified against coverm 0.8: exit 1, output file present, 0 bytes.
+        run(coverm_cmd, stdout=logf, stderr=STDOUT, check=True)
 
 def get_abundances(
     long_reads,

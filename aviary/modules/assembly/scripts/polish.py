@@ -62,7 +62,18 @@ def minimap2_process(
     # rammap is a minimap2-compatible Rust implementation: same -x presets,
     # same PAF output, which this script parses directly further down. Only
     # the binary name differs, so --long-read-mapper selects it here too.
-    minimap2_cmd = f"{mapper} -x {minimap2_type} -t {threads} {reference} {reads}".split()
+    #
+    # rammap's default (non-CIGAR) PAF path derives target-start from the raw
+    # seed anchor without clamping to 0, so an alignment landing at the very
+    # start of the target underflows to ~u64::MAX instead of 0 and segfaults
+    # racon downstream. minimap2 never hits this because its equivalent
+    # anchor-extrapolation step (mm_align1 in align.c) always clamps negative
+    # starts to 0, unconditionally. -c forces rammap through its full
+    # base-level alignment path, which computes the same clamped coordinate
+    # minimap2 always does. Confirmed via minimal repro: with -c, the two
+    # previously-wrapped coordinates come back as 0/1 and racon completes.
+    extra_args = ["-c"] if mapper == "rammap" else []
+    minimap2_cmd = [mapper, "-x", minimap2_type, "-t", str(threads), *extra_args, reference, reads]
 
     with open(log, "a") as logf:
         # Logged so the aligner actually used is recoverable from the run.
