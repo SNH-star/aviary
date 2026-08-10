@@ -337,10 +337,21 @@
   border-color: var(--md-default-fg-color--lighter);
 }
 
-.md-typeset .md-button:not(.md-button--primary):hover {
+/* Hover fills with brand green and switches the label to near-black, matching
+   the primary button's treatment so the row reads as one family.
+
+   The fill is not decoration -- it is what makes black legible. Setting the
+   label to black on its own leaves it sitting on whatever is behind the
+   button: 16.7:1 on the light page, but 1.01:1 on the dark one, i.e. black
+   text on a near-black background. With the green behind it the same ink
+   measures 8.23:1 in BOTH schemes, so one rule covers light and dark rather
+   than needing a per-scheme override. */
+.md-typeset .md-button:not(.md-button--primary):hover,
+.md-typeset .md-button:not(.md-button--primary):focus-visible {
   transform: translateY(-1px);
-  border-color: var(--md-accent-fg-color);
-  color: var(--md-accent-fg-color);
+  background-color: var(--aviary-brand-green);
+  border-color: var(--aviary-brand-green);
+  color: var(--aviary-brand-green-ink);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -591,22 +602,27 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
   font-size: 1rem;
 }
 
-/* The three calls to action sit on one line. They were stacking because
-   margin-based spacing leaves them as inline-blocks inside a <p>, so the
-   moment the hero's left grid column got tight -- which it does early, since
-   the terminal claims up to 360px beside it -- each button wrapped onto its
-   own line. A flex row with gap keeps them together and lets them wrap in
-   pairs rather than one-per-line when space really does run out.
+/* The three calls to action sit on one line.
 
-   The flex container is the <p> markdown generates inside the wrapper div,
-   not the wrapper itself: with md_in_html the links become paragraph content,
-   so styling the wrapper would only ever move one block-level child. */
-.aviary-hero__actions p {
+   The wrapper itself is the flex container, and the paragraph(s) markdown
+   generates inside it are collapsed with `display: contents` so the buttons
+   become flex items directly. Styling the <p> as the flex row instead only
+   works if markdown emits exactly ONE paragraph for all three links -- if it
+   ever splits them (a stray blank line, a different md_in_html version), each
+   <p> becomes its own single-item row and they stack again no matter how much
+   width is available. Collapsing the paragraph box makes the layout depend on
+   the buttons, not on how the Markdown happened to be parsed. */
+.aviary-hero__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
-  margin: 1.3rem 0 0;
+  margin-top: 1.3rem;
+}
+
+.aviary-hero__actions p {
+  display: contents;
+  margin: 0;
 }
 
 .aviary-hero__actions .md-button {
