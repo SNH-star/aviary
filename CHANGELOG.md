@@ -14,9 +14,9 @@
 ### Changed
 
 - **Default aligners are now strobealign (short) and rammap (long)** — CoverM
-  bumped to `>=0.8`, which defaults short reads to strobealign. Aviary now names 
-  its mapper explicitly at every call site rather than relying on that default. 
-  This is to allow the user to specify a non-deafult mapper if need be. 
+  bumped to `>=0.8`, which defaults short reads to strobealign. Aviary now names
+  its mapper explicitly at every call site rather than relying on that default,
+  so a non-default mapper can be selected when needed.
 
 - **Bin abundances use the same mapper as the binners** — `get_abundances.py`
   hardcoded `minimap2-sr`, so the binners saw strobealign-derived depths while
@@ -30,11 +30,16 @@
 
 - **GPU rules are scheduled correctly on both SLURM and PBS** — Snakemake has no
   portable GPU resource, so its SLURM executor plugin reads `gpu` while
-  `snakemake_mqsub` reads `gpus`. Declaring `gpus` causes SLURM to silently schedules the rule onto a CPU node, where the CUDA environment fails to activate before any log file is written. `taxvamb`, `semibin`, `comebin` and `polish_metagenome_flye` now declare both keys neither scheduler is affected by the other's so no conflicting errors.
- 
+  `snakemake_mqsub` reads `gpus`. Declaring only `gpus` makes SLURM silently
+  schedule the rule onto a CPU node, where the CUDA environment fails to
+  activate before any log file is written. `taxvamb`, `semibin`, `comebin` and
+  `polish_metagenome_flye` now declare both keys; each scheduler ignores the
+  one it does not recognise, so there is no conflict.
 
 - **concoct now runs** — it needs numpy below version 2, but pinning numpy
-  alone was not enough: newer scipy versions ask for numpy 2, which made concoct's own version check fail at runtime. Scipy is now pinned as well, and concoct's error messages go to its log instead of being discarded.
+  alone was not enough: newer scipy versions ask for numpy 2, which made
+  concoct's own version check fail at runtime. Scipy is now pinned as well, and
+  concoct's error messages go to its log instead of being discarded.
 
 - **`assembly_quality` can be built again** — two rules both produced
   `www/assembly_stats.txt`, which snakemake refuses, so nothing needing that
