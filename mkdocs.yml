@@ -1,8 +1,8 @@
 site_name: Aviary
 site_description: Metagenomic assembly, genome recovery and annotation
 site_url: https://snh-star.github.io/aviary/
-repo_url: https://github.com/SNH-star/aviary
-repo_name: SNH-star/aviary
+repo_url: https://github.com/rhysnewell/aviary
+repo_name: rhysnewell/aviary
 edit_uri: edit/main/docs/
 docs_dir: docs
 site_dir: site
@@ -90,7 +90,7 @@ extra:
   generator: false
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/SNH-star/aviary
+      link: https://github.com/rhysnewell/aviary
       name: Aviary on GitHub
 
 copyright: Copyright &copy; Aviary contributors · GPL-3.0
