@@ -49,6 +49,100 @@ def setup_output_dir(output_dir):
     os.makedirs(output_dir)
 
 
+FASTA_LINE_WIDTH = 60
+INFLATED_ASSEMBLY_COPIES = 100
+INFLATED_ASSEMBLY_DIVERGENCE = 0.01
+INFLATED_ASSEMBLY_SEED = 42
+
+# Which bases a given base may mutate into. Anything not listed (N, IUPAC
+# ambiguity codes) is left alone rather than silently turned into a real base.
+_SUBSTITUTIONS = {"A": "CGT", "C": "AGT", "G": "ACT", "T": "ACG"}
+
+
+def _read_fasta(path: str) -> list[tuple[str, str]]:
+    """Read a FASTA file into (header, sequence) pairs, header including '>'."""
+    records: list[tuple[str, str]] = []
+    header: str | None = None
+    parts: list[str] = []
+    with open(path) as handle:
+        for line in handle:
+            line = line.rstrip("\n")
+            if line.startswith(">"):
+                if header is not None:
+                    records.append((header, "".join(parts)))
+                header = line
+                parts = []
+            else:
+                parts.append(line)
+    if header is not None:
+        records.append((header, "".join(parts)))
+    return records
+
+
+def _mutate(sequence: str, divergence: float, rng: random.Random) -> str:
+    """Substitute `divergence` of the bases in `sequence` at random positions.
+
+    Always substitutes at least one base, so that short contigs -- where the
+    rate rounds down to zero -- do not come back byte-identical to their
+    source, which is the very thing this is here to avoid.
+    """
+    bases = bytearray(sequence, "ascii")
+    if not bases:
+        return sequence
+    count = min(len(bases), max(1, int(len(bases) * divergence)))
+    for position in rng.sample(range(len(bases)), count):
+        replacements = _SUBSTITUTIONS.get(chr(bases[position]))
+        if replacements:
+            bases[position] = ord(rng.choice(replacements))
+    return bases.decode("ascii")
+
+
+def _write_record(handle, header: str, sequence: str) -> None:
+    handle.write(header + "\n")
+    for start in range(0, len(sequence), FASTA_LINE_WIDTH):
+        handle.write(sequence[start:start + FASTA_LINE_WIDTH] + "\n")
+
+
+def write_inflated_assembly(
+    source: str,
+    destination: str,
+    copies: int = INFLATED_ASSEMBLY_COPIES,
+    divergence: float = INFLATED_ASSEMBLY_DIVERGENCE,
+    seed: int = INFLATED_ASSEMBLY_SEED,
+) -> None:
+    """Write `source` plus `copies` slightly-mutated copies of it to `destination`.
+
+    The binning tests need far more contigs than the toy assembly provides, so
+    they inflate it. The copies used to be byte-identical (only the headers
+    differed), which handed COMEBin's clustering step thousands of co-located
+    points. hnswlib's graph construction cannot reliably traverse those, and
+    the run fails partway with "Cannot return the results in a contiguous 2D
+    array. Probably ef or M is too small" -- intermittently, because COMEBin's
+    embedding step is unseeded, so whether a given run lands in a traversable
+    configuration is chance.
+
+    Substituting `divergence` of the bases in each copy gives every contig its
+    own kmer composition, while keeping copies of one contig similar enough to
+    remain a coherent, binnable group (strain-level divergence). It also makes
+    read mapping less ambiguous: reads map to the closest variant rather than
+    at random across identical twins, which steadies the coverage signal.
+
+    Seeded, so the inflated assembly is byte-identical from run to run.
+    """
+    records = _read_fasta(source)
+    rng = random.Random(seed)
+    with open(destination, "w") as handle:
+        for header, sequence in records:
+            _write_record(handle, header, sequence)
+        for copy_index in range(copies):
+            for header, sequence in records:
+                _write_record(
+                    handle,
+                    f"{header}{copy_index}",
+                    _mutate(sequence, divergence, rng),
+                )
+
+
 def assert_mapper_logged(testcase, output_dir, rule_log_dir, expected_flag):
     """Assert a CoverM call in this rule used the expected -p mapper.
 
@@ -111,11 +205,7 @@ class TestsQsub(unittest.TestCase):
         setup_output_dir(output_dir)
 
         # Create inflated assembly file
-        cmd = f"cat {data}/assembly.fasta > {output_dir}/assembly.fasta"
-        multiplier = 100
-        for i in range(multiplier):
-            cmd += f" && awk '/^>/ {{print $0 \"{i}\"}} !/^>/ {{print $0}}' {data}/assembly.fasta >> {output_dir}/assembly.fasta"
-        subprocess.run(cmd, shell=True, check=True)
+        write_inflated_assembly(f"{data}/assembly.fasta", f"{output_dir}/assembly.fasta")
 
         cmd = (
             f"aviary recover "
@@ -137,7 +227,15 @@ class TestsQsub(unittest.TestCase):
             f"--max-contamination 20 "
             f"-n 32 -t 32 --local-cores 1 "
             f"--strict "
-            f"--snakemake-profile aqua --cluster-retries 0 "
+            # Retries because the GPU binners here can fail transiently on this
+            # synthetic assembly: COMEBin's embeddings are unseeded, and a run
+            # whose embedding space happens to hold tight duplicate clusters
+            # trips hnswlib ("Cannot return the results in a contigious 2D
+            # array"). write_inflated_assembly's divergence makes that far less
+            # likely; this rides out the remainder rather than failing the whole
+            # suite. The binner rules wipe their output dir first, so a retry is
+            # a clean re-run. Matches the non-GPU sibling test, which uses 3.
+            f"--snakemake-profile aqua --cluster-retries 2 "
         )
         subprocess.run(cmd, shell=True, check=True)
 
@@ -487,12 +585,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
 
         # Create inflated assembly file
-        cmd = f"cat {data}/assembly.fasta > {output_dir}/assembly.fasta"
-        multiplier = 100
-        for i in range(multiplier):
-            cmd += f" && awk '/^>/ {{print $0 \"{i}\"}} !/^>/ {{print $0}}' {data}/assembly.fasta >> {output_dir}/assembly.fasta"
-
-        subprocess.run(cmd, shell=True, check=True)
+        write_inflated_assembly(f"{data}/assembly.fasta", f"{output_dir}/assembly.fasta")
 
         cmd = (
             f"aviary recover "
@@ -522,12 +615,7 @@ class Tests(unittest.TestCase):
         setup_output_dir(output_dir)
 
         # Create inflated assembly file
-        cmd = f"cat {data}/assembly.fasta > {output_dir}/assembly.fasta"
-        multiplier = 100
-        for i in range(multiplier):
-            cmd += f" && awk '/^>/ {{print $0 \"{i}\"}} !/^>/ {{print $0}}' {data}/assembly.fasta >> {output_dir}/assembly.fasta"
-
-        subprocess.run(cmd, shell=True, check=True)
+        write_inflated_assembly(f"{data}/assembly.fasta", f"{output_dir}/assembly.fasta")
 
         cmd = (
             f"aviary recover "
@@ -567,12 +655,7 @@ class Tests(unittest.TestCase):
             shutil.rmtree(logs_backup)
 
         # Create inflated assembly file
-        cmd = f"cat {data}/assembly.fasta > {output_dir}/assembly.fasta"
-        multiplier = 100
-        for i in range(multiplier):
-            cmd += f" && awk '/^>/ {{print $0 \"{i}\"}} !/^>/ {{print $0}}' {data}/assembly.fasta >> {output_dir}/assembly.fasta"
-
-        subprocess.run(cmd, shell=True, check=True)
+        write_inflated_assembly(f"{data}/assembly.fasta", f"{output_dir}/assembly.fasta")
 
         cmd = (
             f"aviary recover "
@@ -707,12 +790,7 @@ class Tests(unittest.TestCase):
             shutil.rmtree(logs_backup)
 
         # Create inflated assembly file
-        cmd = f"cat {data}/assembly.fasta > {output_dir}/assembly.fasta"
-        multiplier = 100
-        for i in range(multiplier):
-            cmd += f" && awk '/^>/ {{print $0 \"{i}\"}} !/^>/ {{print $0}}' {data}/assembly.fasta >> {output_dir}/assembly.fasta"
-
-        subprocess.run(cmd, shell=True, check=True)
+        write_inflated_assembly(f"{data}/assembly.fasta", f"{output_dir}/assembly.fasta")
 
         cmd = (
             f"aviary recover "
