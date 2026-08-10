@@ -591,13 +591,27 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
   font-size: 1rem;
 }
 
-.aviary-hero .md-typeset .md-button {
-  margin-right: 1.1rem;
-  margin-top: 1.3rem;
+/* The three calls to action sit on one line. They were stacking because
+   margin-based spacing leaves them as inline-blocks inside a <p>, so the
+   moment the hero's left grid column got tight -- which it does early, since
+   the terminal claims up to 360px beside it -- each button wrapped onto its
+   own line. A flex row with gap keeps them together and lets them wrap in
+   pairs rather than one-per-line when space really does run out.
+
+   The flex container is the <p> markdown generates inside the wrapper div,
+   not the wrapper itself: with md_in_html the links become paragraph content,
+   so styling the wrapper would only ever move one block-level child. */
+.aviary-hero__actions p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.3rem 0 0;
 }
 
-.aviary-hero .md-typeset .md-button:last-child {
-  margin-right: 0;
+.aviary-hero__actions .md-button {
+  margin: 0;
+  white-space: nowrap;
 }
 
 /* --- Decorative cycling terminal, hero right-hand column ---------------- */
@@ -779,14 +793,18 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
 /* wins regardless of source order.                                        */
 /* Durations roughly doubled (2026-08-10): at 0.5s/0.6s the panel had
    finished settling before your eye arrived at it, so the effect read as
-   "the text was just there" rather than as an entrance. The travel distance
-   is up too -- a longer, larger move is what makes the motion legible,
-   independent of how long it lasts. */
+   "the text was just there" rather than as an entrance.
+
+   Magnitude then dialled back to 75% (2026-08-10): travel 56px -> 42px,
+   shrink 0.9 -> 0.925, and the easing's overshoot 1.56 -> 1.42. Duration is
+   deliberately NOT reduced -- how long the move takes is what makes it
+   noticeable, how far it travels is what makes it feel heavy-handed, and
+   only the second needed toning down. */
 html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal {
   opacity: 0;
-  transform: translateY(56px) scale(0.9);
-  transition: opacity 0.95s cubic-bezier(0.34, 1.56, 0.64, 1),
-              transform 1.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateY(42px) scale(0.925);
+  transition: opacity 0.95s cubic-bezier(0.34, 1.42, 0.64, 1),
+              transform 1.15s cubic-bezier(0.34, 1.42, 0.64, 1);
 }
 
 html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal.is-visible {
@@ -796,7 +814,7 @@ html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal.is-visible {
 
 @media (prefers-reduced-motion: no-preference) {
   html.aviary-motion-ready .aviary-scrolly__panel.is-visible .aviary-scrolly__node {
-    animation: aviary-node-boom 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: aviary-node-boom 1.2s cubic-bezier(0.34, 1.42, 0.64, 1);
   }
 }
 
@@ -806,7 +824,7 @@ html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal.is-visible {
     box-shadow: 0 0 0 0 var(--md-accent-fg-color--transparent);
   }
   70% {
-    box-shadow: 0 0 0 16px transparent;
+    box-shadow: 0 0 0 12px transparent;
   }
   100% {
     border-color: var(--aviary-border);
@@ -860,7 +878,7 @@ html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal.is-visible {
 /* never touches buttons, cards, nav, headerlinks or the banner -- each of  */
 /* which has its own hover language defined elsewhere in this file.         */
 
-.md-content .md-typeset :is(p, li, td) > a {
+.md-content .md-typeset :is(p, li, td) > a:not(.md-button) {
   text-decoration: none;
   background-image: linear-gradient(currentColor, currentColor);
   background-repeat: no-repeat;
@@ -869,7 +887,7 @@ html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal.is-visible {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .md-content .md-typeset :is(p, li, td) > a {
+  .md-content .md-typeset :is(p, li, td) > a:not(.md-button) {
     transition: background-size 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }

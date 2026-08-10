@@ -27,9 +27,11 @@ and coordinates their taxonomic and functional annotation. Short-read,
 long-read and hybrid analyses run through one reproducible Snakemake
 workflow, locally or across an HPC cluster.
 
+<div class="aviary-hero__actions" markdown>
 [Install Aviary](installation.md){ .md-button .md-button--primary }
 [Quickstart](getting-started/quickstart.md){ .md-button }
 [Read the PDF manual](https://snh-star.github.io/aviary/pdf/aviary-manual.pdf){ .md-button }
+</div>
 </div>
 
 <div class="aviary-terminal aviary-reveal">
