@@ -57,56 +57,57 @@ for what each stage does and where its outputs land.
 
 ## The commands
 
-Scroll — each command in turn, what it does and where to read more.
+Six subcommands, each a stage of the same workflow. `complete` runs the lot;
+the others let you enter or leave at any point.
 
-<div class="aviary-scrolly">
+<div class="aviary-commands" markdown>
 
-<div class="aviary-scrolly__panel aviary-reveal">
-<span class="aviary-scrolly__node">🚀</span>
-<h3 class="aviary-scrolly__title"><code>aviary complete</code></h3>
-<p class="aviary-scrolly__tagline">Reads → annotated MAGs, end to end</p>
-<p class="aviary-scrolly__body">Every stage in one command: assembly, binning, refinement, then annotation. Works from short reads, long reads, or both together — this is the command used in the example above. Already have an assembly? Pass it with <code>--assembly</code> and Aviary picks up from binning instead of starting over.</p>
-<a class="aviary-scrolly__link" href="usage/complete/">Read the <code>complete</code> documentation →</a>
+<div class="aviary-command" markdown>
+<div class="aviary-command__head">
+<a class="aviary-command__name" href="usage/complete/"><code>complete</code></a>
+<span class="aviary-command__flow">reads <span aria-hidden="true">→</span> annotated MAGs</span>
+</div>
+<p class="aviary-command__body">Every stage in one command: assembly, binning, refinement, then annotation. Works from short reads, long reads, or both. Already have an assembly? Pass <code>--assembly</code> and Aviary picks up from binning instead of starting over.</p>
 </div>
 
-<div class="aviary-scrolly__panel aviary-reveal">
-<span class="aviary-scrolly__node">🧬</span>
-<h3 class="aviary-scrolly__title"><code>aviary assemble</code></h3>
-<p class="aviary-scrolly__tagline">Reads → contigs</p>
-<p class="aviary-scrolly__body">Step-down hybrid assembly that uses long and short reads together, playing each to its strengths — long reads for contiguity, short reads for accuracy. Either read type alone works too. Hand it several short-read samples with no long reads and they are co-assembled with MEGAHIT or metaSPAdes.</p>
-<a class="aviary-scrolly__link" href="usage/assemble/">Read the <code>assemble</code> documentation →</a>
+<div class="aviary-command" markdown>
+<div class="aviary-command__head">
+<a class="aviary-command__name" href="usage/assemble/"><code>assemble</code></a>
+<span class="aviary-command__flow">reads <span aria-hidden="true">→</span> contigs</span>
+</div>
+<p class="aviary-command__body">Step-down hybrid assembly using long and short reads together, playing each to its strengths — long reads for contiguity, short reads for accuracy. Either type alone works too. Several short-read samples with no long reads are co-assembled with MEGAHIT or metaSPAdes.</p>
 </div>
 
-<div class="aviary-scrolly__panel aviary-reveal">
-<span class="aviary-scrolly__node">🧩</span>
-<h3 class="aviary-scrolly__title"><code>aviary recover</code></h3>
-<p class="aviary-scrolly__tagline">Assembly → MAGs</p>
-<p class="aviary-scrolly__body">Sorts an assembly's contigs into metagenome-assembled genomes, running several binning algorithms rather than trusting any single one, then refines the results and reports quality and taxonomy for each MAG. No assembly to hand? It runs the assembly pipeline first. Pass multiple assemblies to enable SemiBin2 multi-sample binning.</p>
-<a class="aviary-scrolly__link" href="usage/recover/">Read the <code>recover</code> documentation →</a>
+<div class="aviary-command" markdown>
+<div class="aviary-command__head">
+<a class="aviary-command__name" href="usage/recover/"><code>recover</code></a>
+<span class="aviary-command__flow">assembly <span aria-hidden="true">→</span> MAGs</span>
+</div>
+<p class="aviary-command__body">Sorts contigs into metagenome-assembled genomes using several binning algorithms rather than trusting any single one, then refines the result and reports quality and taxonomy per MAG. With no assembly it runs the assembly pipeline first; with several it enables SemiBin2 multi-sample binning.</p>
 </div>
 
-<div class="aviary-scrolly__panel aviary-reveal">
-<span class="aviary-scrolly__node">🏷️</span>
-<h3 class="aviary-scrolly__title"><code>aviary annotate</code></h3>
-<p class="aviary-scrolly__tagline">MAGs → annotations</p>
-<p class="aviary-scrolly__body">Point it at a directory of genomes and it answers the three questions you have about every MAG: what genes are in it (EggNOG), what it is (GTDB-Tk), and how much you can trust it (CheckM2 completeness and contamination). Assemblies can be passed alongside for QUAST QC.</p>
-<a class="aviary-scrolly__link" href="usage/annotate/">Read the <code>annotate</code> documentation →</a>
+<div class="aviary-command" markdown>
+<div class="aviary-command__head">
+<a class="aviary-command__name" href="usage/annotate/"><code>annotate</code></a>
+<span class="aviary-command__flow">MAGs <span aria-hidden="true">→</span> annotations</span>
+</div>
+<p class="aviary-command__body">Answers the three questions you have about every MAG: what genes are in it (EggNOG), what it is (GTDB-Tk), and how far you can trust it (CheckM2 completeness and contamination). Assemblies can be passed alongside for QUAST QC.</p>
 </div>
 
-<div class="aviary-scrolly__panel aviary-reveal">
-<span class="aviary-scrolly__node">👥</span>
-<h3 class="aviary-scrolly__title"><code>aviary cluster</code></h3>
-<p class="aviary-scrolly__tagline">Dereplicate genomes across samples</p>
-<p class="aviary-scrolly__body">Run enough samples and the same organism turns up again and again. Point this at your finished Aviary runs and Galah collapses those near-duplicates into clusters, choosing one representative genome each — 97% ANI by default, adjustable with <code>--ani</code>.</p>
-<a class="aviary-scrolly__link" href="usage/cluster/">Read the <code>cluster</code> documentation →</a>
+<div class="aviary-command" markdown>
+<div class="aviary-command__head">
+<a class="aviary-command__name" href="usage/cluster/"><code>cluster</code></a>
+<span class="aviary-command__flow">many runs <span aria-hidden="true">→</span> representatives</span>
+</div>
+<p class="aviary-command__body">Run enough samples and the same organism turns up repeatedly. Galah collapses those near-duplicates across finished Aviary runs and picks one representative genome per cluster — 97% ANI by default, adjustable with <code>--ani</code>.</p>
 </div>
 
-<div class="aviary-scrolly__panel aviary-reveal">
-<span class="aviary-scrolly__node">🧪</span>
-<h3 class="aviary-scrolly__title"><code>aviary isolate</code></h3>
-<p class="aviary-scrolly__tagline">Assemble and annotate a single isolate genome</p>
-<p class="aviary-scrolly__body">The same step-down hybrid assembly as <code>assemble</code>, but tuned for a single organism from pure culture rather than a mixed community. Reach for this when you sequenced one isolate — on metagenomic data, use <code>assemble</code> or <code>recover</code> instead.</p>
-<a class="aviary-scrolly__link" href="usage/isolate/">Read the <code>isolate</code> documentation →</a>
+<div class="aviary-command" markdown>
+<div class="aviary-command__head">
+<a class="aviary-command__name" href="usage/isolate/"><code>isolate</code></a>
+<span class="aviary-command__flow">pure culture <span aria-hidden="true">→</span> genome</span>
+</div>
+<p class="aviary-command__body">The same step-down hybrid assembly as <code>assemble</code>, tuned for a single organism from pure culture rather than a mixed community. For metagenomic data, use <code>assemble</code> or <code>recover</code> instead.</p>
 </div>
 
 </div>

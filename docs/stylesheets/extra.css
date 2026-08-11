@@ -69,8 +69,6 @@
   --aviary-surface-sunken: #efeee9;
   --aviary-border: #dfddd6;
   --aviary-shadow: 0 1px 2px rgba(23, 27, 33, 0.06), 0 4px 14px rgba(23, 27, 33, 0.05);
-  --aviary-aurora-2: rgba(66, 105, 150, 0.10);
-  --aviary-aurora-3: rgba(74, 197, 142, 0.14);
   /* True brand green -- for button fills and other large decorative
      surfaces only. Never used as small text (see contrast note above). */
   --aviary-brand-green: #4ac58e;
@@ -117,8 +115,6 @@
   --aviary-surface-sunken: #0d1015;
   --aviary-border: #262c35;
   --aviary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.35);
-  --aviary-aurora-2: rgba(94, 138, 190, 0.16);
-  --aviary-aurora-3: rgba(74, 197, 142, 0.18);
   --aviary-brand-green: #4ac58e;
   --aviary-brand-green-ink: #0c1a15;
   --aviary-zebra: rgba(255, 255, 255, 0.035);
@@ -162,14 +158,24 @@ html {
 
 .md-typeset {
   font-size: 0.72rem;
-  line-height: 1.65;
+  line-height: 1.7;
+}
+
+/* Reference prose is read in long sittings, so measure matters more here than
+   filling the column. ~72 characters at this size; tables, code and figures
+   opt out below because they genuinely want the full width. */
+.md-typeset p,
+.md-typeset ul,
+.md-typeset ol {
+  max-width: 42rem;
 }
 
 .md-typeset h1,
 .md-typeset h2,
-.md-typeset h3 {
+.md-typeset h3,
+.md-typeset h4 {
   font-weight: 650;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.012em;
 }
 
 .md-typeset h1 {
@@ -179,11 +185,18 @@ html {
 
 /* Section rules run brand green the whole way, rather than a green leader
    handing off to a grey hairline -- the two-tone version read as an unfinished
-   bar rather than a deliberate accent. */
+   bar rather than a deliberate accent.
+
+   Spacing is deliberately asymmetric (3.2em above, 1em below): a heading
+   belongs to what follows it, so the gap above must clearly exceed the gap
+   below or the eye groups it with the preceding section. Material's default
+   is closer to even, which is what makes long reference pages read as one
+   undifferentiated column. */
 .md-typeset h2 {
   position: relative;
   font-size: 1.4rem;
-  margin-top: 2em;
+  margin-top: 3.2em;
+  margin-bottom: 1em;
   padding-bottom: 0.4em;
   border-bottom: none;
 }
@@ -202,7 +215,9 @@ html {
 .md-typeset h3 {
   font-size: 1.1rem;
   font-weight: 600;
+  margin-top: 2.2em;
 }
+
 
 .md-typeset code,
 .md-typeset kbd,
@@ -270,31 +285,11 @@ html {
   --md-typeset-a-color: var(--aviary-brand-green-ink);
 }
 
-/* A slow specular sweep. The banner is the one element on every page, so it
-   earns a little motion the rest of the chrome doesn't get -- and it reads as
-   "this is a link worth clicking" without resorting to a bright CTA colour
-   that would fight the header. */
-.md-banner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  transform: translateX(-120%);
-  background: linear-gradient(100deg,
-    transparent 42%, rgba(255, 255, 255, 0.3) 50%, transparent 58%);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  html.aviary-js .md-banner::after {
-    animation: aviary-sheen 9s ease-in-out 3s infinite;
-  }
-}
-
-@keyframes aviary-sheen {
-  0%   { transform: translateX(-120%); }
-  55%  { transform: translateX(120%); }
-  100% { transform: translateX(120%); }
-}
+/* The specular sweep that used to run here was removed 2026-08-11. It was the
+   one element animating on every page of the site, on a loop, in the reader's
+   peripheral vision while they read reference material -- the definition of
+   decoration competing with content. The bar earns attention from its colour
+   and position; it does not need to move. */
 
 .aviary-announcement {
   position: relative;
@@ -508,43 +503,23 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
   isolation: isolate;
 }
 
-/* Aurora mesh -- slow-drifting radial gradients behind everything. Pure
-   decoration, sits at z-index -2, never interferes with text contrast
-   because the hero text has its own solid-enough foreground color. */
+/* A single, still wash behind the hero -- one accent-tinted gradient rather
+   than the three-colour drifting mesh that was here before (removed
+   2026-08-11, along with the SVG grain overlay).
+
+   Both were doing the same job the branch motif already does better, and
+   doing it in the reader's peripheral vision. A perpetual 22-second drift on
+   the landing page of a reference site is movement with nothing to say; the
+   grain was a texture trend rather than a property of this product. What
+   remains is a quiet depth cue that lets the motif and the headline carry the
+   page. */
 .aviary-hero::before {
   content: "";
   position: absolute;
-  inset: -20%;
-  z-index: -2;
-  background:
-    radial-gradient(38% 55% at 12% 15%, var(--md-accent-fg-color--transparent), transparent 70%),
-    radial-gradient(30% 45% at 85% 10%, var(--aviary-aurora-2, rgba(120, 150, 190, 0.14)), transparent 70%),
-    radial-gradient(45% 60% at 60% 90%, var(--aviary-aurora-3, rgba(168, 103, 42, 0.08)), transparent 70%);
-  filter: blur(6px);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  html.aviary-js .aviary-hero::before {
-    animation: aviary-aurora-drift 22s ease-in-out infinite alternate;
-  }
-}
-
-@keyframes aviary-aurora-drift {
-  0%   { transform: translate3d(0, 0, 0) scale(1); }
-  100% { transform: translate3d(-2%, 2%, 0) scale(1.06); }
-}
-
-/* Grain -- a static SVG turbulence texture, blended over the aurora so the
-   gradients don't look like a flat SaaS-hero blob. Subtle on purpose. */
-.aviary-hero::after {
-  content: "";
-  position: absolute;
   inset: 0;
-  z-index: -1;
-  opacity: 0.35;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  background-size: 160px 160px;
+  z-index: -2;
+  background: radial-gradient(60% 80% at 18% 0%,
+    var(--md-accent-fg-color--transparent), transparent 72%);
 }
 
 .aviary-hero__inner {
@@ -745,149 +720,89 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Scrollytelling -- "The commands". One command reveals per scroll step.  */
-/* Each panel gets real vertical room so scrolling naturally paces through */
-/* them one at a time -- no scroll-jacking/pinning, just min-height +      */
-/* IntersectionObserver (see javascripts/reveal.js), which stays scrollable*/
-/* at the browser's normal speed and degrades to "just show everything"    */
-/* with no JS or reduced-motion at all.                                    */
+/* Command index -- the six subcommands.                                   */
 /*                                                                          */
-/* No connecting line (removed 2026-08-10): panels are centered and full-  */
-/* width text, so a vertical line spanning the whole container ran behind  */
-/* the node circle (fine, opaque background) AND straight through the      */
-/* title/tagline/body text below it (not fine -- nothing there to hide it  */
-/* behind). Not worth re-adding shortened/clipped to just the node-to-node */
-/* gaps for what it added.                                                 */
+/* Replaces the scrollytelling section (removed 2026-08-11): one command    */
+/* revealed per scroll step looked considered but read as a slideshow, and  */
+/* it forced ~5 screens of scrolling to convey what is fundamentally a      */
+/* six-row reference. A reader arriving here wants to compare the six and   */
+/* leave, not be walked through them.                                       */
 /*                                                                          */
-/* min-height is 2x the original per-panel figure (2026-08-10). Note what   */
-/* this does and does not buy: it doubles the distance BETWEEN reveals, but */
-/* it does not delay any individual one. threshold is a fraction of the     */
-/* panel's own height, so a taller panel hits 30%-of-itself at the same     */
-/* point on screen. Delaying the trigger is rootMargin's job, and that      */
-/* lives in reveal.js -- see the note on the scrolly observer there.        */
+/* A ruled list rather than another card grid: the "Find what you need"     */
+/* block below is already cards, and two card grids stacked is exactly the  */
+/* uniform, template-y rhythm worth avoiding. Rules give a denser, more     */
+/* scannable register and let the monospaced command names form a strong    */
+/* left-hand column the eye can run down.                                   */
 /* ---------------------------------------------------------------------- */
 
-.aviary-scrolly {
-  position: relative;
-  max-width: 38rem;
-  margin: 1rem auto 2rem;
+.aviary-commands {
+  margin: 1.6rem 0 2.4rem;
+  border-top: 1px solid var(--aviary-border);
 }
 
-.aviary-scrolly__panel {
-  position: relative;
-  z-index: 1;
+.aviary-command {
+  display: grid;
+  grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
+  gap: 0.4rem 2rem;
+  align-items: baseline;
+  padding: 1.15rem 0.6rem 1.15rem 0.75rem;
+  border-bottom: 1px solid var(--aviary-border);
+  /* Left rail rather than a background tint: keeps the row flat until it is
+     pointed at, so the resting state stays quiet. */
+  box-shadow: inset 2px 0 0 -2px transparent;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.aviary-command:hover {
+  background-color: var(--aviary-zebra);
+  box-shadow: inset 2px 0 0 0 var(--md-accent-fg-color);
+}
+
+.aviary-command__head {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  min-height: 88vh;
-  padding: 2rem 1.25rem;
+  gap: 0.3rem;
 }
 
-.aviary-scrolly__panel:first-child {
-  min-height: 60vh;
+.aviary-command__name {
+  font-weight: 600;
+  text-decoration: none;
 }
 
-.aviary-scrolly__panel:last-child {
-  min-height: 0;
-  padding-bottom: 0.5rem;
-}
-
-.aviary-scrolly__node {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.4rem;
-  height: 3.4rem;
-  margin-bottom: 1rem;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  background: var(--aviary-surface);
-  border: 2px solid var(--aviary-border);
-  box-shadow: var(--aviary-shadow);
-}
-
-[data-md-color-scheme="slate"] .aviary-scrolly__node {
-  background: rgba(23, 27, 33, 0.75);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-}
-
-.aviary-scrolly__title {
-  margin: 0 0 0.3rem;
-  font-size: 1.35rem;
-}
-
-.aviary-scrolly__title code {
+/* The command names are the page's anchor points, so they get the accent and
+   a size step up -- everything else in the row stays secondary. */
+.md-typeset .aviary-command__name code {
   background: none;
   padding: 0;
-  font-size: 1em;
-}
-
-.aviary-scrolly__tagline {
-  margin: 0 0 0.7rem;
-  font-weight: 600;
-  font-size: 0.82rem;
-  letter-spacing: 0.02em;
+  font-size: 0.95rem;
   color: var(--md-accent-fg-color);
 }
 
-.aviary-scrolly__body {
-  margin: 0 0 1rem;
-  max-width: 30rem;
+.aviary-command__name:hover code {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.aviary-command__flow {
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--lighter);
+}
+
+.md-typeset .aviary-command__body {
+  margin: 0;
   color: var(--md-default-fg-color--light);
 }
 
-.aviary-scrolly__link {
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-/* "Boom": a punchier, overshooting variant of the base .aviary-reveal      */
-/* transition, plus a brief ring-pulse on the node itself. Higher           */
-/* specificity than the generic .aviary-reveal rule (extra class), so it    */
-/* wins regardless of source order.                                        */
-/* Durations roughly doubled (2026-08-10): at 0.5s/0.6s the panel had
-   finished settling before your eye arrived at it, so the effect read as
-   "the text was just there" rather than as an entrance.
-
-   Magnitude then dialled back to 75% (2026-08-10): travel 56px -> 42px,
-   shrink 0.9 -> 0.925, and the easing's overshoot 1.56 -> 1.42. Duration is
-   deliberately NOT reduced -- how long the move takes is what makes it
-   noticeable, how far it travels is what makes it feel heavy-handed, and
-   only the second needed toning down. */
-html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal {
-  opacity: 0;
-  transform: translateY(42px) scale(0.925);
-  transition: opacity 0.95s cubic-bezier(0.34, 1.42, 0.64, 1),
-              transform 1.15s cubic-bezier(0.34, 1.42, 0.64, 1);
-}
-
-html.aviary-motion-ready .aviary-scrolly__panel.aviary-reveal.is-visible {
-  opacity: 1;
-  transform: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  html.aviary-motion-ready .aviary-scrolly__panel.is-visible .aviary-scrolly__node {
-    animation: aviary-node-boom 1.2s cubic-bezier(0.34, 1.42, 0.64, 1);
+@media screen and (max-width: 44.9375em) {
+  .aviary-command {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
   }
 }
 
-@keyframes aviary-node-boom {
-  0% {
-    border-color: var(--md-accent-fg-color);
-    box-shadow: 0 0 0 0 var(--md-accent-fg-color--transparent);
-  }
-  70% {
-    box-shadow: 0 0 0 12px transparent;
-  }
-  100% {
-    border-color: var(--aviary-border);
-    box-shadow: var(--aviary-shadow);
-  }
-}
 
 /* ---------------------------------------------------------------------- */
 /* Scrollbar + selection -- small details, but stock browser chrome next   */
