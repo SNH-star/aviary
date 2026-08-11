@@ -926,39 +926,38 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
 /* within it. Padding goes on ALL links, not just the active one, so        */
 /* activating an item does not shift its text sideways.                     */
 
+/* Both markers are PAINTED ON THE LINK ITSELF -- an inset shadow for the rail,
+   a background gradient for the dot -- rather than drawn with an absolutely
+   positioned ::after.
+
+   This is deliberate and it is the third attempt at this. A positioned
+   pseudo-element can always be clipped by some ancestor's overflow, and here
+   there is one: Material gives .md-sidebar__scrollwrap `overflow-y: auto`,
+   which makes it a scroll container, and a scroll container clips on BOTH
+   axes. Moving the marker inside the padding box fixed it in principle but
+   still left a shape that another overflow context could cut. Backgrounds and
+   inset shadows are painted within the element's own border box, so no
+   ancestor can slice them -- the failure mode is structurally gone rather
+   than avoided by choosing the right offset. */
+
 .md-sidebar--primary .md-nav__link,
 .md-sidebar--secondary .md-nav__link {
   padding-left: 0.6rem;
 }
 
-.md-sidebar--primary .md-nav__link--active,
+/* Rail: a 3px inset edge down the whole link. */
+.md-sidebar--primary .md-nav__link--active {
+  box-shadow: inset 3px 0 0 0 var(--md-accent-fg-color);
+}
+
+/* Dot: a radial gradient sized and placed with background-position, so it is
+   part of the link's own painting. 5px circle, 0.14rem in from the edge. */
 .md-sidebar--secondary .md-nav__link--active {
-  position: relative;
-}
-
-.md-sidebar--primary .md-nav__link--active::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 3px;
-  height: 1.05em;
-  transform: translateY(-50%);
-  border-radius: 2px;
-  background: var(--md-accent-fg-color);
-}
-
-.md-sidebar--secondary .md-nav__link--active::after {
-  content: "";
-  position: absolute;
-  /* Inset far enough that the 3px halo below also clears the scrollwrap. */
-  left: 0.12rem;
-  top: 0.62em;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--md-accent-fg-color);
-  box-shadow: 0 0 0 3px var(--md-accent-fg-color--transparent);
+  background-image: radial-gradient(circle,
+    var(--md-accent-fg-color) 2.5px, transparent 2.6px);
+  background-repeat: no-repeat;
+  background-position: 0.14rem 0.75em;
+  background-size: 10px 10px;
 }
 
 /* --- Tables: zebra + a header that sits back ---------------------------- */
