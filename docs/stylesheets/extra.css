@@ -915,15 +915,31 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
 /* --- Navigation: primary gets a rail, the TOC gets a dot ---------------- */
 /* Two different markers so the two sidebars stay tellable apart at a       */
 /* glance -- they sit on opposite sides of the same page.                   */
+/*                                                                          */
+/* BOTH markers must sit INSIDE the link's own box. Material gives          */
+/* .md-sidebar__scrollwrap `overflow-y: auto`, which makes it a scroll      */
+/* container -- and a scroll container clips on BOTH axes, so overflow-x is */
+/* effectively hidden too. Markers hung off the left edge with a negative   */
+/* `left` (which is what was here until 2026-08-11) get sliced down their   */
+/* left-hand side, worst on the TOC where a clipped circle is obvious.      */
+/* Hence: reserve space with padding on every link, then draw the marker    */
+/* within it. Padding goes on ALL links, not just the active one, so        */
+/* activating an item does not shift its text sideways.                     */
 
-.md-sidebar--primary .md-nav__link--active {
+.md-sidebar--primary .md-nav__link,
+.md-sidebar--secondary .md-nav__link {
+  padding-left: 0.6rem;
+}
+
+.md-sidebar--primary .md-nav__link--active,
+.md-sidebar--secondary .md-nav__link--active {
   position: relative;
 }
 
 .md-sidebar--primary .md-nav__link--active::after {
   content: "";
   position: absolute;
-  left: -0.55rem;
+  left: 0;
   top: 50%;
   width: 3px;
   height: 1.05em;
@@ -932,14 +948,11 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
   background: var(--md-accent-fg-color);
 }
 
-.md-sidebar--secondary .md-nav__link--active {
-  position: relative;
-}
-
 .md-sidebar--secondary .md-nav__link--active::after {
   content: "";
   position: absolute;
-  left: -0.6rem;
+  /* Inset far enough that the 3px halo below also clears the scrollwrap. */
+  left: 0.12rem;
   top: 0.62em;
   width: 5px;
   height: 5px;
