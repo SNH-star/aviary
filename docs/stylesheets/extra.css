@@ -940,25 +940,29 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
    ancestor can slice them -- the failure mode is structurally gone rather
    than avoided by choosing the right offset. */
 
-/* The primary nav was being truncated at the bottom of long pages: scrolled to
-   the end, the list stopped several items early (at `configure` rather than
-   `Reproducibility`) while its top stayed put -- so the height was shrinking,
-   not the sidebar riding up.
+/* On the primary nav being "cut off" at the bottom of long pages.
 
-   Material sizes the scrollwrap from JS -- `i.style.height = ${l - 2*a}px` on
-   `.md-sidebar__scrollwrap` (bundle.js, sidebar observable) -- and an inline
-   style beats any stylesheet rule, which is why nothing here had any effect
-   until now. Hence !important: it is the only way to reach a JS-written inline
-   height, not a specificity shortcut.
+   Material sizes the scrollwrap from JS (`i.style.height = ${l - 2*a}px` on
+   `.md-sidebar__scrollwrap`, sidebar observable) and shrinks it as the footer
+   comes into view, so the nav never overlaps the footer. Forcing full height
+   with `height: auto !important` was tried on 2026-08-11 and reverted the same
+   day: it stops the shrinking, but the nav then runs down THROUGH the footer,
+   which is worse than what it fixed.
 
-   `height: auto` hands sizing back to the content, `max-height` caps it to the
-   viewport so the nav scrolls internally instead of being cut. Scoped to the
-   breakpoint where the desktop sidebar exists at all, so the mobile drawer --
-   which relies on that same inline height -- is untouched. */
+   There is no arrangement that shows all of it at once -- this nav is ~25
+   items, taller than the viewport at any realistic window size, so it has to
+   scroll internally no matter what. The real complaint is that the boundary
+   read as "chopped" rather than "there is more below", so that is what this
+   fixes: a short fade at the bottom edge, which is the conventional signal for
+   a scroll region with more content. Material's own scroll affordance stays.
+
+   Scoped to the desktop breakpoint; the mobile drawer is left alone. */
 @media screen and (min-width: 76.25em) {
   .md-sidebar--primary .md-sidebar__scrollwrap {
-    height: auto !important;
-    max-height: calc(100vh - 8rem);
+    -webkit-mask-image: linear-gradient(to bottom,
+      #000 calc(100% - 1.5rem), transparent 100%);
+    mask-image: linear-gradient(to bottom,
+      #000 calc(100% - 1.5rem), transparent 100%);
   }
 }
 
