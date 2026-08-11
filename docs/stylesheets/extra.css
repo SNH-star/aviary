@@ -966,8 +966,7 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
   }
 }
 
-.md-sidebar--primary .md-nav__link,
-.md-sidebar--secondary .md-nav__link {
+.md-sidebar--primary .md-nav__link {
   padding-left: 0.6rem;
 }
 
@@ -976,14 +975,33 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
   box-shadow: inset 3px 0 0 0 var(--md-accent-fg-color);
 }
 
-/* Dot: a radial gradient sized and placed with background-position, so it is
-   part of the link's own painting. 5px circle, 0.14rem in from the edge. */
-.md-sidebar--secondary .md-nav__link--active {
-  background-image: radial-gradient(circle,
-    var(--md-accent-fg-color) 2.5px, transparent 2.6px);
-  background-repeat: no-repeat;
-  background-position: 0.14rem 0.75em;
-  background-size: 10px 10px;
+/* Dot: a real flex item, not a painted background.
+
+   Material makes .md-nav__link a flex container (`display: flex;
+   align-items: flex-start; gap: .4rem`), so a ::before becomes a laid-out
+   child -- it gets the gap for free, sits on the FIRST line of a wrapped
+   entry because of flex-start, and cannot be clipped because it is in normal
+   flow rather than positioned. The earlier background-gradient version had to
+   guess a vertical offset (`0.75em`) and got it wrong; here the geometry is
+   computed from the line box instead.
+
+   The slot is reserved on EVERY link and merely coloured in on the active
+   one. Adding the marker only when active would widen that link by
+   5px + 0.4rem gap and shove its text sideways as you scroll. */
+.md-sidebar--secondary .md-nav__link::before {
+  content: "";
+  flex: 0 0 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: transparent;
+  /* Centre on the first line: half the 1.3 line-height, less half the dot. */
+  margin-top: calc(0.65em - 2.5px);
+  transition: background-color 125ms;
+}
+
+.md-sidebar--secondary .md-nav__link--active::before {
+  background-color: var(--md-accent-fg-color);
+  box-shadow: 0 0 0 3px var(--md-accent-fg-color--transparent);
 }
 
 /* --- Tables: zebra + a header that sits back ---------------------------- */
