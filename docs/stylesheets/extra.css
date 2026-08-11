@@ -940,6 +940,28 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
    ancestor can slice them -- the failure mode is structurally gone rather
    than avoided by choosing the right offset. */
 
+/* The primary nav was being truncated at the bottom of long pages: scrolled to
+   the end, the list stopped several items early (at `configure` rather than
+   `Reproducibility`) while its top stayed put -- so the height was shrinking,
+   not the sidebar riding up.
+
+   Material sizes the scrollwrap from JS -- `i.style.height = ${l - 2*a}px` on
+   `.md-sidebar__scrollwrap` (bundle.js, sidebar observable) -- and an inline
+   style beats any stylesheet rule, which is why nothing here had any effect
+   until now. Hence !important: it is the only way to reach a JS-written inline
+   height, not a specificity shortcut.
+
+   `height: auto` hands sizing back to the content, `max-height` caps it to the
+   viewport so the nav scrolls internally instead of being cut. Scoped to the
+   breakpoint where the desktop sidebar exists at all, so the mobile drawer --
+   which relies on that same inline height -- is untouched. */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary .md-sidebar__scrollwrap {
+    height: auto !important;
+    max-height: calc(100vh - 8rem);
+  }
+}
+
 .md-sidebar--primary .md-nav__link,
 .md-sidebar--secondary .md-nav__link {
   padding-left: 0.6rem;
