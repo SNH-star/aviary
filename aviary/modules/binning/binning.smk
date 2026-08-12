@@ -129,7 +129,8 @@ def select_split_samples(wildcards, read_type):
     end = (split + 1) * split_size
     split_reads = reads[start:end]
 
-    output = list(set(split_reads) & set(read_data))
+    read_data_set = set(read_data)
+    output = [r for r in split_reads if r in read_data_set]
 
     return output if output else "none"
 
