@@ -117,6 +117,11 @@ ipython = "*"
 toml = "*"
 bird_tool_utils_python = "*"
 snakemake-executor-plugin-cluster-generic = "*" # for run-tests-at-cmr
+# Required by `bird-release-python`, which runs
+# `python -m setuptools_scm --force-write-version-files` inside this env to
+# generate aviary/version.py at release time. Also what supplies the package
+# version at build time (see [tool.setuptools_scm] in pyproject.toml).
+setuptools_scm = "*"
 
 [feature.dev.activation]
 # Sets metapackage environment variables, which are assumed to be in the db/ of

@@ -1,4 +1,19 @@
-__version__ = "0.13.2"
+# Written by setuptools_scm from the git tag (see [tool.setuptools_scm] in
+# pyproject.toml). It IS tracked in git, unlike the usual advice in its own
+# header comment, because bird-release-python's flow depends on that: it
+# force-writes this file, tolerates exactly " M aviary/version.py" in its
+# pre-tag clean-tree guard, and then runs `git commit -a` -- which stages only
+# tracked modifications, so an ignored version.py would leave nothing to commit
+# and abort the release. singlem and bird_tool_utils track theirs for the same
+# reason.
+#
+# The fallback still matters: the file can be absent in a fresh checkout before
+# any build, and aviary.py imports __version__ from here for `--version` and its
+# startup log line, so a bare ImportError would break the CLI outright.
+try:
+    from aviary.version import __version__
+except ImportError:  # pragma: no cover - only hit in an unbuilt checkout
+    __version__ = "0.0.0.dev0"
 
 
 # CONSTANTS
