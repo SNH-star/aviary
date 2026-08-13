@@ -14,6 +14,10 @@ aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --lo
 
 ## Input options (short reads)
 
+Long reads (below) are required — isolate assembly is Flye-based and has no short-read-only
+path. Short reads are optional and, when given, are used for one additional Pilon/racon
+polishing round on top of the long-read assembly.
+
 **`-1`**, **`--pe-1`** FILE [FILE ...]
 
   Forward short read files.
@@ -72,12 +76,37 @@ aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --lo
 
 ## Examples
 
-Hybrid isolate assembly:
+### Long-read only
+
+The minimum viable input — Flye assembly, racon and medaka polishing, then dnaapler
+reorientation. No illumina polishing round runs, since no short reads are given:
 ```
-aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long_read_type ont
+aviary isolate --longreads reads.fastq.gz --long-read-type ont
 ```
 
-Short-read-only isolate assembly:
+### Hybrid: long reads + short reads for polishing
+
+The typical case for a bacterial isolate closed with ONT and cleaned up with Illumina — adds one
+extra Pilon/racon polishing round using the short reads on top of the long-read assembly:
 ```
-aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz
+aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
+```
+
+Short reads accept the same input shapes as the other subcommands:
+```
+aviary isolate -i sample_interleaved.fq.gz --longreads reads.fastq.gz --long-read-type ont
+aviary isolate -c sample_1.fq.gz sample_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
+```
+
+`aviary isolate` has no `--long-read-assembler`/`--use-megahit`/`--use-unicycler` flags — unlike
+`assemble`/`recover`/`complete`, the isolate assembly path is fixed to Flye rather than
+user-selectable, since it targets a single pure-culture genome rather than a mixed community.
+
+### Sizing the assembly
+
+Set `--genome-size` to roughly the expected isolate genome size (bacterial genomes are typically
+2–10 Mbp); it tunes Flye's assembly parameters and is unrelated to `--min-bin-size`, which
+doesn't apply here since isolate assembly produces one genome rather than binning a community:
+```
+aviary isolate --longreads reads.fastq.gz --long-read-type ont --genome-size 4500000
 ```

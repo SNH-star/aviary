@@ -311,22 +311,57 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 
 ## Examples
 
-Run the full pipeline with paired reads:
+The basic shape — assembly, binning and annotation in one call:
 ```
 aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz
 ```
 
-Run the full pipeline with long reads:
+`complete` accepts every input shape and assembler flag documented in
+[`aviary assemble`](assemble.md) (`-1`/`-2`, `-i`, `-c`, `-l`, `--use-megahit`,
+`--long-read-assembler`) and every binning flag in [`aviary recover`](recover.md)
+(`--semibin-model`, `--extra-binners`, `--min-completeness`, etc.), since it runs both stages
+back to back. The examples below are scenarios where combining flags across those two stages
+in a single `complete` call is the actual point, rather than running each stage separately.
+
+### A realistic hybrid run, soil metagenome, time series
+
+Long and short reads for three related samples, coassembled per-sample, SemiBin2 multi-sample
+binning to use cross-sample abundance, and a stricter completeness cutoff before annotation:
 ```
-aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long_read_type ont
+aviary complete \
+  -1 week1_1.fq.gz week2_1.fq.gz week3_1.fq.gz \
+  -2 week1_2.fq.gz week2_2.fq.gz week3_2.fq.gz \
+  --longreads week1.ont.fq.gz week2.ont.fq.gz week3.ont.fq.gz --long-read-type ont \
+  --semibin-mode multi --semibin-model soil \
+  --min-completeness 70 --max-contamination 5 \
+  -o soil_timeseries/ -t 16 -n 64
 ```
 
-Start from an existing assembly:
+### Fast turnaround on a preliminary assembly
+
+Skip taxonomy and abundance to get bins quickly for a first look, without wiring up GTDB-tk or
+running CoverM abundance yet:
+```
+aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --binning-only
+```
+
+Or keep abundance but drop only the slowest annotation step:
+```
+aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --skip-taxonomy
+```
+
+### Re-running from an assembly you already have
+
+If you already assembled separately (e.g. to inspect it first, or because you built it with
+another tool), `complete` skips straight to binning and annotation:
 ```
 aviary complete --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz
 ```
 
-Recover from multiple assemblies with SemiBin2 multi-sample binning:
+### Multiple assemblies through the whole pipeline
+
+SemiBin2 multi-sample binning also works when `complete` builds the assemblies itself, given
+one read set per sample:
 ```
 aviary complete --assembly sample1.fasta sample2.fasta \
   -1 sample1_1.fq.gz sample2_1.fq.gz -2 sample1_2.fq.gz sample2_2.fq.gz \

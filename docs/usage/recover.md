@@ -313,17 +313,91 @@ If no assembly is provided, aviary will first run the assembly pipeline.
 
 ## Examples
 
-Recover MAGs from an existing assembly with paired reads:
+The basic shape — an existing assembly plus reads for coverage:
 ```
 aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz
 ```
 
-Recover MAGs from an assembly with long reads:
+If `--assembly` is omitted, aviary assembles first from the same reads before binning; see
+[`aviary assemble`](assemble.md) for the read-input shapes (`-1`/`-2`, `-i`, `-c`, `-l`) and
+assembler choices (`--use-megahit`, `--long-read-assembler`) that apply equally here.
+
+The rest of these examples focus on what `recover` itself controls: which binners run, how
+SemiBin2 is configured, and what happens after binning.
+
+### Choosing which binning algorithms run
+
+`rosella`, `semibin`, `metabat1`/`metabat2` and `vamb` run by default; `maxbin2`, `concoct`,
+`comebin`, `taxvamb` and `quickbin` are skipped by default because of their runtime. Turn extras
+on, or drop defaults you don't want (e.g. `vamb` is memory-hungry on large assemblies):
 ```
-aviary recover --assembly scaffolds.fasta --longreads reads.fastq.gz --long_read_type ont
+aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
+  --extra-binners concoct comebin
+
+aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
+  --skip-binners vamb metabat
 ```
 
-Recover MAGs and assemble in one step:
+### Matching the SemiBin2 model to the sample's environment
+
+`--semibin-model` selects a pre-trained SemiBin2 environment model instead of the generic
+`global` default, which usually improves binning when the sample's environment is one SemiBin2
+has a model for:
 ```
-aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long_read_type ont
+aviary recover --assembly gut_sample.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
+  --semibin-model human_gut
+
+aviary recover --assembly seawater_sample.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
+  --semibin-model ocean
+```
+
+For a time series or multiple related samples, co-bin them instead of picking one model —
+SemiBin2 learns cross-sample abundance correlation, which `--semibin-model` doesn't need for
+this mode and is ignored:
+```
+aviary recover --assembly week1.fasta week2.fasta week3.fasta \
+  -1 week1_1.fq.gz week2_1.fq.gz week3_1.fq.gz \
+  -2 week1_2.fq.gz week2_2.fq.gz week3_2.fq.gz \
+  --semibin-mode multi
+```
+
+### Tuning MAG quality thresholds and refinement
+
+Raise the completeness bar and tighten contamination for a stricter final bin set (defaults are
+50% / 5%):
+```
+aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
+  --min-completeness 70 --max-contamination 5
+```
+
+Rosella's refinement step iterates by default; disable it for a faster, less-refined pass, or
+give it more retries on a difficult assembly:
+```
+aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
+  --refinery-max-iterations 0
+
+aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
+  --refinery-max-retries 6
+```
+
+### Large sample cohorts
+
+Coverage calculation is normally submitted as one job per rule; with many samples, splitting it
+into smaller parallel jobs shortens wall time on a cluster:
+```
+aviary recover --assembly scaffolds.fasta -1 s01_1.fq.gz ... s40_1.fq.gz -2 s01_2.fq.gz ... s40_2.fq.gz \
+  --coverage-job-strategy always --coverage-samples-per-job 8
+```
+
+### Skip individual downstream steps
+
+Stop after binning (skip SingleM, GTDB-tk and CoverM abundance calculation entirely):
+```
+aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz --binning-only
+```
+
+Keep binning and abundance, but skip taxonomy assignment specifically (useful when GTDB-tk's
+database isn't configured yet, or its runtime isn't needed for a given run):
+```
+aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz --skip-taxonomy
 ```

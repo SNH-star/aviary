@@ -74,12 +74,43 @@ aviary annotate --genome-fasta-directory input_bins/
 
 ## Examples
 
-Annotate a directory of MAGs:
+### Full annotation (GTDB-tk + EggNOG)
+
 ```
 aviary annotate --genome-fasta-directory input_bins/
 ```
 
-Annotate with a specific GTDB path:
+The default `annotate` target runs GTDB-tk taxonomy and EggNOG functional annotation together
+(CheckM2 is run separately, as part of the `recover`/`complete` binning pipeline rather than
+here). Point at specific database locations with `--gtdb-path`/`--eggnog-db-path` if they
+aren't already set via `aviary configure`:
 ```
 aviary annotate --genome-fasta-directory input_bins/ --gtdb-path /path/to/gtdb/
+```
+
+### Run a single annotator
+
+Use `-w`/`--workflow` to target one annotation step instead of the full set — useful for
+re-running just the step that failed, or when you only need one kind of annotation:
+
+Taxonomy only (GTDB-tk):
+```
+aviary annotate --genome-fasta-directory input_bins/ -w gtdbtk
+```
+
+Functional annotation only (EggNOG):
+```
+aviary annotate --genome-fasta-directory input_bins/ -w eggnog
+```
+
+CheckM2 quality assessment is not run through `aviary annotate` — it runs as part of the
+`recover`/`complete` binning pipeline, where it has access to the intermediate binning outputs
+it depends on.
+
+### A different FASTA extension
+
+`--fasta-extension` defaults to `fna`; set it to match your files if they use something else
+(e.g. bins produced outside aviary):
+```
+aviary annotate --genome-fasta-directory input_bins/ --fasta-extension fa
 ```
