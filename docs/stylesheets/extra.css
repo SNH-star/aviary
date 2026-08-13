@@ -303,6 +303,19 @@ html {
   color: inherit;
 }
 
+/* Material's own `.md-typeset a:focus, .md-typeset a:hover { color:
+   var(--md-accent-fg-color) }` outranks `.aviary-announcement`'s
+   `color: inherit` on specificity ((0,2,1) vs (0,1,0)), so hovering swapped
+   the ink to the site's generic accent colour -- a washed-out, "lighter"
+   look against the green gradient, not a deliberate choice. Pin it to plain
+   white instead, at higher specificity so it wins regardless of stylesheet
+   load order. Color inherits down to the child <span>/<strong>/arrow, so
+   this covers the whole row, not just the label. */
+.md-banner a.aviary-announcement:hover,
+.md-banner a.aviary-announcement:focus {
+  color: #fff;
+}
+
 .aviary-announcement strong {
   font-weight: 700;
 }
@@ -949,12 +962,18 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
    day: it stops the shrinking, but the nav then runs down THROUGH the footer,
    which is worse than what it fixed.
 
-   There is no arrangement that shows all of it at once -- this nav is ~25
-   items, taller than the viewport at any realistic window size, so it has to
-   scroll internally no matter what. The real complaint is that the boundary
-   read as "chopped" rather than "there is more below", so that is what this
-   fixes: a short fade at the bottom edge, which is the conventional signal for
-   a scroll region with more content. Material's own scroll affordance stays.
+   As of 2026-08-13, `navigation.sections` is no longer enabled in
+   mkdocs.yml, so Guide and CLI reference collapse to single entries until
+   the reader is inside them -- the always-visible list is ~14 items instead
+   of ~28, and the footer prev/next strip has been trimmed too (below). Both
+   make the shrink-to-visible-nothing case far rarer. But the underlying
+   mechanism is unchanged: whichever section IS expanded can still push the
+   list past viewport height on a short window, and it still has to scroll
+   internally when that happens -- there is no arrangement that avoids that
+   in general. The real complaint was that the boundary read as "chopped"
+   rather than "there is more below", so that is what this still fixes: a
+   short fade at the bottom edge, the conventional signal for a scroll region
+   with more content. Material's own scroll affordance stays.
 
    Scoped to the desktop breakpoint; the mobile drawer is left alone. */
 @media screen and (min-width: 76.25em) {
@@ -1062,4 +1081,20 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
 
 .md-footer-meta {
   background-color: var(--md-footer-bg-color--dark);
+}
+
+/* Trim the previous/next strip. Material's defaults (.md-footer__link:
+   margin-top 1rem, margin-bottom .4rem; .md-footer__title: margin-bottom
+   .7rem) give it a taller footprint than the copyright bar below it, and
+   it's also part of what the sidebar scrollwrap has to make room for as it
+   scrolls into view (see the primary-nav comment further up this file) --
+   trimming it here means less of the sidebar has to shrink away for it.
+   Margins only, not font-size or padding on the button, so the click/tap
+   target stays full-sized. */
+.md-footer__link {
+  margin-top: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+.md-footer__title {
+  margin-bottom: 0.35rem;
 }

@@ -26,7 +26,16 @@ theme:
   features:
     - navigation.top
     - navigation.indexes
-    - navigation.sections
+    # navigation.sections removed 2026-08-13: it force-expands every
+    # top-level section (Guide, CLI reference, ...) permanently, which made
+    # the primary sidebar ~28 items tall -- taller than the viewport at any
+    # realistic window size, so it always had to scroll internally, and
+    # Material's own JS shrinks .md-sidebar__scrollwrap as the footer comes
+    # into view (see docs/stylesheets/extra.css), which read as nav items
+    # disappearing. Without this feature the nav is a normal collapsible
+    # accordion -- only the active section auto-expands -- so the always-
+    # visible list is ~14 top-level items instead, which fits without
+    # scrolling on most viewports.
     - navigation.footer
     - navigation.tracking
     - content.code.copy
