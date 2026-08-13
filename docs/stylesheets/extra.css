@@ -1083,11 +1083,38 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
   background-color: var(--md-footer-bg-color--dark);
 }
 
+/* Merge the previous/next strip and the copyright bar into one row instead
+   of two stacked full-width ones. Both were kept -- nothing here drops the
+   prev/next links or the copyright/social row, it just puts them side by
+   side so the footer's total height is one row's worth instead of two.
+   `.md-footer__inner` (the prev/next <nav>) and `.md-footer-meta` (copyright
+   + social) are siblings under `.md-footer` already, so this is a pure
+   layout change: no template override needed, and each block keeps its own
+   background/typography exactly as Material renders it.
+
+   flex-wrap is left on so this still falls back to the original two-row
+   stack on narrow viewports, where there usually isn't width to spare for a
+   side-by-side row anyway. */
+.md-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.md-footer > .md-footer__inner {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.md-footer > .md-footer-meta {
+  flex: 0 0 auto;
+}
+
 /* Trim the previous/next strip. Material's defaults (.md-footer__link:
    margin-top 1rem, margin-bottom .4rem; .md-footer__title: margin-bottom
-   .7rem) give it a taller footprint than the copyright bar below it, and
-   it's also part of what the sidebar scrollwrap has to make room for as it
-   scrolls into view (see the primary-nav comment further up this file) --
+   .7rem) give it a taller footprint than the copyright bar next to it now,
+   and it's also part of what the sidebar scrollwrap has to make room for as
+   it scrolls into view (see the primary-nav comment further up this file) --
    trimming it here means less of the sidebar has to shrink away for it.
    Margins only, not font-size or padding on the button, so the click/tap
    target stays full-sized. */
@@ -1097,4 +1124,11 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
 }
 .md-footer__title {
   margin-bottom: 0.35rem;
+}
+
+/* Match the copyright/social row's vertical rhythm to the trimmed prev/next
+   strip beside it, so the merged row reads as one deliberate bar rather than
+   two mismatched heights forced together. */
+.md-footer-meta__inner {
+  padding: 0.5rem 0;
 }
