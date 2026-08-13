@@ -44,6 +44,6 @@ confirmations = [
 # reminders (push, GitHub release); these are aviary's own.
 
 reminders = [
-    "REMINDER: Build and push the Docker image once the tag is on GitHub: pixi run bash docker/build.sh",
-    "REMINDER: Do Manual Aviary Release",
+    "Build and push the Docker image once the tag is on GitHub: pixi run bash docker/build.sh",
+    "Do Manual Aviary Release",
 ]
