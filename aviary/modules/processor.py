@@ -19,7 +19,12 @@
 #                                                                             #
 ###############################################################################
 import aviary.config.config as Config
-from aviary.__init__ import SHORT_READ_MAPPER_TO_COVERM
+from aviary.__init__ import (
+    SHORT_READ_MAPPER_TO_COVERM, MAPPER_MODELS, MAPPERS_WITHOUT_MODELS,
+    SHORT_READ_MODELS, LONG_READ_MODELS,
+    DEFAULT_SHORT_READ_MAPPER, DEFAULT_LONG_READ_MAPPER,
+    short_read_mapper_for_alignment,
+)
 __author__ = "Rhys Newell"
 __copyright__ = "Copyright 2020"
 __credits__ = ["Rhys Newell"]
@@ -245,14 +250,28 @@ class Processor:
             self.longread_type = args.longread_type
             self.medaka_model = args.medaka_model
             self.long_read_assembler = getattr(args, "long_read_assembler", "myloasm")
-            self.long_read_mapper = getattr(args, "long_read_mapper", "rammap")
-            self.short_read_mapper = getattr(args, "short_read_mapper", "strobealign")
+            self.long_read_mapper = getattr(args, "long_read_mapper", None)
+            self.short_read_mapper = getattr(args, "short_read_mapper", None)
+            self.long_read_mapper_model = getattr(args, "long_read_mapper_model", None)
+            self.short_read_mapper_model = getattr(args, "short_read_mapper_model", None)
+            self.minibwa_params = getattr(args, "minibwa_params", None)
+            self.bwa_params = getattr(args, "bwa_params", None)
+            self.strobealign_params = getattr(args, "strobealign_params", None)
+            self.minimap2_params = getattr(args, "minimap2_params", None)
+            self.rammap_params = getattr(args, "rammap_params", None)
         except AttributeError:
             self.longread_type = 'none'
             self.medaka_model = 'none'
             self.long_read_assembler = 'myloasm'
-            self.long_read_mapper = 'rammap'
-            self.short_read_mapper = 'strobealign'
+            self.long_read_mapper = None
+            self.short_read_mapper = None
+            self.long_read_mapper_model = None
+            self.short_read_mapper_model = None
+            self.minibwa_params = None
+            self.bwa_params = None
+            self.strobealign_params = None
+            self.minimap2_params = None
+            self.rammap_params = None
         self.guppy_model = getattr(args, 'guppy_model', 'r941_min_hac_g507')
 
         try:
@@ -291,6 +310,10 @@ class Processor:
                 if not os.access(p, os.R_OK):
                     logging.error(f"Cannot read long read file {p}. Please check permissions.")
                     sys.exit(1)
+
+        # Runs after the read inputs above are resolved, because the mapper
+        # flags are validated against which reads were actually supplied.
+        self._validate_mapper_selection()
 
         try:
             self.kmer_sizes = args.kmer_sizes
@@ -396,6 +419,138 @@ class Processor:
             self.workflows.insert(0, 'download_databases')
 
 
+    def _validate_mapper_selection(self):
+        """Reject impossible --*-mapper / --*-mapper-model / --minibwa-params
+        combinations before the run starts.
+
+        These all used to surface only once a mapping job actually ran, i.e.
+        after assembly had already burned hours of walltime -- or, worse, not at
+        all: CoverM accepts a short-read preset for long reads and returns a
+        well-formed table of near-zero depths rather than failing, so the
+        mistake reads as bad numbers instead of an error.
+
+        Requires self.pe1/self.pe2/self.longreads to be resolved already.
+        """
+        has_short_reads = self.pe1 != 'none' and self.pe1
+        has_long_reads = self.longreads != 'none' and self.longreads
+
+        # A mapper is only meaningful alongside the reads it would map. These
+        # are None unless the user passed the flag (see aviary.py), so an
+        # unrelated default never trips this.
+        for mapper_value, model_value, reads_present, mapper_flag, model_flag, reads_flag in (
+            (self.short_read_mapper, self.short_read_mapper_model, has_short_reads,
+             "--short-read-mapper", "--short-read-mapper-model", "-1/-2/--interleaved/--coupled"),
+            (self.long_read_mapper, self.long_read_mapper_model, has_long_reads,
+             "--long-read-mapper", "--long-read-mapper-model", "-l/--longreads"),
+        ):
+            if reads_present:
+                continue
+            for value, flag in ((mapper_value, mapper_flag), (model_value, model_flag)):
+                if value is not None:
+                    logging.error(
+                        f"{flag} was given as {value!r}, but no reads were supplied for it "
+                        f"to map. Provide reads with {reads_flag}, or drop {flag}."
+                    )
+                    sys.exit(-1)
+
+        # Resolve to the documented defaults now that "was it given?" has been
+        # answered. Everything downstream sees a concrete mapper name.
+        if self.short_read_mapper is None:
+            self.short_read_mapper = DEFAULT_SHORT_READ_MAPPER
+        if self.long_read_mapper is None:
+            self.long_read_mapper = DEFAULT_LONG_READ_MAPPER
+
+        # --*-mapper-model is only meaningful for mappers with more than one
+        # CoverM preset (minimap2, rammap). Validated here rather than via
+        # argparse choices=, since the valid set depends on the paired mapper
+        # flag -- and on read length, because CoverM exposes both short- and
+        # long-read presets through the same -p option.
+        for model_value, mapper_value, flag_name, valid_for_length, length_name in (
+            (self.short_read_mapper_model, self.short_read_mapper,
+             "--short-read-mapper-model", SHORT_READ_MODELS, "short"),
+            (self.long_read_mapper_model, self.long_read_mapper,
+             "--long-read-mapper-model", LONG_READ_MODELS, "long"),
+        ):
+            if model_value is None:
+                continue
+            if mapper_value in MAPPERS_WITHOUT_MODELS:
+                logging.error(
+                    f"{flag_name} was given but {mapper_value!r} has no selectable model."
+                )
+                sys.exit(-1)
+            if mapper_value in MAPPER_MODELS and model_value not in MAPPER_MODELS[mapper_value]:
+                logging.error(
+                    f"Wrong model chosen for mapper {mapper_value!r}: {model_value!r} is not valid. "
+                    f"Valid models: {MAPPER_MODELS[mapper_value]}"
+                )
+                sys.exit(-1)
+            if model_value not in valid_for_length:
+                logging.error(
+                    f"{flag_name} was given as {model_value!r}, which is not a {length_name}-read "
+                    f"preset. CoverM would accept it and return a well-formed table of near-zero "
+                    f"depths rather than failing. Valid {length_name}-read models: "
+                    f"{list(valid_for_length)}"
+                )
+                sys.exit(-1)
+
+        if self.minibwa_params is not None and "minibwa" not in (self.short_read_mapper, self.long_read_mapper):
+            logging.error(
+                "--minibwa-params was given but minibwa is not selected as "
+                "--short-read-mapper or --long-read-mapper."
+            )
+            sys.exit(-1)
+
+        # Raw CoverM per-aligner passthroughs, same "given without the mapper
+        # it applies to" guard as --minibwa-params above. bwa-mem/bwa-mem2 and
+        # strobealign are short-read-only mappers, so --bwa-params/
+        # --strobealign-params are only checked against --short-read-mapper;
+        # minimap2/rammap are valid for either read length, so --minimap2-params/
+        # --rammap-params are checked against both. strobealign-aemb
+        # deliberately does not count for --strobealign-params: it shells out
+        # to `strobealign --aemb` directly inside CoverM and does not accept it.
+        if self.bwa_params is not None and self.short_read_mapper not in ("bwa-mem", "bwa-mem2"):
+            logging.error(
+                "--bwa-params was given but --short-read-mapper is not bwa-mem or bwa-mem2."
+            )
+            sys.exit(-1)
+        if self.strobealign_params is not None and self.short_read_mapper != "strobealign":
+            logging.error(
+                "--strobealign-params was given but --short-read-mapper is not strobealign "
+                "(strobealign-aemb does not accept it)."
+            )
+            sys.exit(-1)
+        if self.minimap2_params is not None and "minimap2" not in (self.short_read_mapper, self.long_read_mapper):
+            logging.error(
+                "--minimap2-params was given but minimap2 is not selected as "
+                "--short-read-mapper or --long-read-mapper."
+            )
+            sys.exit(-1)
+        if self.rammap_params is not None and "rammap" not in (self.short_read_mapper, self.long_read_mapper):
+            logging.error(
+                "--rammap-params was given but rammap is not selected as "
+                "--short-read-mapper or --long-read-mapper."
+            )
+            sys.exit(-1)
+
+        # minibwa takes a `map` subcommand instead of minimap2's bare
+        # `-x <preset>`, so polish.py cannot build a racon PAF command for it.
+        # Racon long-read polishing runs when aviary does the assembly itself
+        # (a supplied --assembly skips it) and the reads are PacBio-family --
+        # ONT bails out of racon earlier with its own message.
+        polishes_long_reads = (
+            has_long_reads
+            and (self.assembly == 'none' or self.assembly is None)
+            and self.longread_type not in ('ont', 'ont_hq')
+        )
+        if self.long_read_mapper == "minibwa" and polishes_long_reads:
+            logging.error(
+                "--long-read-mapper minibwa cannot be used on a run that racon-polishes: "
+                "minibwa cannot emit the PAF racon needs. Use rammap or minimap2, or supply "
+                "a pre-built assembly with --assembly to skip polishing."
+            )
+            sys.exit(-1)
+
+
     def make_config(self):
         """
         Reads template config file with comments from ./template_config.yaml
@@ -474,10 +629,25 @@ class Processor:
         conf["long_read_type"] = self.longread_type
         conf["long_read_assembler"] = self.long_read_assembler
         conf["long_read_mapper"] = self.long_read_mapper
+        conf["long_read_mapper_model"] = self.long_read_mapper_model or "none"
+        conf["minibwa_params"] = self.minibwa_params or "none"
+        conf["bwa_params"] = self.bwa_params or "none"
+        conf["strobealign_params"] = self.strobealign_params or "none"
+        conf["minimap2_params"] = self.minimap2_params or "none"
+        conf["rammap_params"] = self.rammap_params or "none"
         # Resolved to the value CoverM's -p expects, so the Snakefiles and the
         # coverage scripts can use it verbatim. Long reads stay as the family
-        # name since their preset depends on --long-read-type.
-        conf["short_read_mapper"] = SHORT_READ_MAPPER_TO_COVERM[self.short_read_mapper]
+        # name since their preset depends on --long-read-type (or
+        # --long-read-mapper-model, resolved downstream in the scripts).
+        if self.short_read_mapper in MAPPER_MODELS and self.short_read_mapper_model is not None:
+            conf["short_read_mapper"] = f"{self.short_read_mapper}-{self.short_read_mapper_model}"
+        else:
+            conf["short_read_mapper"] = SHORT_READ_MAPPER_TO_COVERM[self.short_read_mapper]
+        # `coverm genome` (per-genome relative abundance) cannot run
+        # strobealign-aemb -- it is `coverm contig`-only. get_abundances.py and
+        # the raw dereplicate_and_get_abundances_* rules use this key instead
+        # of short_read_mapper so they always get a real -p value.
+        conf["short_read_mapper_aligner"] = short_read_mapper_for_alignment(conf["short_read_mapper"])
         conf["medaka_model"] = self.medaka_model
         conf["guppy_model"] = self.guppy_model
         conf["kmer_sizes"] = self.kmer_sizes
