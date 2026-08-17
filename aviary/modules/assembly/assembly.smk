@@ -519,7 +519,10 @@ rule spades_assembly:
         log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/spades_assembly", attempt),
     params:
         max_memory = config["max_memory"],
-        long_read_type = config["long_read_type"],
+        # spades_assembly.py's --long-read-type only accepts spades.py's own
+        # ont/ont_hq/pacbio/pacbio_hifi vocabulary, narrower than aviary's
+        # --longread-type -- see LONG_READ_TYPE_TO_SPADES in aviary/__init__.py.
+        long_read_type = config["long_read_type_spades"],
         kmer_sizes = " ".join(config["kmer_sizes"]),
         tmpdir = f"--tmp-dir {config['tmpdir']}" if 'tmpdir' in config and config['tmpdir'] else "",
     benchmark:

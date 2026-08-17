@@ -152,6 +152,22 @@ LONG_READ_TYPE_TO_MODEL = {
     "hifi": "hifi",
 }
 
+# spades_assembly.py's --long-read-type only accepts spades.py's own
+# --nanopore/--pacbio vocabulary ("ont", "ont_hq", "pacbio", "pacbio_hifi"),
+# narrower than aviary's --longread-type (LONG_READ_TYPES above). Passing one
+# of the other four values straight through crashes it with "invalid choice"
+# -- verified by actually running `aviary assemble --longread-type ccs`.
+# rs/sq are older PacBio CLR chemistry -> "pacbio"; ccs/hifi are HiFi ->
+# "pacbio_hifi", matching the rs/sq -> "pb", ccs/hifi -> "hifi" split above.
+LONG_READ_TYPE_TO_SPADES = {
+    "ont": "ont",
+    "ont_hq": "ont_hq",
+    "rs": "pacbio",
+    "sq": "pacbio",
+    "ccs": "pacbio_hifi",
+    "hifi": "pacbio_hifi",
+}
+
 
 def resolve_mapper_model(mapper: str, model: str | None, long_read_type: str | None = None) -> str:
     """Combine a mapper family with an explicit model or a --long-read-type default

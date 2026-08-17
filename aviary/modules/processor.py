@@ -47,7 +47,7 @@ from glob import glob
 from snakemake import utils
 from snakemake.common.configfile import load_configfile
 from ruamel.yaml import YAML  # used for yaml reading with comments
-from aviary import LONG_READ_TYPES, COVERAGE_JOB_STRATEGIES, COVERAGE_JOB_CUTOFF
+from aviary import LONG_READ_TYPES, LONG_READ_TYPE_TO_SPADES, COVERAGE_JOB_STRATEGIES, COVERAGE_JOB_CUTOFF
 from aviary.modules.common import workflow_identifier
 import re
 import threading
@@ -627,6 +627,10 @@ class Processor:
         conf["short_reads_2"] = self.pe2
         conf["long_reads"] = self.longreads
         conf["long_read_type"] = self.longread_type
+        # spades_assembly.py accepts a narrower --long-read-type vocabulary
+        # than aviary's own (see LONG_READ_TYPE_TO_SPADES) -- resolved here,
+        # not passed raw, so rs/sq/ccs/hifi don't crash it with "invalid choice".
+        conf["long_read_type_spades"] = LONG_READ_TYPE_TO_SPADES[self.longread_type]
         conf["long_read_assembler"] = self.long_read_assembler
         conf["long_read_mapper"] = self.long_read_mapper
         conf["long_read_mapper_model"] = self.long_read_mapper_model or "none"

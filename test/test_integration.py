@@ -1027,6 +1027,99 @@ class Tests(unittest.TestCase):
         assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "bwa mem")
         assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "sam2paf")
 
+    def test_short_read_polishing_with_bwa_mem2(self):
+        # Same pipeline as bwa-mem above (index, then pipe through
+        # paftools.js sam2paf), but bwa-mem2 is a distinct binary that CoverM
+        # does not pull in itself -- this also proves it is actually present
+        # in the polishing pixi env, not just the coverm one.
+        output_dir = os.path.join("example", "test_short_read_polishing_bwa_mem2")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary assemble "
+            f"-o {output_dir}/aviary_out "
+            f"-l {data}/pbsim.fq.gz "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--longread-type ccs "
+            f"--short-read-mapper bwa-mem2 "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+        assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "bwa-mem2 mem")
+        assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "sam2paf")
+
+    def test_short_read_polishing_with_minimap2(self):
+        # minimap2/rammap emit PAF directly (no sam2paf conversion needed),
+        # but on this non-interleaved paired-read path they do not reliably
+        # preserve the /1 or /2 mate suffix in their PAF query names, which
+        # has to be reconciled against the still-suffixed original reads for
+        # racon's seqkit read-extraction step to find anything at all.
+        output_dir = os.path.join("example", "test_short_read_polishing_minimap2")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary assemble "
+            f"-o {output_dir}/aviary_out "
+            f"-l {data}/pbsim.fq.gz "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--longread-type ccs "
+            f"--short-read-mapper minimap2 "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+        assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "minimap2 -x sr")
+
+    def test_short_read_polishing_with_rammap(self):
+        # Same mate-suffix concern as minimap2 above -- rammap is a separate
+        # binary sharing minimap2's preset semantics, so this is not covered
+        # by the minimap2 test.
+        output_dir = os.path.join("example", "test_short_read_polishing_rammap")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary assemble "
+            f"-o {output_dir}/aviary_out "
+            f"-l {data}/pbsim.fq.gz "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--longread-type ccs "
+            f"--short-read-mapper rammap "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+        assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "rammap -x sr")
+
+    def test_short_read_polishing_with_minibwa(self):
+        # minibwa's `map` subcommand requires a prebuilt on-disk index, unlike
+        # every other short-read PAF mapper here, which index inline from the
+        # FASTA path in one invocation -- polish.py has to build that index
+        # itself before calling `minibwa map`.
+        output_dir = os.path.join("example", "test_short_read_polishing_minibwa")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary assemble "
+            f"-o {output_dir}/aviary_out "
+            f"-l {data}/pbsim.fq.gz "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--longread-type ccs "
+            f"--short-read-mapper minibwa "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+        assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "minibwa map")
+
     def test_long_read_coverage_rammap_default(self):
         # rammap is the new long-read default and nothing else exercises it.
         # --longread-type ont with no --long-read-mapper-model override
