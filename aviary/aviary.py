@@ -610,7 +610,7 @@ def main():
              'reads by current PacBio terminology), "hifi" for PacBio HiFi \n'
              'reads (map-hifi), "ont" for Oxford Nanopore (mapped with the \n'
              'modern lr:hq preset, recommended by ONT for chemistry v14 reads \n'
-             'at ~99% accuracy -- use --long-read-mapper-model ont for the \n'
+             'at ~99%% accuracy -- use --long-read-mapper-model ont for the \n'
              'legacy, noisier map-ont preset instead) and "ont_hq" for Oxford \n'
              'Nanopore high quality reads (Guppy5+ or Q20; also lr:hq) \n',
         dest='longread_type',
@@ -639,10 +639,10 @@ def main():
         help='Preset/model to use with --long-read-mapper (rammap or\n'
              'minimap2 only). Omit to derive the preset from --long-read-type.\n'
              'Valid values:\n'
-             '  lr-hq       accurate long reads (<1% error), e.g. modern ONT\n'
+             '  lr-hq       accurate long reads (<1%% error), e.g. modern ONT\n'
              '              chemistry v14 -- the --longread-type ont/ont_hq default\n'
              '  hifi        PacBio HiFi -- the --longread-type ccs/hifi default\n'
-             '  ont         [LEGACY: Deprecated for lr-hq] noisy ONT, ~10% error\n'
+             '  ont         [LEGACY: Deprecated for lr-hq] noisy ONT, ~10%% error\n'
              '  pb          [LEGACY: Deprecated for hifi] older PacBio CLR\n'
              '  sr          short reads\n'
              '  no-preset   run the aligner with no -x preset at all',
