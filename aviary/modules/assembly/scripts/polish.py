@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import re
 import sys
 import argparse
 from subprocess import run, Popen, PIPE, STDOUT
@@ -187,20 +186,46 @@ def run_seqkit(
     output_file: str,
     threads: int,
     log: str,
-    use_regexp: bool = False,
+    id_regexp: str = None,
+    strip_mate_suffix_from_output: bool = False,
 ):
-    regexp_flag = ["-r"] if use_regexp else []
-    seqkit_cmd = ["seqkit", "-j", str(threads), "grep", *regexp_flag, "--pattern-file", pattern_file, reads]
+    # id_regexp (not -r/--use-regexp) is deliberate: -r matches every pattern
+    # against every read as a regex, which is O(patterns x reads) instead of
+    # seqkit's normal hash-lookup exact match -- verified against this file's
+    # own wgsim test data (~163k patterns/reads): a -r run was still running
+    # after 7+ minutes where exact matching takes ~2s, and that gap only grows
+    # with real read counts. --id-regexp instead changes how seqkit parses an
+    # ID out of each header (a single pass over the reads, same cost as the
+    # default) while still hash-matching that ID against the pattern file, so
+    # it stays O(reads) with a stripped mate suffix folded into the ID itself.
+    id_regexp_flag = ["--id-regexp", id_regexp] if id_regexp else []
+    seqkit_cmd = ["seqkit", "-j", str(threads), "grep", *id_regexp_flag, "--pattern-file", pattern_file, reads]
     pigz_cmd = f"pigz -p {threads}".split()
+    # id_regexp only changes what seqkit matches against, not what it writes
+    # out -- extracted reads keep their original (possibly suffixed) headers.
+    # racon then reads both this file and filtered.*.paf, whose query names
+    # were normalized suffix-free upstream (see run_polish()); left alone,
+    # racon fails with "empty overlap set!" because the two never agree on a
+    # name for the same read. Strip the same suffix here so they match again.
+    sed_cmd = ["sed", "-E", r"1~4s#(/1|/2)$##"] if strip_mate_suffix_from_output else None
 
     with open(log, "a") as logf:
-        logf.write(f"Shell style: {' '.join(seqkit_cmd)} | {' '.join(pigz_cmd)} > {output_file}\n")
+        pipeline_desc = ' | '.join(' '.join(c) for c in (seqkit_cmd, sed_cmd, pigz_cmd) if c)
+        logf.write(f"Shell style: {pipeline_desc} > {output_file}\n")
 
         with open(output_file, 'a') as out:
             seqkit = Popen(seqkit_cmd, stdout=PIPE, stderr=logf)
-            pigz = Popen(pigz_cmd, stdin=seqkit.stdout, stdout=out, stderr=logf)
-            pigz.wait()
-            seqkit.wait()
+            if sed_cmd:
+                sed = Popen(sed_cmd, stdin=seqkit.stdout, stdout=PIPE, stderr=logf)
+                pigz = Popen(pigz_cmd, stdin=sed.stdout, stdout=out, stderr=logf)
+                pigz.wait()
+                sed.wait()
+                seqkit.wait()
+                logf.write(f"sed return: {sed.returncode}\n")
+            else:
+                pigz = Popen(pigz_cmd, stdin=seqkit.stdout, stdout=out, stderr=logf)
+                pigz.wait()
+                seqkit.wait()
             logf.write(f"seqkit return: {seqkit.returncode}\n")
             logf.write(f"pigz return: {pigz.returncode}\n")
 
@@ -488,14 +513,14 @@ def run_polish(
                             excluded_reads.add(norm_qname)
             with open(os.path.join(output_dir, "reads.%s.%d.lst" % (output_prefix, rounds)), "w") as o:
                 for i in included_reads:
-                    if mapper_needs_suffix_leniency:
-                        # i is already suffix-free (see the qname normalization
-                        # above); match it against the original fastq headers
-                        # with or without a real /1 or /2, since we cannot tell
-                        # from here whether the source reads had one.
-                        o.write(f"^{re.escape(i)}(/1|/2)?$\n")
-                    else:
-                        o.write(f"^{re.escape(i)}$\n")
+                    # i is already suffix-free when mapper_needs_suffix_leniency
+                    # (see the qname normalization above); seqkit_id_regexp below
+                    # strips a real /1 or /2 from the target read headers to match.
+                    o.write(i + '\n')
+            # Non-greedy capture + optional /1 or /2 so seqkit's ID for a header
+            # matches i above whether or not the header actually has a mate
+            # suffix -- vs. the default "^(\S+)\s?", which would keep it.
+            seqkit_id_regexp = r'^(\S+?)(?:/[12])?\s?$' if mapper_needs_suffix_leniency else None
             logging.info("Retrieving reads...")
             if not isinstance(reads, str):
                 for read in reads:
@@ -507,7 +532,8 @@ def run_polish(
                         output_file=output_file,
                         threads=threads,
                         log=log,
-                        use_regexp=True,
+                        id_regexp=seqkit_id_regexp,
+                        strip_mate_suffix_from_output=mapper_needs_suffix_leniency,
                     )
 
             else:
@@ -519,7 +545,8 @@ def run_polish(
                     output_file=output_file,
                     threads=threads,
                     log=log,
-                    use_regexp=True,
+                    id_regexp=seqkit_id_regexp,
+                    strip_mate_suffix_from_output=mapper_needs_suffix_leniency,
                 )
 
             with open(log, "a") as logf:
