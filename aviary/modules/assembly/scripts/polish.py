@@ -8,6 +8,14 @@ import shutil
 import logging
 import tempfile
 
+# Snakemake runs this script standalone inside the `polishing` pixi env, where
+# aviary is not pip-installed, so the package has to be put on sys.path by path
+# rather than imported as an installed dependency. Matches get_coverage.py /
+# get_abundances.py / fraction_recovered.py.
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
+from aviary import aligner_preset_args
+
+
 def clean_short_reads(
     cat_or_zcat: str,
     read_path: str,
@@ -37,17 +45,96 @@ def clean_short_reads(
 # aligner spells that differently: minimap2/rammap take a preset with -x,
 # strobealign's -x is a boolean switch, and minibwa needs the "map"
 # subcommand with -f. Keys are the CoverM -p values that --short-read-mapper
-# resolves to, so this stays in step with the coverage side.
+# resolves to (including a --short-read-mapper-model suffix, if one was
+# given), so this stays in step with the coverage side. bwa-mem/bwa-mem2 have
+# no PAF mode at all and are handled separately by bwa_mem_paf_cmd() below.
 def short_read_paf_cmd(mapper: str, reference: str, reads: str, threads: int) -> str:
     if mapper == "strobealign":
         return f"strobealign -x -t {threads} {reference} {reads}"
-    if mapper == "minimap2-sr":
-        return f"minimap2 -x sr -t {threads} {reference} {reads}"
-    if mapper == "rammap-sr":
-        return f"rammap -x sr -t {threads} {reference} {reads}"
+    for family in ("minimap2", "rammap"):
+        if mapper.startswith(f"{family}-"):
+            # The model half of the CoverM name is not the aligner's own -x
+            # value (e.g. CoverM "lr-hq" is minimap2's "lr:hq"), so it has to be
+            # translated rather than passed through -- see aligner_preset_args.
+            preset = " ".join(aligner_preset_args(mapper.removeprefix(f"{family}-")))
+            preset = f"{preset} " if preset else ""
+            return f"{family} {preset}-t {threads} {reference} {reads}"
     if mapper == "minibwa":
         return f"minibwa map -f -x sr -t {threads} {reference} {reads}"
     raise ValueError(f"No PAF mode known for short-read mapper {mapper!r}")
+
+
+def index_reference(mapper: str, reference: str, log: str) -> None:
+    """bwa/bwa-mem2 require a prebuilt on-disk index before `mem` can run,
+    unlike strobealign/minimap2/rammap/minibwa which index inline from the
+    FASTA path in one invocation. The reference is a fresh FASTA every racon
+    round (see run_polish()), so this runs once per round.
+    """
+    index_bin = "bwa" if mapper == "bwa-mem" else "bwa-mem2"
+    index_cmd = [index_bin, "index", reference]
+    with open(log, "a") as logf:
+        print("Running command:", " ".join(index_cmd), file=logf)
+        returncode = run(index_cmd, stdout=logf, stderr=STDOUT).returncode
+        logf.write(f"{index_bin} index return: {returncode}\n")
+        if returncode != 0:
+            raise RuntimeError(
+                f"{index_bin} index failed (exit {returncode}) on {reference}; see {log} for details"
+            )
+
+
+def bwa_mem_paf_cmd(
+    mapper: str, reference: str, reads: str, threads: int, output_paf: str, log: str,
+    paired_interleaved: bool = False,
+) -> None:
+    """bwa mem / bwa-mem2 mem only emit SAM, unlike every other supported
+    short-read aligner which can be asked for PAF directly. Convert with
+    paftools.js sam2paf, which ships as part of the polishing env's minimap2
+    package, so no extra dependency is needed for the conversion step.
+
+    sam2paf already restores the /1 or /2 mate suffix itself from the FLAG
+    column (`if (flag&1 && flag&0x40) qname += '/1'`, same for 0x80/'2') --
+    do NOT add a second suffix-restoration pass in front of it, e.g. by
+    post-processing the SAM QNAME before piping into sam2paf. sam2paf's
+    check requires FLAG bit 0x1 (paired) to be set, so if that pass strips
+    the suffix and reapplies it standalone the FLAG bits it reads are still
+    bwa's real ones and sam2paf will apply its own restoration on top,
+    doubling the suffix (e.g. "read_id/1/1") -- which then matches nothing
+    in the original fastq via seqkit's exact --pattern-file lookup, leaving
+    racon with an empty read set. sam2paf's own restoration is sufficient
+    and correct as long as bwa actually sets FLAG bit 0x1, which requires -p.
+
+    paired_interleaved must be True when `reads` is a single genuinely
+    interleaved fastq (mates adjacent in the stream, e.g. the -i/--interleaved
+    input path, or --coupled with short_reads_2 == 'none' upstream in
+    run_polish) -- this passes -p so bwa actually sets FLAG bit 0x1 (paired)
+    plus the 0x40/0x80 mate bits sam2paf's own restoration relies on.
+    Verified empirically: without -p, bwa mem treats the input as unpaired
+    single-end reads regardless of whether it is actually interleaved, and
+    never sets those FLAG bits at all (FLAG comes back 0 for every record) --
+    so sam2paf's restoration silently does nothing and the empty-read-set bug
+    comes right back. Must stay False for run_polish's other reads source
+    (paired R1/R2 concatenated block-then-block via clean_short_reads, not
+    interleaved): -p there would wrongly pair up two R1 reads as mates.
+    """
+    index_reference(mapper, reference, log)
+    mem_bin = "bwa" if mapper == "bwa-mem" else "bwa-mem2"
+    pairing_flag = ["-p"] if paired_interleaved else []
+    mem_cmd = [mem_bin, "mem", "-t", str(threads), *pairing_flag, reference, *reads.split()]
+    sam2paf_cmd = ["paftools.js", "sam2paf", "-P", "-"]
+    with open(log, "a") as logf:
+        print("Running command:", " ".join(mem_cmd), "|", " ".join(sam2paf_cmd), file=logf)
+        with open(output_paf, "w") as out:
+            mem = Popen(mem_cmd, stdout=PIPE, stderr=logf)
+            sam2paf = Popen(sam2paf_cmd, stdin=mem.stdout, stdout=out, stderr=logf)
+            sam2paf.wait()
+            mem.wait()
+        logf.write(f"{mem_bin} return: {mem.returncode}\n")
+        logf.write(f"sam2paf return: {sam2paf.returncode}\n")
+        if mem.returncode != 0 or sam2paf.returncode != 0:
+            raise RuntimeError(
+                f"{mem_bin}/sam2paf pipeline failed (mem exit {mem.returncode}, "
+                f"sam2paf exit {sam2paf.returncode}) generating {output_paf}; see {log} for details"
+            )
 
 
 def minimap2_process(
@@ -230,6 +317,10 @@ def run_polish(
 
             pe1 = "data/short_reads.racon.1.fastq.gz"
             reads = [pe1]
+            # clean_short_reads() concatenates all of R1 then all of R2 into
+            # this file -- block-then-block, not interleaved -- so bwa mem
+            # must not be told -p here (see bwa_mem_paf_cmd's docstring).
+            reads_are_interleaved = False
         else:
             if len(short_reads_1) == 1 or not coassemble:
                 pe1 = short_reads_1[0]
@@ -246,12 +337,18 @@ def run_polish(
                                 Popen(cat_cmd, stdout=out, stderr=logf).wait()
 
                     with open(log, "a") as logf:
-                        run("pigz -p {threads} --fast data/short_reads.1.fastq".split(), stdout=logf, stderr=STDOUT)
+                        run(f"pigz -p {threads} --fast data/short_reads.1.fastq".split(), stdout=logf, stderr=STDOUT)
 
                 pe1 = "data/short_reads.1.fastq.gz"
             reads = [pe1]
+            # short_reads_2 == 'none' means -i/--interleaved input (or a
+            # single already-interleaved file) throughout aviary -- see
+            # get_coverage.py's matching --interleaved branch -- so this is
+            # genuinely interleaved, unlike the clean_short_reads() branch above.
+            reads_are_interleaved = True
     else:
         reads = input_fastq
+        reads_are_interleaved = False
 
     # use racon when using illumina or pacbio data
     if illumina or long_read_type not in ['ont', 'ont_hq']:
@@ -263,21 +360,36 @@ def run_polish(
             # Generate PAF mapping files
             if not os.path.exists(paf): # Check if mapping already exists
                 if illumina:
-                    cmd = short_read_paf_cmd(
-                        short_read_mapper, reference, ' '.join(reads), threads)
-                    with open(log, "a") as logf:
-                        logf.write(f"Short-read PAF command: {cmd}\n")
-                        logf.flush()
-                        with open(paf, 'w') as out:
-                            returncode = Popen(cmd.split(), stdout=out, stderr=logf).wait()
-                        logf.write(f"{short_read_mapper} return: {returncode}\n")
-                        if returncode != 0:
-                            raise RuntimeError(
-                                f"{short_read_mapper} failed (exit {returncode}) generating "
-                                f"{paf}; see {log} for details"
-                            )
+                    if short_read_mapper in ("bwa-mem", "bwa-mem2"):
+                        bwa_mem_paf_cmd(
+                            short_read_mapper, reference, ' '.join(reads), threads, paf, log,
+                            paired_interleaved=reads_are_interleaved)
+                    else:
+                        cmd = short_read_paf_cmd(
+                            short_read_mapper, reference, ' '.join(reads), threads)
+                        with open(log, "a") as logf:
+                            logf.write(f"Short-read PAF command: {cmd}\n")
+                            logf.flush()
+                            with open(paf, 'w') as out:
+                                returncode = Popen(cmd.split(), stdout=out, stderr=logf).wait()
+                            logf.write(f"{short_read_mapper} return: {returncode}\n")
+                            if returncode != 0:
+                                raise RuntimeError(
+                                    f"{short_read_mapper} failed (exit {returncode}) generating "
+                                    f"{paf}; see {log} for details"
+                                )
                 elif long_read_type in ['ont', 'ont_hq']:
                     sys.exit("ONT reads are not supported for racon polishing")
+                elif long_read_mapper == "minibwa":
+                    # minibwa takes a `map` subcommand rather than minimap2's
+                    # bare `-x <preset>`, so minimap2_process() below would call
+                    # it as `minibwa -x map-pb ...` and get "unknown command
+                    # '-x'". processor.py rejects this combination up front; this
+                    # is the backstop for a hand-written config.yaml.
+                    sys.exit(
+                        "minibwa cannot generate the PAF racon needs for long-read polishing. "
+                        "Use --long-read-mapper rammap or minimap2 for runs that polish."
+                    )
                 else:
                     minimap2_process("map-pb", reference, reads, threads, paf, log,
                                      mapper=long_read_mapper)
@@ -329,7 +441,7 @@ def run_polish(
                     # match the fastq header, so stripping here would corrupt them instead
                     # (dropping the real /1 or /2 the fastq already has, breaking the seqkit
                     # --pattern-file lookup and leaving racon with an empty read set).
-                    mapper_doubles_suffix = short_read_mapper in ("minimap2-sr", "rammap-sr")
+                    mapper_doubles_suffix = short_read_mapper.startswith(("minimap2-", "rammap-"))
                     if illumina and mapper_doubles_suffix and (qname.endswith('/1') or qname.endswith('/2')):
                         norm_qname = qname[:-2]
                         fields[0] = norm_qname
