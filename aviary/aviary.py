@@ -508,11 +508,85 @@ def main():
         '--short-read-mapper', '--short_read_mapper',
         help='Aligner used for short-read coverage. CoverM defaults to\n'
              'strobealign from v0.7.0. minimap2 uses the -x sr preset,\n'
-             'rammap is a minimap2-compatible Rust implementation, and\n'
-             'minibwa is a lightweight bwa. [default: strobealign]',
+             'rammap is a minimap2-compatible Rust implementation, minibwa\n'
+             'is a lightweight bwa, and bwa-mem/bwa-mem2 are the reference\n'
+             'BWA implementations. strobealign-aemb uses strobealign\'s fast\n'
+             'direct abundance estimator (CoverM -m strobealign-aemb) instead\n'
+             'of a normal alignment for per-contig binning coverage -- it is\n'
+             'faster but less precise, is only used for that coverage step\n'
+             '(per-genome abundance always falls back to plain strobealign,\n'
+             'since CoverM cannot run it there), and cannot be combined with\n'
+             'a --short-read-mapper-model. Erroring if given without short\n'
+             'reads to map is deliberate. [default: strobealign]',
         dest='short_read_mapper',
-        default='strobealign',
+        # Defaults to None, not the mapper name, so that processor.py can tell
+        # "the user chose this" from "nobody said anything" and reject a mapper
+        # selected without the reads it would map. Resolved to
+        # DEFAULT_SHORT_READ_MAPPER there.
+        default=None,
         choices=SHORT_READ_MAPPERS,
+    )
+
+    short_read_group.add_argument(
+        '--short-read-mapper-model', '--short_read_mapper_model',
+        help='Preset/model to use with --short-read-mapper, for mappers that\n'
+             'support one (currently minimap2 and rammap; e.g. "sr",\n'
+             '"no-preset"). Omit to use the mapper\'s default short-read\n'
+             'preset. Not valid for strobealign, minibwa, bwa-mem, bwa-mem2\n'
+             'or strobealign-aemb, which have no selectable model.',
+        dest='short_read_mapper_model',
+        default=None,
+    )
+
+    short_read_group.add_argument(
+        '--minibwa-params', '--minibwa_params',
+        help='Extra raw parameters passed through to minibwa via CoverM\'s\n'
+             '--minibwa-params. Used when --short-read-mapper or\n'
+             '--long-read-mapper is minibwa. minibwa has no long-read preset\n'
+             'of its own (unlike --long-read-mapper minimap2/rammap, which\n'
+             'derive their -x preset automatically from --long-read-type) --\n'
+             'give "-x lr" here to align long reads with it explicitly.\n'
+             'Without it, minibwa falls back to its own default adaptive\n'
+             'per-read mode rather than an explicit long-read preset.',
+        dest='minibwa_params',
+        default=None,
+    )
+
+    short_read_group.add_argument(
+        '--bwa-params', '--bwa_params',
+        help='Extra raw parameters passed through to bwa/bwa-mem2 via\n'
+             'CoverM\'s --bwa-params. Used when --short-read-mapper is\n'
+             'bwa-mem or bwa-mem2.',
+        dest='bwa_params',
+        default=None,
+    )
+
+    short_read_group.add_argument(
+        '--strobealign-params', '--strobealign_params',
+        help='Extra raw parameters passed through to strobealign via\n'
+             'CoverM\'s --strobealign-params. Used when --short-read-mapper\n'
+             'is strobealign. Not valid for strobealign-aemb, which does not\n'
+             'accept it.',
+        dest='strobealign_params',
+        default=None,
+    )
+
+    short_read_group.add_argument(
+        '--minimap2-params', '--minimap2_params',
+        help='Extra raw parameters passed through to minimap2 via CoverM\'s\n'
+             '--minimap2-params. Used when --short-read-mapper or\n'
+             '--long-read-mapper is minimap2.',
+        dest='minimap2_params',
+        default=None,
+    )
+
+    short_read_group.add_argument(
+        '--rammap-params', '--rammap_params',
+        help='Extra raw parameters passed through to rammap via CoverM\'s\n'
+             '--rammap-params. Used when --short-read-mapper or\n'
+             '--long-read-mapper is rammap.',
+        dest='rammap_params',
+        default=None,
     )
 
     long_read_group = argparse.ArgumentParser(formatter_class=CustomHelpFormatter,
@@ -530,8 +604,15 @@ def main():
     long_read_input.add_argument(
         '-z', '--longread-type', '--longread_type', '--long_read_type', '--long-read-type',
         help='Sequencing platform and technology for the longreads. \n'
-             '"rs" for PacBio RSII, "sq" for PacBio Sequel, "ccs" for PacBio CCS, "hifi" for PacBio HiFi \n'
-             'reads, "ont" for Oxford Nanopore and "ont_hq" for Oxford Nanopore high quality reads (Guppy5+ or Q20) \n',
+             '"rs" for PacBio RSII, "sq" for PacBio Sequel [LEGACY: older CLR \n'
+             'chemistry, mapped with the map-pb preset], "ccs" for PacBio CCS \n'
+             '(mapped with the modern map-hifi preset -- CCS reads are HiFi \n'
+             'reads by current PacBio terminology), "hifi" for PacBio HiFi \n'
+             'reads (map-hifi), "ont" for Oxford Nanopore (mapped with the \n'
+             'modern lr:hq preset, recommended by ONT for chemistry v14 reads \n'
+             'at ~99% accuracy -- use --long-read-mapper-model ont for the \n'
+             'legacy, noisier map-ont preset instead) and "ont_hq" for Oxford \n'
+             'Nanopore high quality reads (Guppy5+ or Q20; also lr:hq) \n',
         dest='longread_type',
         default="ont",
         choices=LONG_READ_TYPES,
@@ -542,10 +623,31 @@ def main():
         help='Aligner used for long reads, both for coverage and for racon\n'
              'polishing. rammap is a minimap2-compatible Rust implementation;\n'
              'set to minimap2 to retain the previous behaviour. The -x preset\n'
-             'is chosen from --long-read-type either way. [default: rammap]',
+             'is chosen from --long-read-type either way (override with\n'
+             '--long-read-mapper-model). minibwa has no long-read preset of\n'
+             'its own; use --minibwa-params to control it directly (e.g.\n'
+             '"-x lr"); it cannot be used for runs that racon-polish, which is\n'
+             'rejected up front. [default: rammap]',
         dest='long_read_mapper',
-        default='rammap',
+        # None rather than 'rammap' for the same reason as --short-read-mapper.
+        default=None,
         choices=LONG_READ_MAPPERS,
+    )
+
+    long_read_group.add_argument(
+        '--long-read-mapper-model', '--long_read_mapper_model',
+        help='Preset/model to use with --long-read-mapper (rammap or\n'
+             'minimap2 only). Omit to derive the preset from --long-read-type.\n'
+             'Valid values:\n'
+             '  lr-hq       accurate long reads (<1% error), e.g. modern ONT\n'
+             '              chemistry v14 -- the --longread-type ont/ont_hq default\n'
+             '  hifi        PacBio HiFi -- the --longread-type ccs/hifi default\n'
+             '  ont         [LEGACY: Deprecated for lr-hq] noisy ONT, ~10% error\n'
+             '  pb          [LEGACY: Deprecated for hifi] older PacBio CLR\n'
+             '  sr          short reads\n'
+             '  no-preset   run the aligner with no -x preset at all',
+        dest='long_read_mapper_model',
+        default=None,
     )
 
     medaka_default = "r941_min_hac_g507"
