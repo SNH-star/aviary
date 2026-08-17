@@ -52,7 +52,7 @@ rule polish_isolate_racon:
         --rounds {params.rounds} \
         --long-read-type {config[long_read_type]} \
         --long-read-mapper {config[long_read_mapper]} \
-        --short-read-mapper {config[short_read_mapper]} \
+        --short-read-mapper {config[short_read_mapper_aligner]} \
         --medaka-model {config[medaka_model]} \
         --illumina {params.illumina} \
         --max-cov {params.maxcov} \
@@ -126,7 +126,7 @@ rule polish_isolate_racon_ill:
         --rounds {params.rounds} \
         --long-read-type {config[long_read_type]} \
         --long-read-mapper {config[long_read_mapper]} \
-        --short-read-mapper {config[short_read_mapper]} \
+        --short-read-mapper {config[short_read_mapper_aligner]} \
         --medaka-model {config[medaka_model]} \
         --illumina {params.illumina} \
         --max-cov {params.maxcov} \

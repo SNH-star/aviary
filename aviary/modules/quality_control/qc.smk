@@ -199,7 +199,13 @@ rule read_fraction_recovered:
         --short-reads-2 {config[short_reads_2]} \
         --long-read-type {config[long_read_type]} \
         --long-read-mapper {config[long_read_mapper]} \
-        --short-read-mapper {config[short_read_mapper]} \
+        --long-read-mapper-model {config[long_read_mapper_model]} \
+        --minibwa-params '{config[minibwa_params]}' \
+        --bwa-params '{config[bwa_params]}' \
+        --strobealign-params '{config[strobealign_params]}' \
+        --minimap2-params '{config[minimap2_params]}' \
+        --rammap-params '{config[rammap_params]}' \
+        --short-read-mapper {config[short_read_mapper_aligner]} \
         --threads {threads} \
         --log {resources.log_path}
         """
