@@ -522,5 +522,70 @@ class Tests(unittest.TestCase):
             self.assertEqual(config["filter_bins_min_completeness"], 50.0)
             self.assertEqual(config["filter_bins_max_contamination"], 5.0)
 
+    def test_mapper_config_defaults(self):
+        # --short-read-mapper/--long-read-mapper default to None in argparse so
+        # that "the user chose this" is distinguishable from "unset"; these pin
+        # the resolved values that actually reach the workflow, which must stay
+        # strobealign/rammap. The two model keys are written as the string
+        # "none" rather than omitted, because the .smk rules interpolate them
+        # unconditionally and a missing key is a KeyError at parse time.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cmd = (
+                f"GTDBTK_DATA_PATH=. CHECKM2DB=. EGGNOG_DATA_DIR=. "
+                f"METABULI_DB_PATH=. SINGLEM_METAPACKAGE_PATH=. "
+                f"aviary recover "
+                f"--assembly {ASSEMBLY} "
+                f"-1 {FORWARD_READS} "
+                f"-2 {REVERSE_READS} "
+                f"--output {tmpdir}/test --tmpdir {tmpdir} --dryrun "
+            )
+            extern.run(cmd)
+            config = load_configfile(os.path.join(tmpdir, "test", "config.yaml"))
+
+            self.assertEqual(config["short_read_mapper"], "strobealign")
+            self.assertEqual(config["long_read_mapper"], "rammap")
+            self.assertEqual(config["long_read_mapper_model"], "none")
+            self.assertEqual(config["minibwa_params"], "none")
+
+    def test_mapper_config_with_explicit_selection(self):
+        # bwa-mem resolves to a CoverM -p value verbatim; a --short-read-mapper
+        # -model is folded into short_read_mapper rather than kept separate,
+        # since that is the form CoverM and polish.py both consume.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cmd = (
+                f"GTDBTK_DATA_PATH=. CHECKM2DB=. EGGNOG_DATA_DIR=. "
+                f"METABULI_DB_PATH=. SINGLEM_METAPACKAGE_PATH=. "
+                f"aviary recover "
+                f"--assembly {ASSEMBLY} "
+                f"-1 {FORWARD_READS} "
+                f"-2 {REVERSE_READS} "
+                f"--short-read-mapper minimap2 --short-read-mapper-model sr "
+                f"--output {tmpdir}/test --tmpdir {tmpdir} --dryrun "
+            )
+            extern.run(cmd)
+            config = load_configfile(os.path.join(tmpdir, "test", "config.yaml"))
+
+            self.assertEqual(config["short_read_mapper"], "minimap2-sr")
+
+    def test_minibwa_params_reach_the_config_verbatim(self):
+        # The value starts with '-', so it has to survive argparse here and
+        # shell-quoting in binning.smk/qc.smk on the way back out.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cmd = (
+                f"GTDBTK_DATA_PATH=. CHECKM2DB=. EGGNOG_DATA_DIR=. "
+                f"METABULI_DB_PATH=. SINGLEM_METAPACKAGE_PATH=. "
+                f"aviary recover "
+                f"--assembly {ASSEMBLY} "
+                f"-1 {FORWARD_READS} "
+                f"-2 {REVERSE_READS} "
+                f"--short-read-mapper minibwa --minibwa-params '-x lr' "
+                f"--output {tmpdir}/test --tmpdir {tmpdir} --dryrun "
+            )
+            extern.run(cmd)
+            config = load_configfile(os.path.join(tmpdir, "test", "config.yaml"))
+
+            self.assertEqual(config["minibwa_params"], "-x lr")
+
+
 if __name__ == '__main__':
     unittest.main()

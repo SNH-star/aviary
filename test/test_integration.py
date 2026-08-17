@@ -989,15 +989,56 @@ class Tests(unittest.TestCase):
             "test_short_read_coverage_minibwa",
             "--short-read-mapper minibwa", "minibwa")
 
+    def test_short_read_coverage_bwa_mem(self):
+        # bwa-mem/bwa-mem2 are the only short-read mappers CoverM does not pull
+        # in itself, so this also proves the binaries are actually present in
+        # the coverm pixi env rather than merely declared.
+        self._run_short_read_coverage(
+            "test_short_read_coverage_bwa_mem",
+            "--short-read-mapper bwa-mem", "bwa-mem")
+
+    def test_short_read_coverage_bwa_mem2(self):
+        self._run_short_read_coverage(
+            "test_short_read_coverage_bwa_mem2",
+            "--short-read-mapper bwa-mem2", "bwa-mem2")
+
+    def test_short_read_polishing_with_bwa_mem(self):
+        # The one path where bwa-mem is not just another CoverM -p value: racon
+        # needs PAF, bwa mem only emits SAM, so polish.py indexes the reference
+        # and pipes bwa mem through paftools.js sam2paf. Nothing else covers
+        # that pipeline end to end, and it runs in the polishing env, which is a
+        # different env from the coverage tests above.
+        output_dir = os.path.join("example", "test_short_read_polishing_bwa_mem")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary assemble "
+            f"-o {output_dir}/aviary_out "
+            f"-l {data}/pbsim.fq.gz "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--longread-type ccs "
+            f"--short-read-mapper bwa-mem "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+        assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "bwa mem")
+        assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "sam2paf")
+
     def test_long_read_coverage_rammap_default(self):
         # rammap is the new long-read default and nothing else exercises it.
+        # --longread-type ont with no --long-read-mapper-model override
+        # resolves to the "lr-hq" model, not the legacy "ont"/map-ont preset
+        # -- see LONG_READ_TYPE_TO_MODEL in aviary/__init__.py.
         self._run_long_read_coverage(
-            "test_long_read_coverage_rammap_default", "", "rammap-ont")
+            "test_long_read_coverage_rammap_default", "", "rammap-lr-hq")
 
     def test_long_read_coverage_minimap2(self):
         self._run_long_read_coverage(
             "test_long_read_coverage_minimap2",
-            "--long-read-mapper minimap2", "minimap2-ont")
+            "--long-read-mapper minimap2", "minimap2-lr-hq")
 
     def test_short_read_abundances_use_selected_mapper(self):
         # get_abundances.py runs only when --binning-only is NOT set. Short-read
@@ -1043,7 +1084,10 @@ class Tests(unittest.TestCase):
         subprocess.run(cmd, shell=True, check=True)
         self.assertTrue(os.path.isfile(
             f"{output_dir}/aviary_out/data/coverm_abundances.tsv"))
-        assert_mapper_logged(self, output_dir, "coverm_abundances", "-p rammap-ont")
+        # --longread-type ont resolves to the "lr-hq" model by default, not
+        # the legacy "ont"/map-ont preset -- see LONG_READ_TYPE_TO_MODEL in
+        # aviary/__init__.py.
+        assert_mapper_logged(self, output_dir, "coverm_abundances", "-p rammap-lr-hq")
 
     def test_fraction_recovered_uses_selected_mapper(self):
         # read_fraction_recovered is not part of the default DAG -- nothing in
