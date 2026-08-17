@@ -435,6 +435,13 @@ def run_polish(
             with open(paf) as f:
                 for line in f:
                     qname, qlen, qstart, qstop, strand, ref, rlen, rstart, rstop = line.split()[:9]
+                    # minibwa's -f PAF output includes an explicit row per
+                    # unmapped read (all numeric/ref fields "*", unlike
+                    # strobealign/minimap2/rammap, which omit unmapped reads
+                    # from PAF output entirely) -- skip them rather than
+                    # crashing on int('*').
+                    if ref == '*':
+                        continue
                     qlen, qstart, qstop, rlen, rstart, rstop = map(int, [qlen, qstart, qstop, rlen, rstart, rstop])
                     if ref in cov_dict:
                         cov_dict[ref] += (rstop - rstart) / rlen
@@ -465,17 +472,24 @@ def run_polish(
 
             # minimap2/rammap's handling of an existing /1 or /2 mate suffix on this
             # (non-interleaved, R1-then-R2-concatenated) read path is not reliable to
-            # predict: verified against the installed minimap2 2.30 binary, it strips
-            # the suffix entirely rather than doubling it, which is what an earlier
-            # version of this code assumed. Strip it here too (a no-op if already
-            # stripped, handles a doubled suffix defensively) so qnames are always
-            # suffix-free -- run_seqkit() below then matches leniently against an
-            # optional single /1 or /2 on the target fastq headers instead of needing
-            # to know which transformation the installed aligner version applied.
-            # strobealign and minibwa do NOT touch the suffix - their qnames already
-            # match the fastq header exactly - so they are left alone. Computed once
-            # here (not per-PAF-line) so it stays defined even if the PAF is empty.
-            mapper_needs_suffix_leniency = illumina and short_read_mapper.startswith(("minimap2-", "rammap-"))
+            # predict per mapper: verified against the installed minimap2 2.30 binary,
+            # it strips the suffix entirely rather than doubling it, which is what an
+            # earlier version of this code assumed for minimap2/rammap specifically.
+            # bwa-mem/bwa-mem2 have the same problem here too, for a different reason:
+            # bwa_mem_paf_cmd() only passes bwa mem the -p flag that makes it set the
+            # SAM FLAG bits sam2paf's own suffix restoration relies on when the reads
+            # are genuinely interleaved -- for this non-interleaved path it must not
+            # (see that function's docstring), so sam2paf's restoration never fires and
+            # its qnames come out suffix-free too. strobealign/minibwa qnames already
+            # match the fastq header exactly and don't need this, but stripping (a
+            # no-op) and matching leniently doesn't change their (already-correct)
+            # outcome either, so this applies uniformly rather than re-deriving which
+            # mapper+interleaving combination needs it as new mappers are added. Strip
+            # here (handles 0, 1, or a defensively-covered doubled suffix) so qnames
+            # are always suffix-free -- run_seqkit() below then matches leniently
+            # against an optional single /1 or /2 on the target fastq headers. Computed
+            # once here (not per-PAF-line) so it stays defined even if the PAF is empty.
+            mapper_needs_suffix_leniency = illumina
 
             included_reads = set()
             excluded_reads = set()
@@ -483,6 +497,10 @@ def run_polish(
                 for line in f:
                     fields = line.split('\t')
                     qname, qlen, qstart, qstop, strand, ref, rlen, rstart, rstop = fields[:9]
+                    # See the cov_dict loop above -- minibwa emits an explicit
+                    # "*"-filled row per unmapped read.
+                    if ref == '*':
+                        continue
                     qlen, qstart, qstop, rlen, rstart, rstop = map(int, [qlen, qstart, qstop, rlen, rstart, rstop])
                     if mapper_needs_suffix_leniency:
                         norm_qname = qname
