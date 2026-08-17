@@ -232,6 +232,13 @@ minimap2 = ">=2.15"
 rammap = ">=1.1"
 strobealign = ">=0.17"
 minibwa = ">=0.6"
+# bwa/bwa-mem2 are pulled transitively into the coverm env by the coverm conda
+# package's own runtime deps, but this env has no dependency on coverm at all
+# -- without these explicit entries, --short-read-mapper bwa-mem/bwa-mem2
+# fails racon polishing with "FileNotFoundError: bwa" even though the same
+# mapper choice works fine for coverage/abundance (which does run via coverm).
+bwa = ">=0.7"
+bwa-mem2 = ">=2.2"
 seqkit = ">=2.1"
 pigz = "*"
 
@@ -290,9 +297,15 @@ env = { PYTHONNOUSERSITE = "1" }
 [feature.coverm.dependencies]
 coverm = ">=0.8"
 # Alternative mappers selectable with --short-read-mapper / --long-read-mapper.
-# CoverM names these presets but does not pull the binaries in itself.
+# CoverM names these presets but does not pull the binaries in itself, except
+# for bwa/minimap2/strobealign, which come along transitively as the coverm
+# conda package's own runtime deps. bwa-mem2 is not one of those transitive
+# deps (verified: `pixi list -e coverm` has no bwa-mem2 entry even though
+# --short-read-mapper bwa-mem2 is a documented, supported value) and needs an
+# explicit entry here or it silently fails with "FileNotFoundError: bwa-mem2".
 rammap = ">=1.1"
 minibwa = ">=0.6"
+bwa-mem2 = ">=2.2"
 galah = ">=0.3"
 chopper = ">=0.6"
 pigz = "*"

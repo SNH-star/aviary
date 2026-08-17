@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import sys
 import argparse
 from subprocess import run, Popen, PIPE, STDOUT
@@ -65,12 +66,18 @@ def short_read_paf_cmd(mapper: str, reference: str, reads: str, threads: int) ->
 
 
 def index_reference(mapper: str, reference: str, log: str) -> None:
-    """bwa/bwa-mem2 require a prebuilt on-disk index before `mem` can run,
-    unlike strobealign/minimap2/rammap/minibwa which index inline from the
-    FASTA path in one invocation. The reference is a fresh FASTA every racon
-    round (see run_polish()), so this runs once per round.
+    """bwa/bwa-mem2/minibwa require a prebuilt on-disk index before `mem`/`map`
+    can run, unlike strobealign/minimap2/rammap which index inline from the
+    FASTA path in one invocation. Verified against the installed minibwa 0.6
+    binary: `minibwa map -f -x sr <fasta> <reads>` aborts with "failed to load
+    the index. ABORT!" because it treats its first positional argument as an
+    index path, not a FASTA -- `minibwa index <fasta>` must run first, writing
+    `<fasta>.l2b`/`<fasta>.mbw` alongside it, after which the original FASTA
+    path doubles as the index argument to `map` (same convention as bwa). The
+    reference is a fresh FASTA every racon round (see run_polish()), so this
+    runs once per round.
     """
-    index_bin = "bwa" if mapper == "bwa-mem" else "bwa-mem2"
+    index_bin = {"bwa-mem": "bwa", "bwa-mem2": "bwa-mem2", "minibwa": "minibwa"}[mapper]
     index_cmd = [index_bin, "index", reference]
     with open(log, "a") as logf:
         print("Running command:", " ".join(index_cmd), file=logf)
@@ -180,8 +187,10 @@ def run_seqkit(
     output_file: str,
     threads: int,
     log: str,
+    use_regexp: bool = False,
 ):
-    seqkit_cmd = f"seqkit -j {threads} grep  --pattern-file {pattern_file} {reads}".split()
+    regexp_flag = ["-r"] if use_regexp else []
+    seqkit_cmd = ["seqkit", "-j", str(threads), "grep", *regexp_flag, "--pattern-file", pattern_file, reads]
     pigz_cmd = f"pigz -p {threads}".split()
 
     with open(log, "a") as logf:
@@ -365,6 +374,8 @@ def run_polish(
                             short_read_mapper, reference, ' '.join(reads), threads, paf, log,
                             paired_interleaved=reads_are_interleaved)
                     else:
+                        if short_read_mapper == "minibwa":
+                            index_reference(short_read_mapper, reference, log)
                         cmd = short_read_paf_cmd(
                             short_read_mapper, reference, ' '.join(reads), threads)
                         with open(log, "a") as logf:
@@ -427,6 +438,20 @@ def run_polish(
                     elif getseq:
                         o.write(line)
 
+            # minimap2/rammap's handling of an existing /1 or /2 mate suffix on this
+            # (non-interleaved, R1-then-R2-concatenated) read path is not reliable to
+            # predict: verified against the installed minimap2 2.30 binary, it strips
+            # the suffix entirely rather than doubling it, which is what an earlier
+            # version of this code assumed. Strip it here too (a no-op if already
+            # stripped, handles a doubled suffix defensively) so qnames are always
+            # suffix-free -- run_seqkit() below then matches leniently against an
+            # optional single /1 or /2 on the target fastq headers instead of needing
+            # to know which transformation the installed aligner version applied.
+            # strobealign and minibwa do NOT touch the suffix - their qnames already
+            # match the fastq header exactly - so they are left alone. Computed once
+            # here (not per-PAF-line) so it stays defined even if the PAF is empty.
+            mapper_needs_suffix_leniency = illumina and short_read_mapper.startswith(("minimap2-", "rammap-"))
+
             included_reads = set()
             excluded_reads = set()
             with open(paf) as f, open(os.path.join(output_dir, "filtered.%s.%d.paf" % (output_prefix, rounds)), 'w') as paf_file:
@@ -434,18 +459,15 @@ def run_polish(
                     fields = line.split('\t')
                     qname, qlen, qstart, qstop, strand, ref, rlen, rstart, rstop = fields[:9]
                     qlen, qstart, qstop, rlen, rstart, rstop = map(int, [qlen, qstart, qstop, rlen, rstart, rstop])
-                    # minimap2/rammap -x sr on interleaved PE reads doubles existing /1 /2
-                    # suffixes (e.g. read/1 -> PAF qname read/1/1). Strip the extra suffix so
-                    # qnames match the original fastq read names for seqkit and racon.
-                    # strobealign and minibwa do NOT double the suffix - their qnames already
-                    # match the fastq header, so stripping here would corrupt them instead
-                    # (dropping the real /1 or /2 the fastq already has, breaking the seqkit
-                    # --pattern-file lookup and leaving racon with an empty read set).
-                    mapper_doubles_suffix = short_read_mapper.startswith(("minimap2-", "rammap-"))
-                    if illumina and mapper_doubles_suffix and (qname.endswith('/1') or qname.endswith('/2')):
-                        norm_qname = qname[:-2]
-                        fields[0] = norm_qname
-                        norm_line = '\t'.join(fields)
+                    if mapper_needs_suffix_leniency:
+                        norm_qname = qname
+                        while norm_qname.endswith(('/1', '/2')):
+                            norm_qname = norm_qname[:-2]
+                        if norm_qname != qname:
+                            fields[0] = norm_qname
+                            norm_line = '\t'.join(fields)
+                        else:
+                            norm_line = line
                     else:
                         norm_qname = qname
                         norm_line = line
@@ -466,7 +488,14 @@ def run_polish(
                             excluded_reads.add(norm_qname)
             with open(os.path.join(output_dir, "reads.%s.%d.lst" % (output_prefix, rounds)), "w") as o:
                 for i in included_reads:
-                    o.write(i + '\n')
+                    if mapper_needs_suffix_leniency:
+                        # i is already suffix-free (see the qname normalization
+                        # above); match it against the original fastq headers
+                        # with or without a real /1 or /2, since we cannot tell
+                        # from here whether the source reads had one.
+                        o.write(f"^{re.escape(i)}(/1|/2)?$\n")
+                    else:
+                        o.write(f"^{re.escape(i)}$\n")
             logging.info("Retrieving reads...")
             if not isinstance(reads, str):
                 for read in reads:
@@ -478,6 +507,7 @@ def run_polish(
                         output_file=output_file,
                         threads=threads,
                         log=log,
+                        use_regexp=True,
                     )
 
             else:
@@ -489,6 +519,7 @@ def run_polish(
                     output_file=output_file,
                     threads=threads,
                     log=log,
+                    use_regexp=True,
                 )
 
             with open(log, "a") as logf:
