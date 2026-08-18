@@ -241,8 +241,8 @@ html {
 
 .md-header__button.md-logo img,
 .md-header__button.md-logo svg {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.1rem;
+  height: 2.1rem;
   object-fit: contain;
   image-rendering: auto;
 }
@@ -982,23 +982,13 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
    make the shrink-to-visible-nothing case far rarer. But the underlying
    mechanism is unchanged: whichever section IS expanded can still push the
    list past viewport height on a short window, and it still has to scroll
-   internally when that happens -- there is no arrangement that avoids that
-   in general. The real complaint was that the boundary read as "chopped"
-   rather than "there is more below", so that is what this still fixes: a
-   short fade at the bottom edge, the conventional signal for a scroll region
-   with more content. Material's own scroll affordance stays.
-
-   Scoped to the desktop breakpoint; the mobile drawer is left alone. */
-@media screen and (min-width: 76.25em) {
-  .md-sidebar--primary .md-sidebar__scrollwrap {
-    -webkit-mask-image: linear-gradient(to bottom,
-      #000 calc(100% - 1.5rem), transparent 100%);
-    mask-image: linear-gradient(to bottom,
-      #000 calc(100% - 1.5rem), transparent 100%);
-  }
-}
+   internally when that happens. A permanent mask previously faded the final
+   1.5rem of this container, but it also made the footer transition look like
+   an overlap and obscured links even after the inner nav reached its end.
+   Leaving the native scroll edge visible makes the boundary unambiguous. */
 
 .md-sidebar--primary .md-nav__link {
+  margin-top: 0.5em;
   padding-left: 0.6rem;
 }
 
