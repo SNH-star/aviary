@@ -630,7 +630,18 @@ class Processor:
         # spades_assembly.py accepts a narrower --long-read-type vocabulary
         # than aviary's own (see LONG_READ_TYPE_TO_SPADES) -- resolved here,
         # not passed raw, so rs/sq/ccs/hifi don't crash it with "invalid choice".
-        conf["long_read_type_spades"] = LONG_READ_TYPE_TO_SPADES[self.longread_type]
+        # .get(..., "none") rather than a bare lookup: self.longread_type is
+        # the literal string "none" whenever no long reads were supplied at
+        # all (annotate, short-read-only recover, ...), and
+        # LONG_READ_TYPE_TO_SPADES only maps the six real read types.
+        # spades_assembly.py is only ever invoked on the hybrid/long-read
+        # assembly path, which is unreachable when there are no long reads,
+        # so this fallback value is never actually read -- it only needs to
+        # exist because the .smk rules interpolate config values
+        # unconditionally, same reason every other inapplicable field here
+        # (long_read_mapper_model, minibwa_params, ...) is written as "none"
+        # rather than omitted.
+        conf["long_read_type_spades"] = LONG_READ_TYPE_TO_SPADES.get(self.longread_type, "none")
         conf["long_read_assembler"] = self.long_read_assembler
         conf["long_read_mapper"] = self.long_read_mapper
         conf["long_read_mapper_model"] = self.long_read_mapper_model or "none"
