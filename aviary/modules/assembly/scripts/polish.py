@@ -430,18 +430,32 @@ def run_polish(
                     minimap2_process("map-pb", reference, reads, threads, paf, log,
                                      mapper=long_read_mapper)
 
+            # minibwa's -f PAF output includes an explicit row per unmapped
+            # read (all numeric/ref fields "*"), unlike strobealign/minimap2/
+            # rammap/bwa-mem/bwa-mem2, which omit unmapped reads from PAF
+            # output entirely. Strip those rows here, right after the PAF is
+            # written, so every reader of this file -- both below in this
+            # function and get_high_cov_contigs in assembly.smk, which reads
+            # this same on-disk file directly -- can assume every line is a
+            # real alignment without needing its own "*" guard. A no-op for
+            # every other mapper, since they never emit these rows.
+            filtered_lines = []
+            with open(paf) as f:
+                for line in f:
+                    fields = line.split()[:9]
+                    if len(fields) > 5 and fields[5] == '*':
+                        continue
+                    filtered_lines.append(line)
+            tmp_paf = paf + '.tmp'
+            with open(tmp_paf, 'w') as f:
+                f.writelines(filtered_lines)
+            os.replace(tmp_paf, paf)
+
             cov_dict = {}
             # Populate coverage dictionary,
             with open(paf) as f:
                 for line in f:
                     qname, qlen, qstart, qstop, strand, ref, rlen, rstart, rstop = line.split()[:9]
-                    # minibwa's -f PAF output includes an explicit row per
-                    # unmapped read (all numeric/ref fields "*", unlike
-                    # strobealign/minimap2/rammap, which omit unmapped reads
-                    # from PAF output entirely) -- skip them rather than
-                    # crashing on int('*').
-                    if ref == '*':
-                        continue
                     qlen, qstart, qstop, rlen, rstart, rstop = map(int, [qlen, qstart, qstop, rlen, rstart, rstop])
                     if ref in cov_dict:
                         cov_dict[ref] += (rstop - rstart) / rlen
@@ -497,10 +511,6 @@ def run_polish(
                 for line in f:
                     fields = line.split('\t')
                     qname, qlen, qstart, qstop, strand, ref, rlen, rstart, rstop = fields[:9]
-                    # See the cov_dict loop above -- minibwa emits an explicit
-                    # "*"-filled row per unmapped read.
-                    if ref == '*':
-                        continue
                     qlen, qstart, qstop, rlen, rstart, rstop = map(int, [qlen, qstart, qstop, rlen, rstart, rstop])
                     if mapper_needs_suffix_leniency:
                         norm_qname = qname
