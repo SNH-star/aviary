@@ -12,7 +12,8 @@ aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz
 
 If no assembly is provided, aviary will first run the assembly pipeline.
 
-> This subcommand also accepts `--build`, `--build-gpu`, `--download`, `--rerun-triggers`, `--default-resources`, and `--workflow`, which are shared across every aviary subcommand — see [Centralised commands](centralised_commands.md).
+> This subcommand also accepts the common workflow, resource, output and
+> execution options described under [Shared options](centralised_commands.md).
 
 ## Input options
 
@@ -156,7 +157,7 @@ If no assembly is provided, aviary will first run the assembly pipeline.
 
 **`--extra-binners`** BINNER [BINNER ...]
 
-  Extra binning algorithms to run: `maxbin2`, `concoct`, `comebin`, `taxvamb`, `quickbin`. These are skipped by default due to long runtimes.
+  Extra binning algorithms to run: `maxbin`/`maxbin2` (equivalent), `concoct`, `comebin`, `taxvamb`, `quickbin`. These are skipped by default due to long runtimes.
 
 **`--skip-binners`** BINNER [BINNER ...]
 
@@ -178,6 +179,9 @@ If no assembly is provided, aviary will first run the assembly pipeline.
   ```
 
   Assemblies are concatenated (with unique `sample:contig` headers) into one SemiBin2 input, and reads from every sample are mapped back onto that concatenation, so co-abundance across samples improves binning. Output bins are written per-sample-prefixed into `data/semibin_bins/output_bins/`.
+
+  `--semibin-multi` is accepted as a hidden compatibility alias for
+  `--semibin-mode multi`; use the explicit form in new scripts.
 
 **`--refinery-max-iterations`** INT
 
@@ -205,11 +209,13 @@ If no assembly is provided, aviary will first run the assembly pipeline.
 
 **`--min-completeness`** FLOAT
 
-  Minimum CheckM2 completeness percentage for annotation. [default: 50.0]
+  Minimum CheckM2 completeness percentage for bins retained in downstream
+  processing. [default: 50.0]
 
 **`--max-contamination`** FLOAT
 
-  Maximum CheckM2 contamination percentage for annotation. [default: 5.0]
+  Maximum CheckM2 contamination percentage for bins retained in downstream
+  processing. [default: 5.0]
 
 **`--coverage-job-strategy`** STRATEGY
 
