@@ -448,6 +448,12 @@ class Tests(unittest.TestCase):
             f"--coverage-job-strategy always "
             f"--coverage-samples-per-job 2 "
             f"--min-read-size 10 --min-mean-q 1 "
+            # This tiny synthetic dataset only ever produces bins in the
+            # 15-27% completeness range -- this test is checking that bins
+            # within threshold get picked up, not that the (default 50%)
+            # threshold itself works, so loosen it to match what the data
+            # can actually produce.
+            f"--min-completeness 20 --max-contamination 20 "
             f"-n 32 -t 32 "
             f"{singlem_args} "
         )
@@ -476,6 +482,12 @@ class Tests(unittest.TestCase):
             f"-l {data}/pbsim.fq.gz "
             f"--longread-type ont "
             f"--min-read-size 10 --min-mean-q 1 "
+            # This tiny synthetic dataset only ever produces bins in the
+            # 15-27% completeness range -- this test is checking that bins
+            # within threshold get picked up, not that the (default 50%)
+            # threshold itself works, so loosen it to match what the data
+            # can actually produce.
+            f"--min-completeness 20 --max-contamination 20 "
             f"-n 32 -t 32 "
             f"--strict "
             f"{singlem_args} "
