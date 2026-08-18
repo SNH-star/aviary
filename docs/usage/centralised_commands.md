@@ -1,10 +1,17 @@
 ---
-title: Centralised commands
+title: Shared options
 ---
 
-# Centralised commands
+# Shared options
 
-These options are not specific to any one subcommand. They're defined once in `aviary.py` as a shared parent parser (`base_group`, plus the `-w`/`--workflow` argument added separately per subcommand) and attached to every subcommand via argparse's `parents=` mechanism — that's why `--clean`, `--dry-run`, `--build`, etc. behave identically whether you're running `aviary recover`, `aviary annotate`, or any other subcommand.
+These options are defined once in `aviary.py` and shared by `assemble`,
+`recover`, `annotate`, `complete`, `cluster`, `isolate` and `configure`.
+The `build` command is the exception: it accepts only `--gpu` and
+`--workflow`; see [`aviary build`](build.md).
+
+Top-level `--version`, `--verbosity` and `--log` options must appear before the
+subcommand. They and the accepted CLI value forms are documented under
+[Command syntax](syntax.md).
 
 **Note on `bird_tool_utils`:** the flags below are Aviary's own, not part of `bird_tool_utils`. What *does* come from `bird_tool_utils` is the surrounding CLI machinery: the `BirdArgparser` wrapper class, the short-help/`--full-help` split (see the gotcha below), and the overall `--help` formatting. Don't confuse "shared across subcommands" (this page) with "provided by bird_tool_utils" (the CLI plumbing) — they're two different things that happen to overlap here.
 
@@ -12,9 +19,10 @@ These options are not specific to any one subcommand. They're defined once in `a
 
 **`--help` vs `--full-help`.** For `assemble`, `recover`, and `complete`, plain `-h`/`--help` prints only a short description and examples — none of the flags on this page (or the subcommand's own flags) are shown. You need `--full-help`/`--full_help` to get the complete flag listing. The other subcommands (`annotate`, `cluster`, `build`, `isolate`, `configure`) use plain argparse help, so `--help` already shows everything for them.
 
-**Boolean flags need an explicit value to turn off.** `--clean`, `--dry-run`, `--strict`, `--request-gpu`, `--build`, and `--build-gpu` all use `nargs='?', const=True` with a custom `str2bool` parser. That means:
+**Boolean flags need an explicit value to turn off.** Boolean options use an
+optional value with a bare flag meaning `true`. For example:
 - Bare `--clean` (no value) → `True`.
-- To disable, you must pass an explicit falsy value: `--clean False`, `--clean no`, `--clean 0`, etc. (accepted values: `yes/true/t/y/1` and `no/false/f/n/0`, case-insensitive.) There's no `--no-clean` form.
+- To disable, pass an explicit falsy value: `--clean False`, `--clean no`, `--clean 0`, etc. (accepted values: `yes/true/t/y/1` and `no/false/f/n/0`, case-insensitive.) There's no `--no-clean` form.
 - `--clean` in particular defaults to `True`, so if you want to keep intermediate files (e.g. for debugging or to resume from a partial run), you must explicitly pass `--clean False` — omitting the flag does not do this.
 
 **`--build`/`--build-gpu` short-circuit the pipeline.** Passing either causes aviary to build the dependency Conda/Snakemake environments for that subcommand and then exit — it will not run the actual workflow in the same invocation.
@@ -31,6 +39,11 @@ These options are not specific to any one subcommand. They're defined once in `a
 | `complete` | `get_bam_indices recover_mags annotate` |
 | `isolate` | `dnaapler` |
 | `configure` | `download_databases` (help hidden) |
+
+`configure` accepts the shared resource and output options because it inherits
+the common parser, but only `--tmpdir`, database paths and `--download` affect
+normal configuration mode. With no requested download, it records paths,
+prints the current configuration to the log and exits before a workflow runs.
 
 ## Performance options
 

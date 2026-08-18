@@ -43,12 +43,12 @@ aviary assemble \
 
 ## Important controls
 
-`--min-contig-size` filters short contigs before downstream processing. Raising
-it reduces the fragmented sequence retained but can also discard genuine
-sequence from a fragmented assembly. `--long-read-assembler` selects the
-supported long-read assembly implementation. Quality-control thresholds affect
-which reads reach the assembler and should be chosen for the sequencing data,
-not copied mechanically between projects.
+`--long-read-assembler` selects the supported long-read assembly implementation.
+Quality-control thresholds affect which reads reach the assembler and should be
+chosen for the sequencing data, not copied mechanically between projects.
+`--min-contig-size` is accepted by `assemble` through its shared parser, but it
+is a downstream binning filter and does not alter the default assembly target;
+set it on `recover` or `complete` when filtering contigs for binning.
 
 ## Result
 

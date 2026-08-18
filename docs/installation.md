@@ -33,10 +33,10 @@ analysis software.
 
 ```bash
 aviary --version
-aviary complete --help
+aviary complete --full-help
 ```
 
-Before downloading large databases, use `aviary complete --help` to confirm
+Before downloading large databases, use `aviary complete --full-help` to confirm
 that the installed release exposes the options used by this documentation.
 
 ## Configure reference data
@@ -54,8 +54,7 @@ aviary configure \
   --eggnog-db-path /shared/db/eggnog \
   --checkm2-db-path /shared/db/checkm2/uniref100.KO.1.dmnd \
   --singlem-metapackage-path /shared/db/singlem/package.smpkg.zb \
-  --metabuli-db-path /shared/db/metabuli \
-  --output configure_logs
+  --metabuli-db-path /shared/db/metabuli
 ```
 
 The corresponding environment variables are:
@@ -77,8 +76,7 @@ one or more of `gtdb`, `eggnog`, `singlem`, `checkm2` and `metabuli`. Supplying
 aviary configure \
   --gtdb-path /shared/db/gtdb \
   --checkm2-db-path /shared/db/checkm2 \
-  --download gtdb checkm2 \
-  --output configure_logs
+  --download gtdb checkm2
 ```
 
 Database downloads are large and should not be duplicated per user or run.

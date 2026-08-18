@@ -23,9 +23,8 @@ title: Aviary
 # Aviary
 
 Aviary assembles metagenomes, recovers metagenome-assembled genomes (MAGs),
-and coordinates their taxonomic and functional annotation. Short-read,
-long-read and hybrid analyses run through one reproducible Snakemake
-workflow, locally or across an HPC cluster.
+and coordinates their annotation in reproducible local or HPC Snakemake
+workflows. It supports short-read, long-read and hybrid analyses.
 
 <div class="aviary-hero__actions" markdown>
 [Install Aviary](installation.md){ .md-button .md-button--primary }
@@ -57,8 +56,10 @@ for what each stage does and where its outputs land.
 
 ## The commands
 
-Six subcommands, each a stage of the same workflow. `complete` runs the lot;
-the others let you enter or leave at any point.
+Six analysis subcommands cover the workflow. `complete` runs the metagenome
+stages end to end; the others let you enter or leave at a specific point.
+Two utility commands, [`configure`](usage/configure.md) and
+[`build`](usage/build.md), manage reference paths and dependency environments.
 
 <div class="aviary-commands" markdown>
 
@@ -91,7 +92,7 @@ the others let you enter or leave at any point.
 <a class="aviary-command__name" href="usage/annotate/"><code>annotate</code></a>
 <span class="aviary-command__flow">MAGs <span aria-hidden="true">→</span> annotations</span>
 </div>
-<p class="aviary-command__body">Answers the three questions you have about every MAG: what genes are in it (EggNOG), what it is (GTDB-Tk), and how far you can trust it (CheckM2 completeness and contamination). Assemblies can be passed alongside for QUAST QC.</p>
+<p class="aviary-command__body">Adds functional annotations with EggNOG and taxonomic classifications with GTDB-Tk. Assemblies can be passed alongside when targeting QUAST QC. CheckM2 quality assessment belongs to the <code>recover</code>/<code>complete</code> binning path, not the default annotation target.</p>
 </div>
 
 <div class="aviary-command" markdown>
@@ -107,7 +108,7 @@ the others let you enter or leave at any point.
 <a class="aviary-command__name" href="usage/isolate/"><code>isolate</code></a>
 <span class="aviary-command__flow">pure culture <span aria-hidden="true">→</span> genome</span>
 </div>
-<p class="aviary-command__body">The same step-down hybrid assembly as <code>assemble</code>, tuned for a single organism from pure culture rather than a mixed community. For metagenomic data, use <code>assemble</code> or <code>recover</code> instead.</p>
+<p class="aviary-command__body">A long-read-first Flye assembly and polishing path for a single organism from pure culture. Optional short reads add another polishing round. For metagenomic data, use <code>assemble</code> or <code>recover</code> instead.</p>
 </div>
 
 </div>

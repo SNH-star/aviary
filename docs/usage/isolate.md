@@ -7,10 +7,11 @@ title: aviary isolate
 Step-down hybrid assembly for isolated pure culture sequencing results. For use with isolate (not metagenomic) sequencing data.
 
 ```
-aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long_read_type ont
+aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
 ```
 
-> This subcommand also accepts `--dry-run`, `--clean`, `--strict`, `--request-gpu`, `--build`, `--build-gpu`, `--download`, `--rerun-triggers`, `--default-resources`, `--snakemake-profile`, `--snakemake-cmds`, `--cluster-retries`, `--local-cores`, and `--workflow`, which are shared across every aviary subcommand — see [Centralised commands](centralised_commands.md).
+> This subcommand also accepts the common workflow, resource, output and
+> execution options described under [Shared options](centralised_commands.md).
 
 ## Input options (short reads)
 
@@ -46,13 +47,33 @@ polishing round on top of the long-read assembly.
 
 **`--medaka-model`** MODEL
 
-  Medaka model for polishing. [default: r941_min_hac_g507]
+  Model passed to the shared polishing helper. [default: r941_min_hac_g507]
 
 ## Isolate options
 
+**`--guppy-model`** MODEL
+
+  Medaka model used by the isolate-specific `polish_isolate_medaka` rule.
+  Despite the historical option name, this is a Medaka model identifier.
+  The default is passed as a scalar; the current parser stores an explicit
+  override as a one-item list, so custom values should be treated as a known
+  compatibility limitation. [default: r941_min_hac_g507]
+
 **`--genome-size`** INT
 
-  Approximate size of the isolate genome in base pairs. [default: 5000000]
+  Accepted by the current CLI for compatibility, but not read by the current
+  isolate workflow and therefore does not tune Flye. [default: 5000000]
+
+## QC options
+
+Short-read and long-read filtering uses the same controls as `assemble`:
+`--host-filter`, `--gold-standard-assembly`, `--gsa-mappings`,
+`--min-read-size`, `--min-mean-q`, `--keep-percent`,
+`--min-short-read-length`, `--max-short-read-length`,
+`--disable-adapter-trimming`, `--unqualified-percent-limit`,
+`--quality-cutoff`, `--extra-fastp-params` and `--skip-qc`. See
+[`aviary assemble` → QC options](assemble.md#qc-options) for types, defaults
+and examples.
 
 ## Performance options
 
@@ -68,11 +89,38 @@ polishing round on top of the long-read assembly.
 
   Maximum memory in gigabytes. [default: 250]
 
+**`-p`**, **`--pplacer-threads`** INT
+
+  Accepted through the shared parser but not used by the default isolate
+  workflow. [default: 8]
+
 ## Output options
 
 **`-o`**, **`--output`** DIR
 
   Output directory. [default: ./]
+
+**`--tmpdir`** DIR
+
+  Temporary files directory.
+
+## Inherited compatibility options
+
+`isolate` also inherits the binning and database-path groups used by the
+metagenome workflows. The default `dnaapler` isolate target does not use them:
+
+- `--min-contig-size`, `--min-bin-size`, `--coverage-job-strategy`,
+  `--coverage-samples-per-job`, `--semibin-model`, `--semibin-mode`,
+  `--refinery-max-iterations`, `--refinery-max-retries`, `--extra-binners`,
+  `--skip-binners`, `--binning-only`, `--skip-abundances`, `--skip-taxonomy`,
+  `--skip-singlem`, `--min-completeness` and `--max-contamination`
+- `--min-percent-read-identity-short`, `--min-percent-read-identity-long`
+- `--gtdb-path`, `--eggnog-db-path`, `--singlem-metapackage-path`,
+  `--checkm2-db-path`, `--metabuli-db-path`
+
+See [`aviary recover`](recover.md#binning-options) for the binning values and
+[`aviary annotate`](annotate.md#annotation-bin-processing-options) for database
+paths. The hidden `--semibin-multi` alias means `--semibin-mode multi`.
 
 ## Examples
 
@@ -104,9 +152,9 @@ user-selectable, since it targets a single pure-culture genome rather than a mix
 
 ### Sizing the assembly
 
-Set `--genome-size` to roughly the expected isolate genome size (bacterial genomes are typically
-2–10 Mbp); it tunes Flye's assembly parameters and is unrelated to `--min-bin-size`, which
-doesn't apply here since isolate assembly produces one genome rather than binning a community:
+`--genome-size` is present in the CLI but is not currently consumed by the
+workflow, so changing it does not alter the assembly. The following is accepted
+for compatibility but behaves like the default invocation:
 ```
 aviary isolate --longreads reads.fastq.gz --long-read-type ont --genome-size 4500000
 ```

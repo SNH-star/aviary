@@ -11,7 +11,7 @@ Aviary is installed and the required databases are configured.
 
 ```bash
 aviary --version
-aviary complete --help
+aviary complete --full-help
 ```
 
 ## 2. Prepare paired reads
@@ -36,11 +36,11 @@ aviary complete \
   --output sample_aviary \
   --max-threads 8 \
   --n-cores 8 \
-  --dryrun
+  --dry-run
 ```
 
 The dry run resolves the workflow without executing analysis tools. Remove
-`--dryrun` after checking the planned jobs and configured database paths.
+`--dry-run` after checking the planned jobs and configured database paths.
 
 ## 4. Run
 

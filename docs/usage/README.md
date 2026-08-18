@@ -7,6 +7,9 @@ title: CLI reference
 Aviary exposes eight subcommands. The installed command's `--help` output is
 the final authority for the installed version.
 
+Start with [command syntax](syntax.md) for global-option placement, boolean
+values, list inputs, aliases and quoting rules.
+
 | Command | Purpose |
 | --- | --- |
 | [`assemble`](assemble.md) | Quality-control reads and assemble contigs |
@@ -16,7 +19,7 @@ the final authority for the installed version.
 | [`cluster`](cluster.md) | Dereplicate genomes across completed runs |
 | [`isolate`](isolate.md) | Assemble reads from a cultured isolate |
 | [`configure`](configure.md) | Store reference-data paths and request downloads |
-| `build` | Build dependency environments; add `--gpu` for GPU environments |
+| [`build`](build.md) | Build dependency environments; add `--gpu` for GPU environments |
 
 Shared workflow and resource options are explained in
-[centralised commands](centralised_commands.md).
+[shared options](centralised_commands.md).

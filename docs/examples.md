@@ -29,12 +29,12 @@ aviary complete \
   --output hybrid_complete \
   --max-threads 16 \
   --n-cores 32 \
-  --dryrun
+  --dry-run
 ```
 
 ### Run
 
-Remove `--dryrun` after checking the planned targets and database paths:
+Remove `--dry-run` after checking the planned targets and database paths:
 
 ```bash
 aviary complete \

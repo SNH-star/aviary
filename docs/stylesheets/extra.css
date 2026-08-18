@@ -539,8 +539,8 @@ html.aviary-motion-ready .aviary-reveal.is-visible {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
-  gap: 2.5rem;
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 280px);
+  gap: 1.5rem;
   align-items: center;
 }
 

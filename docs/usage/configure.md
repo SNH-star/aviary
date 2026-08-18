@@ -10,7 +10,11 @@ Set conda environment variables for database paths used by future aviary runs. S
 aviary configure --gtdb-path ~/gtdbtk/release232/ --tmpdir /path/to/tmp/
 ```
 
-> This subcommand also accepts `--dry-run`, `--clean`, `--strict`, `--request-gpu`, `--build`, `--build-gpu`, `--rerun-triggers`, `--default-resources`, `--snakemake-profile`, `--snakemake-cmds`, `--cluster-retries`, and `--local-cores`, which are shared across every aviary subcommand — see [Centralised commands](centralised_commands.md). Note: `configure` also has `-w`/`--workflow` like every other subcommand, but its help text is intentionally suppressed here since it isn't meant to be user-facing for this subcommand.
+> `configure` inherits the shared parser options, including `-t`, `-p`, `-n`,
+> `-m`, `-o`, execution controls and the hidden `-w`/`--workflow`. In normal
+> configuration mode they are accepted but ignored; `--tmpdir`, database paths
+> and `--download` are the effective options. See
+> [Shared options](centralised_commands.md).
 
 ## Database path options
 

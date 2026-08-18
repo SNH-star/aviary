@@ -65,7 +65,7 @@ More than one read set was supplied without an explicit assembly decision.
 
 Use `--coassemble` to combine supported inputs, or `--coassemble false` to make
 the non-coassembly behaviour explicit. Review the resulting assembly strategy
-in a `--dryrun` before starting a large analysis.
+in a `--dry-run` before starting a large analysis.
 
 ## `File ... exists` for `--log`
 

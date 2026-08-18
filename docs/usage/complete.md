@@ -7,10 +7,11 @@ title: aviary complete
 Performs all steps in the Aviary pipeline: Assembly → Binning → Refinement → Annotation.
 
 ```
-aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long_read_type ont
+aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
 ```
 
-> This subcommand also accepts `--build`, `--build-gpu`, `--download`, `--rerun-triggers`, `--default-resources`, and `--workflow`, which are shared across every aviary subcommand — see [Centralised commands](centralised_commands.md).
+> This subcommand also accepts the common workflow, resource, output and
+> execution options described under [Shared options](centralised_commands.md).
 
 ## Input options
 
@@ -154,7 +155,7 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 
 **`--extra-binners`** BINNER [BINNER ...]
 
-  Extra binning algorithms to run: `maxbin2`, `concoct`, `comebin`, `taxvamb`, `quickbin`. These are skipped by default due to long runtimes.
+  Extra binning algorithms to run: `maxbin`/`maxbin2` (equivalent), `concoct`, `comebin`, `taxvamb`, `quickbin`. These are skipped by default due to long runtimes.
 
 **`--skip-binners`** BINNER [BINNER ...]
 
@@ -167,6 +168,9 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 **`--semibin-mode`** `{single,multi}`
 
   SemiBin2 mode to use. `single` runs `single_easy_bin` on one assembly at a time. `multi` runs `multi_easy_bin`, co-binning multiple assemblies together — pass two or more files to `--assembly` to use it. Multi mode ignores `--semibin-model`, as pre-trained environments aren't supported for multi-sample binning. [default: single]
+
+  `--semibin-multi` is accepted as a hidden compatibility alias for
+  `--semibin-mode multi`; use the explicit form in new scripts.
 
   ```
   aviary complete --assembly sample1.fasta sample2.fasta sample3.fasta \
@@ -203,11 +207,13 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 
 **`--min-completeness`** FLOAT
 
-  Minimum CheckM2 completeness percentage for annotation. [default: 50.0]
+  Minimum CheckM2 completeness percentage for bins retained in downstream
+  processing. [default: 50.0]
 
 **`--max-contamination`** FLOAT
 
-  Maximum CheckM2 contamination percentage for annotation. [default: 5.0]
+  Maximum CheckM2 contamination percentage for bins retained in downstream
+  processing. [default: 5.0]
 
 **`--coverage-job-strategy`** STRATEGY
 

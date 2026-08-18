@@ -75,7 +75,7 @@ Metagenome assembly, binning, and annotation:
                     or assembly using only short reads
         recover   - Recover MAGs from provided assembly using a variety 
                     of binning algorithms 
-        annotate  - Annotate MAGs using EggNOG and GTBD-tk
+        annotate  - Annotate MAGs using EggNOG and GTDB-Tk
         complete  - Runs each stage of the pipeline: assemble, recover, 
                     annotate in that order.
         cluster   - Combines and dereplicates the MAGs from multiple Aviary runs
@@ -1157,7 +1157,7 @@ def main():
                                             '''
                                                                ......:::::: CONFIGURE ::::::......
 
-                                            aviary configure --gtdb-path ~/gtdbtk/release207/ --temp-dir /path/to/new/temp
+                                            aviary configure --gtdb-path ~/gtdbtk/release232/ --temp-dir /path/to/new/temp
 
                                             ''')
 

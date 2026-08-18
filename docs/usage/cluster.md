@@ -10,7 +10,8 @@ Dereplicate and choose representative genomes from multiple aviary runs using Ga
 aviary cluster --input-runs aviary_output_folder_1/ aviary_output_folder_2/
 ```
 
-> This subcommand also accepts `--dry-run`, `--clean`, `--strict`, `--request-gpu`, `--build`, `--build-gpu`, `--download`, `--rerun-triggers`, `--default-resources`, `--snakemake-profile`, `--snakemake-cmds`, `--cluster-retries`, `--local-cores`, and `--workflow`, which are shared across every aviary subcommand — see [Centralised commands](centralised_commands.md).
+> This subcommand also accepts the common workflow, resource, output and
+> execution options described under [Shared options](centralised_commands.md).
 
 ## Input options
 
@@ -62,11 +63,20 @@ aviary cluster --input-runs aviary_output_folder_1/ aviary_output_folder_2/
 
   Maximum memory in gigabytes. [default: 250]
 
+**`-p`**, **`--pplacer-threads`** INT
+
+  Accepted through the shared parser but not used by the default clustering
+  workflow. [default: 8]
+
 ## Output options
 
 **`-o`**, **`--output`** DIR
 
   Output directory. [default: ./]
+
+**`--tmpdir`** DIR
+
+  Temporary directory passed through the shared workflow configuration.
 
 ## Examples
 

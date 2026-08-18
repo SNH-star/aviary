@@ -4,13 +4,14 @@ title: aviary annotate
 
 # aviary annotate
 
-Annotate a given set of MAGs using EggNOG, GTDB-tk, and CheckM2.
+Annotate a given set of MAGs using EggNOG and GTDB-Tk.
 
 ```
 aviary annotate --genome-fasta-directory input_bins/
 ```
 
-> This subcommand also accepts `--dry-run`, `--clean`, `--strict`, `--request-gpu`, `--build`, `--build-gpu`, `--download`, `--rerun-triggers`, `--default-resources`, `--snakemake-profile`, `--snakemake-cmds`, `--cluster-retries`, `--local-cores`, and `--workflow`, which are shared across every aviary subcommand — see [Centralised commands](centralised_commands.md).
+> This subcommand also accepts the common workflow, resource, output and
+> execution options described under [Shared options](centralised_commands.md).
 
 ## Input options
 
@@ -62,6 +63,11 @@ aviary annotate --genome-fasta-directory input_bins/
 
   Maximum memory in gigabytes. [default: 250]
 
+**`-p`**, **`--pplacer-threads`** INT
+
+  Threads for pplacer during GTDB-tk classification. Values above
+  `--max-threads` are capped to that limit. [default: 8]
+
 ## Output options
 
 **`-o`**, **`--output`** DIR
@@ -71,6 +77,18 @@ aviary annotate --genome-fasta-directory input_bins/
 **`--tmpdir`** DIR
 
   Temporary files directory.
+
+## Inherited QC options
+
+The parser also accepts `--gold-standard-assembly`, `--gsa-mappings`,
+`--host-filter`, `--min-read-size`, `--min-mean-q`, `--keep-percent`,
+`--min-short-read-length`, `--max-short-read-length`,
+`--disable-adapter-trimming`, `--unqualified-percent-limit`,
+`--quality-cutoff`, `--extra-fastp-params` and `--skip-qc` because `annotate`
+inherits Aviary's QC option group. They do not affect the default `annotate`
+target. Use `-a`/`--assembly` to provide assemblies to a separately targeted
+QC rule, and see [`aviary assemble` → QC options](assemble.md#qc-options) for
+the accepted values.
 
 ## Examples
 

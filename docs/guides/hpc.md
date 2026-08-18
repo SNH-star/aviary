@@ -39,7 +39,7 @@ For simpler cluster setups, pass cluster options directly:
 
 ```
 aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz \
-    --long_read_type ont -t 24 -p 24 -n 24 --snakemake-cmds '--cluster qsub '
+    --long-read-type ont -t 24 -p 24 -n 24 --snakemake-cmds '--cluster qsub '
 ```
 
 > **Note:** The trailing space after `qsub` is required due to a quirk in Python's argparse module.

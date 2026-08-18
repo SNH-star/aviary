@@ -7,10 +7,11 @@ title: aviary assemble
 Step-down hybrid assembly using long and short reads, or assembly using only short or long reads.
 
 ```
-aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long_read_type ont
+aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
 ```
 
-> This subcommand also accepts `--build`, `--build-gpu`, `--download`, `--rerun-triggers`, `--default-resources`, and `--workflow`, which are shared across every aviary subcommand — see [Centralised commands](centralised_commands.md).
+> This subcommand also accepts the common workflow, resource, output and
+> execution options described under [Shared options](centralised_commands.md).
 
 ## Input options (short reads)
 
@@ -139,6 +140,27 @@ aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 **`--extra-fastp-params`** STRING
 
   Extra parameters to pass to fastp, e.g. `--extra-fastp-params "-V -e 10"`.
+
+## Downstream compatibility options
+
+The `assemble` parser also accepts the binning controls below because it shares
+option groups with `recover` and `complete`. They do not affect the default
+`complete_assembly_with_qc` target. They only become relevant if `--workflow`
+is used to request a downstream binning rule:
+
+- `--min-contig-size`, `--min-bin-size`
+- `--coverage-job-strategy`, `--coverage-samples-per-job`
+- `--semibin-model`, `--semibin-mode`
+- `--refinery-max-iterations`, `--refinery-max-retries`
+- `--extra-binners`, `--skip-binners`
+- `--binning-only`, `--skip-abundances`, `--skip-taxonomy`, `--skip-singlem`
+- `--min-completeness`, `--max-contamination`
+- `--min-percent-read-identity-short`, `--min-percent-read-identity-long`
+
+Their types, choices and defaults are documented under
+[`aviary recover` → Binning options](recover.md#binning-options). The hidden
+compatibility alias `--semibin-multi` means `--semibin-mode multi`; prefer the
+explicit form.
 
 ## Performance options
 

@@ -119,6 +119,7 @@ nav:
   - Worked analyses: examples.md
   - CLI reference:
       - Overview: usage/README.md
+      - Command syntax: usage/syntax.md
       - Shared options: usage/centralised_commands.md
       - assemble: usage/assemble.md
       - recover: usage/recover.md
@@ -127,6 +128,7 @@ nav:
       - cluster: usage/cluster.md
       - isolate: usage/isolate.md
       - configure: usage/configure.md
+      - build: usage/build.md
   - Configuration: guides/configuration.md
   - Input files: reference/inputs.md
   - Output files: guides/output.md
