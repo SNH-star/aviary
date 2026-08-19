@@ -10,9 +10,6 @@ Pixi is the supported route for development from this repository.
 
 ## Install from Bioconda
 
-!!! tip "Recommended for most users"
-    Start here unless you're developing Aviary itself, in which case use [Pixi](#install-from-source-with-pixi) instead.
-
 Create a dedicated environment:
 
 ```bash

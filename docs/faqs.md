@@ -12,31 +12,35 @@ there rather than to the top-level Aviary log.
 
 ### Cause
 
-Aviary reports the Snakemake rule and, where available, its log path. The cause
-may be invalid input, an upstream-tool error, missing reference data or an
-exhausted scheduler resource. A failure looks like this in the terminal:
+Aviary reports the Snakemake rule and its `shell:` command. The cause may be
+invalid input, an upstream-tool error, missing reference data or an exhausted
+scheduler resource. A failure looks like this in the terminal:
 
 ```text
-Error in rule flye_assembly:
+Error in rule polish_metagenome_flye:
     jobid: 12
-    output: output_dir/assembly/flye/assembly.fasta
-    log: output_dir/logs/flye_assembly.log (check log file(s) for error message)
+    output: data/assembly.pol.rac.fasta
     shell:
-        flye --nano-hq reads/long.fastq.gz --out-dir output_dir/assembly/flye ...
+        pixi run --manifest-path ... -e polishing .../polish.py --input-fastq ... \
+        --output-fasta data/assembly.pol.rac.fasta ... --log logs/polish_metagenome_flye/20260819_231204/attempt1.log
     (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
 ```
 
-The `log:` line names the file to open next.
+Most Aviary rules don't declare a Snakemake `log:` field, so Snakemake's own
+error block usually won't show one. Instead, the tool's own log path is the
+value passed to `--log` inside the `shell:` command shown in the error, under
+`output_dir/logs/<rule-name>/<run-timestamp>/attempt<N>.log`.
 
 ### Resolution
 
 ```bash
-ls output_dir/logs/
-less output_dir/logs/<rule-name>.log
+ls output_dir/logs/<rule-name>/
+less output_dir/logs/<rule-name>/<run-timestamp>/attempt1.log
 ```
 
-In the example above, that's `less output_dir/logs/flye_assembly.log`, since the
-error reported `log: output_dir/logs/flye_assembly.log`.
+In the example above, that's
+`less output_dir/logs/polish_metagenome_flye/20260819_231204/attempt1.log`, taken
+directly from the `--log` argument in the failed rule's `shell:` command.
 
 Correct the underlying problem and repeat the same Aviary command with the same
 output directory. Snakemake normally retains completed valid work.
