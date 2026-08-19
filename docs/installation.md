@@ -10,6 +10,9 @@ Pixi is the supported route for development from this repository.
 
 ## Install from Bioconda
 
+!!! tip "Recommended for most users"
+    Start here unless you're developing Aviary itself, in which case use [Pixi](#install-from-source-with-pixi) instead.
+
 Create a dedicated environment:
 
 ```bash
@@ -79,8 +82,9 @@ aviary configure \
   --download gtdb checkm2
 ```
 
-Database downloads are large and should not be duplicated per user or run.
-Confirm available storage and release requirements before starting them.
+!!! warning "Large downloads"
+    Database downloads are large and should not be duplicated per user or run.
+    Confirm available storage and release requirements before starting them.
 
 ## Install from source with Pixi
 

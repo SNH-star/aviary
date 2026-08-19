@@ -14,7 +14,19 @@ there rather than to the top-level Aviary log.
 
 Aviary reports the Snakemake rule and, where available, its log path. The cause
 may be invalid input, an upstream-tool error, missing reference data or an
-exhausted scheduler resource.
+exhausted scheduler resource. A failure looks like this in the terminal:
+
+```text
+Error in rule flye_assembly:
+    jobid: 12
+    output: output_dir/assembly/flye/assembly.fasta
+    log: output_dir/logs/flye_assembly.log (check log file(s) for error message)
+    shell:
+        flye --nano-hq reads/long.fastq.gz --out-dir output_dir/assembly/flye ...
+    (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+```
+
+The `log:` line names the file to open next.
 
 ### Resolution
 
@@ -22,6 +34,9 @@ exhausted scheduler resource.
 ls output_dir/logs/
 less output_dir/logs/<rule-name>.log
 ```
+
+In the example above, that's `less output_dir/logs/flye_assembly.log`, since the
+error reported `log: output_dir/logs/flye_assembly.log`.
 
 Correct the underlying problem and repeat the same Aviary command with the same
 output directory. Snakemake normally retains completed valid work.

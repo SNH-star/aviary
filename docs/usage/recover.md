@@ -19,7 +19,7 @@ If no assembly is provided, aviary will first run the assembly pipeline.
 
 **`-a`**, **`--assembly`** FILE [FILE ...]
 
-  One or more FASTA files containing scaffolded contigs of metagenome assemblies. If not provided, aviary will assemble first. Provide multiple assemblies for SemiBin2 multi-sample binning (requires `--semibin-mode multi`).
+  One or more FASTA files containing scaffolded contigs of metagenome assemblies. If not provided, aviary will assemble first. Provide multiple assemblies for SemiBin2 multi-sample binning (requires `--semibin-mode multi`; see [Core concepts](../concepts.md) if binning and assembly terms are new to you).
 
 **`-1`**, **`--pe-1`** FILE [FILE ...]
 
@@ -71,6 +71,19 @@ If no assembly is provided, aviary will first run the assembly pipeline.
 
   Manually specify the k-mer sizes used by SPAdes during assembly. Space-separated odd integers less than 128, or `auto`. [default: auto]
 
+These five flags all decide which Flye contigs make it into the assembly before binning. They interact, so read them as one rule set rather than five independent options:
+
+| Flag | Compares | Rule | Default |
+|---|---|---|---|
+| `--min-cov-long` | long-read coverage | keep if coverage ≥ value | 5 |
+| `--min-cov-short` | short-read coverage | keep if coverage ≤ value | 5 |
+| `--exclude-contig-cov` | long-read coverage | drop **only if** coverage ≤ value **and** length ≤ `--exclude-contig-size` | 10 |
+| `--exclude-contig-size` | contig length | drop **only if** length ≤ value **and** coverage ≤ `--exclude-contig-cov` | 2500 |
+| `--include-contig-size` | contig length | keep if length ≥ value, overriding the exclude rule above | 10000 |
+
+!!! example "How these combine"
+    With the defaults, a 2,000 bp contig at 8x long-read coverage is dropped (length ≤ 2500 **and** coverage ≤ 10), but the same contig at 12x coverage is kept (fails the coverage half of the exclude rule). A 15,000 bp contig is always kept regardless of coverage, because it clears `--include-contig-size`.
+
 **`--min-cov-long`** INT
 
   Automatically include Flye contigs with long-read coverage ≥ this value. [default: 5]
@@ -107,7 +120,8 @@ If no assembly is provided, aviary will first run the assembly pipeline.
 
 **`--keep-percent`** INT
 
-  **Deprecated.** Percentage of reads passing quality thresholds kept by Filtlong. [default: 100]
+  !!! warning "Deprecated"
+      Percentage of reads passing quality thresholds kept by Filtlong. [default: 100]
 
 **`--skip-qc`**
 

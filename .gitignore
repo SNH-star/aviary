@@ -25,3 +25,9 @@ mqsub.out
 test/qsub-test-log.txt
 test_semibin_multi/*
 test_semibin_multi.sh
+
+# mkdocs build output — CI (.github/workflows/deploy-docs.yaml) builds this
+# fresh from docs/ on every push and deploys it directly; it is never
+# committed back, so a checked-in copy is stale build output, not the
+# deployed site.
+/site/

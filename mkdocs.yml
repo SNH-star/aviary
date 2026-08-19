@@ -133,9 +133,10 @@ nav:
   - Configuration: guides/configuration.md
   - Input files: reference/inputs.md
   - Output files: guides/output.md
-  - HPC and clusters: guides/hpc.md
-  - Performance: advanced/performance.md
-  - Reproducibility: advanced/reproducibility.md
+  - Advanced:
+      - HPC and clusters: guides/hpc.md
+      - Performance: advanced/performance.md
+      - Reproducibility: advanced/reproducibility.md
   - Troubleshooting: faqs.md
   - Citations: citations.md
   - Development: development.md
