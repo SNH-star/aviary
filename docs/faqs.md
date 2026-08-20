@@ -124,10 +124,34 @@ limit, or reduce concurrency.
 
 ## The output directory is locked after an interrupted run
 
-First confirm that no Aviary or Snakemake process is still using the directory.
-Then use the documented `--unlock` workflow option from the
-[workflow-control guide](guides/workflow-control.md). Unlocking a live run can
-allow concurrent processes to corrupt workflow state.
+First confirm that no Aviary or Snakemake process is still using the directory
+(`ps -ef | grep aviary` locally, or check your scheduler's job queue on a
+cluster). Then use the documented `--unlock` workflow option from the
+[workflow-control guide](guides/workflow-control.md).
+
+!!! warning "Only unlock a directory you've confirmed is inactive"
+    Unlocking a directory that a live Aviary or Snakemake process is still
+    using can allow both processes to write concurrently and corrupt
+    workflow state. There is no automatic detection for this — the
+    responsibility is on you to confirm no process is running first.
+
+**If you unlocked a directory and now suspect corruption** (unexpected
+partial files, a rerun that behaves inconsistently, or mismatched file
+timestamps in `data/`):
+
+1. Check `logs/` for the timestamped subdirectory of the rule that was
+   running when the interruption happened — a partially written output next
+   to a log with no final success message is the clearest sign.
+2. Compare file timestamps in `data/` against the run's `.snakemake/`
+   metadata; a completed-looking output written *after* the interruption
+   time is suspect.
+3. When in doubt, delete the specific rule's output files (not the whole
+   output directory) and rerun — Snakemake will regenerate only what's
+   missing. See [retaining the run state](advanced/reproducibility.md#retain-the-run-state)
+   for what to keep before doing this.
+4. If several stages look affected, or you can't establish a clear boundary,
+   restart in a fresh output directory rather than trying to hand-repair a
+   run with confirmed concurrent writes.
 
 ## No bins were found
 

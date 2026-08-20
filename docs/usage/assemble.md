@@ -89,132 +89,143 @@ aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 
 ## QC options
 
-**`-r`**, **`--host-filter`** FILE [FILE ...]
+??? note "Show all 13 options"
 
-  Host reference FASTA files for removal of contaminant reads prior to assembly.
+    **`-r`**, **`--host-filter`** FILE [FILE ...]
 
-**`-g`**, **`--gold-standard-assembly`** FILE [FILE ...]
+      Host reference FASTA files for removal of contaminant reads prior to assembly.
 
-  A gold-standard assembly to compare the resulting (or a given input) assembly against.
+    **`-g`**, **`--gold-standard-assembly`** FILE [FILE ...]
 
-**`--gsa-mappings`** FILE
+      A gold-standard assembly to compare the resulting (or a given input) assembly against.
 
-  CAMI I & II gold-standard-assembly mappings, used alongside `--gold-standard-assembly`.
+    **`--gsa-mappings`** FILE
 
-**`--keep-percent`** INT
+      CAMI I & II gold-standard-assembly mappings, used alongside `--gold-standard-assembly`.
 
-  **Deprecated.** Percentage of reads passing quality thresholds kept by Filtlong. [default: 100]
+    **`--keep-percent`** INT
 
-**`--skip-qc`**
+    !!! warning "Deprecated"
+        Percentage of reads passing quality thresholds kept by Filtlong. [default: 100]
 
-  Skip quality control steps.
+    **`--skip-qc`**
 
-**`--min-read-size`** INT
+      Skip quality control steps.
 
-  Minimum long read size when filtering using Filtlong. [default: 100]
+    **`--min-read-size`** INT
 
-**`--min-mean-q`** INT
+      Minimum long read size when filtering using Filtlong. [default: 100]
 
-  Minimum long read mean quality threshold. [default: 10]
+    **`--min-mean-q`** INT
 
-**`--min-short-read-length`** INT
+      Minimum long read mean quality threshold. [default: 10]
 
-  Minimum length of short reads to keep. [default: 15]
+    **`--min-short-read-length`** INT
 
-**`--max-short-read-length`** INT
+      Minimum length of short reads to keep. [default: 15]
 
-  Maximum length of short reads to keep, 0 = no maximum. [default: 0]
+    **`--max-short-read-length`** INT
 
-**`--disable-adapter-trimming`**
+      Maximum length of short reads to keep, 0 = no maximum. [default: 0]
 
-  Disable adapter trimming of short reads.
+    **`--disable-adapter-trimming`**
 
-**`--quality-cutoff`** INT
+      Disable adapter trimming of short reads.
 
-  Phred quality value threshold for short reads. [default: 15]
+    **`--quality-cutoff`** INT
 
-**`--unqualified-percent-limit`** INT
+      Phred quality value threshold for short reads. [default: 15]
 
-  Percentage of bases allowed to be unqualified. [default: 40]
+    **`--unqualified-percent-limit`** INT
 
-**`--extra-fastp-params`** STRING
+      Percentage of bases allowed to be unqualified. [default: 40]
 
-  Extra parameters to pass to fastp, e.g. `--extra-fastp-params "-V -e 10"`.
+    **`--extra-fastp-params`** STRING
+
+      Extra parameters to pass to fastp, e.g. `--extra-fastp-params "-V -e 10"`.
 
 ## Downstream compatibility options
 
-The `assemble` parser also accepts the binning controls below because it shares
-option groups with `recover` and `complete`. They do not affect the default
-`complete_assembly_with_qc` target. They only become relevant if `--workflow`
-is used to request a downstream binning rule:
+??? note "Show details"
 
-- `--min-contig-size`, `--min-bin-size`
-- `--coverage-job-strategy`, `--coverage-samples-per-job`
-- `--semibin-model`, `--semibin-mode`
-- `--refinery-max-iterations`, `--refinery-max-retries`
-- `--extra-binners`, `--skip-binners`
-- `--binning-only`, `--skip-abundances`, `--skip-taxonomy`, `--skip-singlem`
-- `--min-completeness`, `--max-contamination`
-- `--min-percent-read-identity-short`, `--min-percent-read-identity-long`
+    The `assemble` parser also accepts the binning controls below because it shares
+    option groups with `recover` and `complete`. They do not affect the default
+    `complete_assembly_with_qc` target. They only become relevant if `--workflow`
+    is used to request a downstream binning rule:
 
-Their types, choices and defaults are documented under
-[`aviary recover` → Binning options](recover.md#binning-options). The hidden
-compatibility alias `--semibin-multi` means `--semibin-mode multi`; prefer the
-explicit form.
+    - `--min-contig-size`, `--min-bin-size`
+    - `--coverage-job-strategy`, `--coverage-samples-per-job`
+    - `--semibin-model`, `--semibin-mode`
+    - `--refinery-max-iterations`, `--refinery-max-retries`
+    - `--extra-binners`, `--skip-binners`
+    - `--binning-only`, `--skip-abundances`, `--skip-taxonomy`, `--skip-singlem`
+    - `--min-completeness`, `--max-contamination`
+    - `--min-percent-read-identity-short`, `--min-percent-read-identity-long`
+
+    Their types, choices and defaults are documented under
+    [`aviary recover` → Binning options](recover.md#binning-options). The hidden
+    compatibility alias `--semibin-multi` means `--semibin-mode multi`; prefer the
+    explicit form.
 
 ## Performance options
 
-**`-t`**, **`--max-threads`** INT
+??? note "Show all 5 options"
 
-  Maximum threads given to any particular process. [default: 8]
+    **`-t`**, **`--max-threads`** INT
 
-**`-n`**, **`--n-cores`** INT
+      Maximum threads given to any particular process. [default: 8]
 
-  Maximum cores available. Setting to multiples of `--max-threads` allows parallel processes. [default: 16]
+    **`-n`**, **`--n-cores`** INT
 
-**`-m`**, **`--max-memory`** INT
+      Maximum cores available. Setting to multiples of `--max-threads` allows parallel processes. [default: 16]
 
-  Maximum memory in gigabytes. [default: 250]
+    **`-m`**, **`--max-memory`** INT
 
-**`-p`**, **`--pplacer-threads`** INT
+      Maximum memory in gigabytes. [default: 250]
 
-  Threads given to pplacer. [default: 8]
+    **`-p`**, **`--pplacer-threads`** INT
 
-**`--local-cores`** INT
+      Threads given to pplacer. [default: 8]
 
-  Maximum local cores when submitting to a cluster. [default: 16]
+    **`--local-cores`** INT
+
+      Maximum local cores when submitting to a cluster. [default: 16]
 
 ## Output options
 
-**`-o`**, **`--output`** DIR
+??? note "Show all 2 options"
 
-  Output directory. [default: ./]
+    **`-o`**, **`--output`** DIR
 
-**`--tmpdir`** DIR
+      Output directory. [default: ./]
 
-  Temporary files directory. Uses `TMPDIR` environment variable if not set.
+    **`--tmpdir`** DIR
+
+      Temporary files directory. Uses `TMPDIR` environment variable if not set.
 
 ## Misc options
 
-**`--snakemake-profile`** PROFILE
+??? note "Show all 5 options"
 
-  Snakemake profile for cluster submission. See the Guides section for HPC usage.
+    **`--snakemake-profile`** PROFILE
 
-**`--cluster-retries`** INT
+      Snakemake profile for cluster submission. See the Guides section for HPC usage.
 
-  Number of retries for failed cluster jobs. [default: 0]
+    **`--cluster-retries`** INT
 
-**`--dry-run`**
+      Number of retries for failed cluster jobs. [default: 0]
 
-  Perform a snakemake dry run.
+    **`--dry-run`**
 
-**`--clean`**
+      Perform a snakemake dry run.
 
-  Clean up temporary files after completion. [default: True]
+    **`--clean`**
 
-**`--snakemake-cmds`** STRING
+      Clean up temporary files after completion. [default: True]
 
-  Additional snakemake commands as a single string.
+    **`--snakemake-cmds`** STRING
+
+      Additional snakemake commands as a single string.
 
 ## Examples
 

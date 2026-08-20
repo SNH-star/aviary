@@ -106,58 +106,60 @@ These five flags all decide which Flye contigs make it into the assembly before 
 
 ## QC options
 
-**`-r`**, **`--host-filter`** FILE [FILE ...]
+??? note "Show all 13 options"
 
-  Host reference FASTA files for removal of contaminant reads prior to assembly.
+    **`-r`**, **`--host-filter`** FILE [FILE ...]
 
-**`-g`**, **`--gold-standard-assembly`** FILE [FILE ...]
+      Host reference FASTA files for removal of contaminant reads prior to assembly.
 
-  A gold-standard assembly to compare the resulting (or a given input) assembly against.
+    **`-g`**, **`--gold-standard-assembly`** FILE [FILE ...]
 
-**`--gsa-mappings`** FILE
+      A gold-standard assembly to compare the resulting (or a given input) assembly against.
 
-  CAMI I & II gold-standard-assembly mappings, used alongside `--gold-standard-assembly`.
+    **`--gsa-mappings`** FILE
 
-**`--keep-percent`** INT
+      CAMI I & II gold-standard-assembly mappings, used alongside `--gold-standard-assembly`.
 
-  !!! warning "Deprecated"
-      Percentage of reads passing quality thresholds kept by Filtlong. [default: 100]
+    **`--keep-percent`** INT
 
-**`--skip-qc`**
+    !!! warning "Deprecated"
+        Percentage of reads passing quality thresholds kept by Filtlong. [default: 100]
 
-  Skip quality control steps.
+    **`--skip-qc`**
 
-**`--min-read-size`** INT
+      Skip quality control steps.
 
-  Minimum long read size when filtering using Filtlong. [default: 100]
+    **`--min-read-size`** INT
 
-**`--min-mean-q`** INT
+      Minimum long read size when filtering using Filtlong. [default: 100]
 
-  Minimum long read mean quality threshold. [default: 10]
+    **`--min-mean-q`** INT
 
-**`--min-short-read-length`** INT
+      Minimum long read mean quality threshold. [default: 10]
 
-  Minimum length of short reads to keep. [default: 15]
+    **`--min-short-read-length`** INT
 
-**`--max-short-read-length`** INT
+      Minimum length of short reads to keep. [default: 15]
 
-  Maximum length of short reads to keep, 0 = no maximum. [default: 0]
+    **`--max-short-read-length`** INT
 
-**`--disable-adapter-trimming`**
+      Maximum length of short reads to keep, 0 = no maximum. [default: 0]
 
-  Disable adapter trimming of short reads.
+    **`--disable-adapter-trimming`**
 
-**`--quality-cutoff`** INT
+      Disable adapter trimming of short reads.
 
-  Phred quality value threshold for short reads. [default: 15]
+    **`--quality-cutoff`** INT
 
-**`--unqualified-percent-limit`** INT
+      Phred quality value threshold for short reads. [default: 15]
 
-  Percentage of bases allowed to be unqualified. [default: 40]
+    **`--unqualified-percent-limit`** INT
 
-**`--extra-fastp-params`** STRING
+      Percentage of bases allowed to be unqualified. [default: 40]
 
-  Extra parameters to pass to fastp, e.g. `--extra-fastp-params "-V -e 10"`.
+    **`--extra-fastp-params`** STRING
+
+      Extra parameters to pass to fastp, e.g. `--extra-fastp-params "-V -e 10"`.
 
 ## Binning options
 
@@ -249,87 +251,95 @@ These five flags all decide which Flye contigs make it into the assembly before 
 
 ## Annotation / bin processing options
 
-**`--gtdb-path`** PATH
+??? note "Show all 5 options"
 
-  Path to local GTDB database files.
+    **`--gtdb-path`** PATH
 
-**`--eggnog-db-path`** PATH
+      Path to local GTDB database files.
 
-  Path to local EggNOG database files.
+    **`--eggnog-db-path`** PATH
 
-**`--singlem-metapackage-path`** PATH
+      Path to local EggNOG database files.
 
-  Path to local SingleM metapackage.
+    **`--singlem-metapackage-path`** PATH
 
-**`--checkm2-db-path`** PATH
+      Path to local SingleM metapackage.
 
-  Path to CheckM2 database.
+    **`--checkm2-db-path`** PATH
 
-**`--metabuli-db-path`** PATH
+      Path to CheckM2 database.
 
-  Path to local Metabuli database.
+    **`--metabuli-db-path`** PATH
+
+      Path to local Metabuli database.
 
 ## Performance options
 
-**`-t`**, **`--max-threads`** INT
+??? note "Show all 5 options"
 
-  Maximum threads per process. [default: 8]
+    **`-t`**, **`--max-threads`** INT
 
-**`-n`**, **`--n-cores`** INT
+      Maximum threads per process. [default: 8]
 
-  Maximum cores available. [default: 16]
+    **`-n`**, **`--n-cores`** INT
 
-**`-m`**, **`--max-memory`** INT
+      Maximum cores available. [default: 16]
 
-  Maximum memory in gigabytes. [default: 250]
+    **`-m`**, **`--max-memory`** INT
 
-**`-p`**, **`--pplacer-threads`** INT
+      Maximum memory in gigabytes. [default: 250]
 
-  Threads for pplacer. [default: 8]
+    **`-p`**, **`--pplacer-threads`** INT
 
-**`--local-cores`** INT
+      Threads for pplacer. [default: 8]
 
-  Maximum cores available locally. Only relevant when submitting to a cluster (see `--snakemake-profile`), in which case `--n-cores` restricts cores requested per submitted job. [default: 16]
+    **`--local-cores`** INT
+
+      Maximum cores available locally. Only relevant when submitting to a cluster (see `--snakemake-profile`), in which case `--n-cores` restricts cores requested per submitted job. [default: 16]
 
 ## Output options
 
-**`-o`**, **`--output`** DIR
+??? note "Show all 2 options"
 
-  Output directory. [default: ./]
+    **`-o`**, **`--output`** DIR
 
-**`--tmpdir`** DIR
+      Output directory. [default: ./]
 
-  Temporary files directory.
+    **`--tmpdir`** DIR
+
+      Temporary files directory.
 
 ## Misc options
 
-**`--snakemake-profile`** PROFILE
+??? note "Show all 7 options"
 
-  Snakemake profile for cluster submission. See the Guides section for HPC usage.
+    **`--snakemake-profile`** PROFILE
 
-**`--cluster-retries`** INT
+      Snakemake profile for cluster submission. See the Guides section for HPC usage.
 
-  Retries for failed cluster jobs. [default: 0]
+    **`--cluster-retries`** INT
 
-**`--dry-run`**
+      Retries for failed cluster jobs. [default: 0]
 
-  Perform a snakemake dry run.
+    **`--dry-run`**
 
-**`--clean`**
+      Perform a snakemake dry run.
 
-  Clean up temporary files. [default: True]
+    **`--clean`**
 
-**`--strict`**
+      Clean up temporary files. [default: True]
 
-  Ensure each binner completes successfully. [default: skip failing binners]
+    **`--strict`**
 
-**`--request-gpu`**
+      Ensure each binner completes successfully. [default: skip failing binners]
 
-  Request a GPU for the pipeline (taxvamb, comebin, semibin). Only takes effect when run on a cluster. [default: false]
+    **`--request-gpu`**
 
-**`--snakemake-cmds`** STRING
+      Request a GPU for the pipeline (taxvamb, comebin, semibin). Only takes effect when run on a cluster. [default: false]
 
-  Additional commands passed through to snakemake as a single string, e.g. `--snakemake-cmds "--print-compilation True"`. Most `snakemake -h` commands are valid, but some may clash with commands aviary supplies directly — check for conflicts before using.
+    **`--snakemake-cmds`** STRING
+
+      Additional commands passed through to snakemake as a single string, e.g. `--snakemake-cmds "--print-compilation True"`. Most `snakemake -h` commands are valid, but some may clash with commands aviary supplies directly — check for conflicts before using.
 
 ## Examples
 

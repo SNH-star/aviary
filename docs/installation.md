@@ -5,8 +5,13 @@ title: Installation
 # Installation
 
 Aviary targets Linux and uses isolated dependency environments for its
-bioinformatics tools. Bioconda is the recommended installation for users;
-Pixi is the supported route for development from this repository.
+bioinformatics tools. Three install routes are documented below — most users
+only need one:
+
+!!! tip "Which install route?"
+    - **Most users:** [Pixi](#install-from-source-with-pixi) — the recommended, supported route.
+    - **Already managing tool dependencies yourself:** [pip](#install-from-pip).
+    - **Prefer a Conda-style environment:** [Bioconda](#install-from-bioconda).
 
 ## Install from Bioconda
 
@@ -69,8 +74,7 @@ The corresponding environment variables are:
 | `TMPDIR` | Temporary-file location |
 
 To ask Aviary to download configured resources, add `--download` followed by
-one or more of `gtdb`, `eggnog`, `singlem`, `checkm2` and `metabuli`. Supplying
-`--download` without values requests all five.
+one or more of `gtdb`, `eggnog`, `singlem`, `checkm2` and `metabuli`.
 
 ```bash
 aviary configure \
@@ -82,6 +86,8 @@ aviary configure \
 !!! warning "Large downloads"
     Database downloads are large and should not be duplicated per user or run.
     Confirm available storage and release requirements before starting them.
+    **Supplying `--download` with no values requests all five databases at
+    once** — always list the specific databases you need.
 
 ## Install from source with Pixi
 
