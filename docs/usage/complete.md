@@ -13,6 +13,18 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 > This subcommand also accepts the common workflow, resource, output and
 > execution options described under [Shared options](centralised_commands.md).
 
+| Jump to | |
+| --- | --- |
+| [Input options](#input-options) | Read files and assemblies |
+| [Assembly options](#assembly-options) | Assembler choice, k-mers, Flye contig filtering |
+| [QC options](#qc-options) | Read filtering and quality thresholds |
+| [Binning options](#binning-options) | Binner selection, SemiBin2 mode/model, refinement, quality cutoffs |
+| [Annotation / bin processing options](#annotation-bin-processing-options) | Local database paths |
+| [Performance options](#performance-options) | Threads, cores, memory |
+| [Output options](#output-options) | Output and temp directories |
+| [Misc options](#misc-options) | Cluster profile, dry run, GPU request |
+| [Examples](#examples) | Common flag combinations |
+
 ## Input options
 
 **`-a`**, **`--assembly`** FILE [FILE ...]

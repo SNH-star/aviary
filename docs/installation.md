@@ -13,6 +13,36 @@ only need one:
     - **Already managing tool dependencies yourself:** [pip](#install-from-pip).
     - **Prefer a Conda-style environment:** [Bioconda](#install-from-bioconda).
 
+## Install from source with Pixi
+
+From a local checkout:
+
+```bash
+cd aviary
+pixi run postinstall
+pixi run aviary --version
+```
+
+This installs Aviary in editable mode. Dependency definitions live in
+`aviary/pixi.toml`, while `aviary/pixi.lock` pins the resolved environments.
+The `postinstall` task prepares both the main and development environments.
+
+For a shared development system, database paths can be represented by symlinks
+in the repository's `db/` directory; `admin/set_env_vars.sh` documents the
+expected local names used by the activation hook.
+
+## Install from pip
+
+The Python package name is `aviary-genome`, but pip alone does not provision
+the complete collection of external bioinformatics tools. Use this route only
+when you are deliberately managing those dependencies yourself:
+
+```bash
+conda env create -n aviary -f admin/environment.yml
+conda activate aviary
+pip install aviary-genome
+```
+
 ## Install from Bioconda
 
 Create a dedicated environment:
@@ -43,6 +73,20 @@ aviary complete --full-help
 
 Before downloading large databases, use `aviary complete --full-help` to confirm
 that the installed release exposes the options used by this documentation.
+
+## Build analysis environments
+
+After installation, Aviary can prepare its per-tool environments:
+
+```bash
+aviary build
+```
+
+GPU environments are optional and require compatible hardware and drivers:
+
+```bash
+aviary build --gpu
+```
 
 ## Configure reference data
 
@@ -88,50 +132,6 @@ aviary configure \
     Confirm available storage and release requirements before starting them.
     **Supplying `--download` with no values requests all five databases at
     once** — always list the specific databases you need.
-
-## Install from source with Pixi
-
-From a local checkout:
-
-```bash
-cd aviary
-pixi run postinstall
-pixi run aviary --version
-```
-
-This installs Aviary in editable mode. Dependency definitions live in
-`aviary/pixi.toml`, while `aviary/pixi.lock` pins the resolved environments.
-The `postinstall` task prepares both the main and development environments.
-
-For a shared development system, database paths can be represented by symlinks
-in the repository's `db/` directory; `admin/set_env_vars.sh` documents the
-expected local names used by the activation hook.
-
-## Install from pip
-
-The Python package name is `aviary-genome`, but pip alone does not provision
-the complete collection of external bioinformatics tools. Use this route only
-when you are deliberately managing those dependencies yourself:
-
-```bash
-conda env create -n aviary -f admin/environment.yml
-conda activate aviary
-pip install aviary-genome
-```
-
-## Build analysis environments
-
-After installation, Aviary can prepare its per-tool environments:
-
-```bash
-aviary build
-```
-
-GPU environments are optional and require compatible hardware and drivers:
-
-```bash
-aviary build --gpu
-```
 
 Continue with the [quickstart](getting-started/quickstart.md). For production
 clusters, see [HPC and cluster submission](guides/hpc.md).
