@@ -1,5 +1,5 @@
 QC_SCRIPTS_DIR = os.path.join(os.path.dirname(os.path.abspath(workflow.snakefile)), 'scripts')
-from aviary.modules.common import pixi_run, setup_log
+from aviary.modules.common import pixi_run, setup_log, primary_fasta
 logs_dir = "logs"
 
 localrules: assembly_size, assembly_quality, complete_qc_short, complete_qc_long, complete_qc_all
@@ -156,10 +156,10 @@ rule nanoplot:
 
 rule metaquast:
     """
-    MetaQuast on input assembly (one or more). Compare against GSA if one is provided
+    MetaQuast on the primary assembly. Compare against GSA if one is provided
     """
     input:
-        assembly = config['fasta']
+        assembly = primary_fasta(config)
     params:
         gsa = f" -r {','.join(config['gsa'])} " if config['gsa'][0] != 'none' else ""
     output:
@@ -179,7 +179,7 @@ rule read_fraction_recovered:
     CoverM genome on assembly to get percentage of reads mapping
     """
     input:
-        fasta = config["fasta"]
+        fasta = primary_fasta(config)
     output:
         # .tsv to match what fraction_recovered.py actually writes; without it
         # snakemake raises MissingOutputException even on a successful run.
@@ -221,7 +221,7 @@ if config["fasta"] != "none":
         Uses the bbmap stats.sh script to retun N/L50 values and the distribution of contig sizes
         """
         input:
-            fasta = config["fasta"]
+            fasta = primary_fasta(config)
         output:
             sizes = "www/assembly_stats.txt"
         resources:
