@@ -32,23 +32,29 @@ def _fasta_lengths(fasta_path: str) -> dict:
 
 
 def _reshape_aemb_to_metabat(aemb_tsv: str, fasta_path: str, output_path: str) -> None:
-    """`coverm contig -m strobealign-aemb` emits a header-less two-column TSV
-    (contig, mean coverage) -- it shells out to `strobealign --aemb` directly
-    and skips CoverM's normal BAM/pileup pipeline, so unlike every other -m
-    value it has no contig length or variance column. Everything downstream
-    of short_cov.tsv in this file (the long+short concat logic and the maxbin
-    writer) assumes the metabat depth-file shape (contigName, contigLen,
-    totalAvgDepth, <sample>.bam, <sample>.bam-var, ...), and so do the
-    binners that read data/coverm.cov directly. Reshape aemb's output into
-    that shape so strobealign-aemb is a drop-in short-read coverage source
-    rather than needing its own binner wiring. Variance is not computed by
-    aemb, so it is filled with 0.
+    """`coverm contig -m strobealign-aemb` emits a two-column TSV (contig,
+    mean coverage) -- it shells out to `strobealign --aemb` directly and
+    skips CoverM's normal BAM/pileup pipeline, so unlike every other -m value
+    it has no contig length or variance column. CoverM 0.8.0 additionally
+    prepends a header row ("Contig\t<sample> Strobealign aemb"); rows whose
+    first column isn't a real contig (i.e. that header) are skipped rather
+    than looked up in `lengths`, so this doesn't depend on the header's exact
+    wording and stays correct if a future CoverM version drops it again.
+    Everything downstream of short_cov.tsv in this file (the long+short
+    concat logic and the maxbin writer) assumes the metabat depth-file shape
+    (contigName, contigLen, totalAvgDepth, <sample>.bam, <sample>.bam-var,
+    ...), and so do the binners that read data/coverm.cov directly. Reshape
+    aemb's output into that shape so strobealign-aemb is a drop-in short-read
+    coverage source rather than needing its own binner wiring. Variance is
+    not computed by aemb, so it is filled with 0.
     """
     lengths = _fasta_lengths(fasta_path)
     with open(aemb_tsv) as f, open(output_path, "w") as out:
         print("contigName\tcontigLen\ttotalAvgDepth\tshort_reads.bam\tshort_reads.bam-var", file=out)
         for line in f:
             contig, depth = line.rstrip("\n").split("\t")
+            if contig not in lengths:
+                continue
             print(f"{contig}\t{lengths[contig]}\t{depth}\t{depth}\t0", file=out)
 
 def get_coverage(
