@@ -79,10 +79,10 @@ These five flags all decide which Flye contigs make it into the assembly before 
 | `--min-cov-short` | short-read coverage | keep if coverage ≤ value | 5 |
 | `--exclude-contig-cov` | long-read coverage | drop **only if** coverage ≤ value **and** length ≤ `--exclude-contig-size` | 10 |
 | `--exclude-contig-size` | contig length | drop **only if** length ≤ value **and** coverage ≤ `--exclude-contig-cov` | 2500 |
-| `--include-contig-size` | contig length | keep if length ≥ value, overriding the exclude rule above | 10000 |
+| `--include-contig-size` | contig length | keep if length ≥ value (checked first, before the exclude/include-coverage rules below even apply) | 10000 |
 
 !!! example "How these combine"
-    With the defaults, a 2,000 bp contig at 8x long-read coverage is dropped (length ≤ 2500 **and** coverage ≤ 10), but the same contig at 12x coverage is kept (fails the coverage half of the exclude rule). A 15,000 bp contig is always kept regardless of coverage, because it clears `--include-contig-size`.
+    Aviary checks `--include-contig-size` first: any contig at or above this length (or marked circular by Flye) is kept immediately, regardless of coverage. Only shorter contigs fall through to the coverage rules — a 2,000 bp contig at 8x long-read coverage is then dropped (length ≤ 2500 **and** coverage ≤ 10), but the same contig at 12x coverage is kept (fails the coverage half of the exclude rule). A 15,000 bp contig is always kept, since it clears `--include-contig-size` before the exclude/coverage checks are ever reached.
 
 **`--min-cov-long`** INT
 
