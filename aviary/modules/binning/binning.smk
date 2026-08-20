@@ -191,6 +191,15 @@ rule prepare_binning_files_split:
 def get_number_of_splits():
     return (get_num_samples() + config["coverage_samples_per_split"] - 1) // config["coverage_samples_per_split"]
 
+def get_semibin_mode():
+    """
+    Return the configured SemiBin mode.
+    Supports the older semibin_multi config key for compatibility with early test configs.
+    """
+    if "semibin_mode" in config:
+        return config["semibin_mode"]
+    return "multi" if config.get("semibin_multi", False) else "single"
+
 rule prepare_binning_files_gather:
     input:
         maxbin_coverages = expand("data/{split}/maxbin.cov.list", split=range(get_number_of_splits())),
@@ -331,9 +340,30 @@ rule vamb_jgi_filter:
         coverm_out.to_csv("data/coverm.filt.cov", sep='\t', index=False)
 
 
+# Single source of truth for whether the SemiBin2-concatenated FASTA is the
+# reference for this run. Keyed off get_semibin_mode() (the user's explicit
+# --semibin-mode), NOT a separate len(fasta)>1 check, so filter_contigs_by_size
+# and the `semibin` rule can never disagree about which fasta is authoritative.
+# processor.py guarantees mode==multi implies >=2 assemblies were provided
+# (single-assembly-multi is only a warning), so this stays correct there too.
+def _use_concatenated_assembly():
+    return get_semibin_mode() == "multi"
+
+
+def _filter_contigs_input(wildcards):
+    """
+    In multi mode, use the SemiBin2-concatenated FASTA (unique sample:contig
+    headers) so all binners work from one deduplicated reference. Otherwise use
+    the assembly directly.
+    """
+    if _use_concatenated_assembly():
+        return "data/semibin_multi_prep/concatenated.fa"
+    return ancient(config["fasta"])
+
+
 rule filter_contigs_by_size:
     input:
-        fasta = ancient(config["fasta"]),
+        fasta = _filter_contigs_input,
     output:
         done = touch("data/done/filter_contigs_by_size.done"),
         fasta = "data/large_contigs.fasta",
@@ -342,9 +372,82 @@ rule filter_contigs_by_size:
     resources:
         log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/filter_contigs_by_size", attempt),
     shell:
-        # use seqtkit
+        # Do NOT strip the "samplename:" prefix concatenate_fasta adds in multi
+        # mode. An earlier version stripped it, believing SemiBin2 re-suffixed
+        # bin contigs some other way -- it does not. Two assemblies produced by
+        # the same assembler routinely share contig names (NODE_1, k141_1, ...),
+        # so stripping the ONE prefix that keeps them unique collapses both
+        # samples' contigs to identical headers -- confirmed in practice: it
+        # broke minimap2/samtools indexing outright with a duplicate SAM header
+        # entry. Keeping "sample:contig" here matches concatenated.fa exactly,
+        # which is the same identifier space SemiBin2 itself relies on for
+        # uniqueness across samples -- so it's the one naming scheme guaranteed
+        # not to collide, and downstream mapping (checkm/refine_semibin/das_tool)
+        # sees the identical name in the reference and in the bins either way.
         f"{pixi_run} -e seqkit "
-        "seqkit seq --only-id -m {params.min_contig_size} {input.fasta} > {output.fasta} 2> {resources.log_path}"
+        "seqkit seq --only-id -m {params.min_contig_size} {input.fasta} "
+        "> {output.fasta} 2> {resources.log_path}"
+
+
+rule semibin_multi_prepare:
+    input:
+        fastas = ancient(config["fasta"]) if config["fasta"] != "none" else [],
+    output:
+        concatenated = "data/semibin_multi_prep/concatenated.fa",
+    params:
+        min_len = config["min_contig_size"],
+    resources:
+        log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/semibin_multi_prepare", attempt),
+    shell:
+        pixi_run + " -e semibin SemiBin2 concatenate_fasta "
+        "-i {input.fastas} "
+        "-o data/semibin_multi_prep "
+        "--compression none "
+        "-m {params.min_len} "
+        "> {resources.log_path} 2>&1"
+
+
+rule semibin_multi_bams:
+    input:
+        fasta = "data/semibin_multi_prep/concatenated.fa",
+    output:
+        done = touch("data/semibin_multi_bams/done"),
+    params:
+        short_reads_1  = config["short_reads_1"],
+        short_reads_2  = config["short_reads_2"],
+        long_reads     = config["long_reads"],
+        tmpdir         = f"--tmpdir {config['tmpdir']}" if config.get('tmpdir') else "",
+    threads:
+        config["max_threads"]
+    resources:
+        mem_mb   = lambda wildcards, attempt: min(int(config["max_memory"]) * 1024, 512 * 1024 * attempt),
+        runtime  = lambda wildcards, attempt: 24 * 60 + 24 * 60 * attempt,
+        log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/semibin_multi_bams", attempt),
+    shell:
+        pixi_run + " -e coverm " + BINNING_SCRIPTS_DIR + "/get_coverage.py "
+        "--long-reads {params.long_reads} "
+        "--short-reads-1 {params.short_reads_1} "
+        "--short-reads-2 {params.short_reads_2} "
+        "--long-read-type {config[long_read_type]} "
+        "--long-read-mapper {config[long_read_mapper]} "
+        "--long-read-mapper-model {config[long_read_mapper_model]} "
+        "--minibwa-params '{config[minibwa_params]}' "
+        "--bwa-params '{config[bwa_params]}' "
+        "--strobealign-params '{config[strobealign_params]}' "
+        "--minimap2-params '{config[minimap2_params]}' "
+        "--rammap-params '{config[rammap_params]}' "
+        "--short-read-mapper {config[short_read_mapper]} "
+        "--input-fasta {input.fasta} "
+        "--bam-cache data/semibin_multi_bams/ "
+        "--working-dir data/semibin_multi_cov/ "
+        "--coverm-output data/semibin_multi_cov/coverm.cov "
+        "--maxbin-output data/semibin_multi_cov/maxbin.cov "
+        "{params.tmpdir} "
+        "--threads {threads} "
+        "--log {resources.log_path} "
+        "&& bash -c 'ls data/semibin_multi_bams/*.bam | " +
+        pixi_run + " -e coverm parallel -j 1 samtools index -@ {threads} {{}} {{}}.bai' "
+        ">> {resources.log_path} 2>&1"
 
 
 rule vamb:
@@ -652,16 +755,24 @@ rule rosella:
 
 rule semibin:
     input:
-        large_contigs_done = "data/done/filter_contigs_by_size.done",
-        fasta = "data/large_contigs.fasta",
-        bams_indexed = ancient("data/binning_bams/done")
+        fasta = lambda wildcards: "data/semibin_multi_prep/concatenated.fa"
+                                  if get_semibin_mode() == "multi"
+                                  else "data/large_contigs.fasta",
+        bams_done = lambda wildcards: ancient("data/semibin_multi_bams/done")
+                                      if get_semibin_mode() == "multi"
+                                      else ancient("data/binning_bams/done"),
+        large_contigs_done = lambda wildcards: []
+                                               if get_semibin_mode() == "multi"
+                                               else "data/done/filter_contigs_by_size.done",
     params:
-        # Can't use premade model with multiple samples, so disregard if provided
-        semibin_model = f"--environment {config['semibin_model']} " if get_num_samples() == 1 else "",
+        # Can't use premade model with multiple samples or in multi mode, so disregard if provided
+        semibin_model = f"--environment {config['semibin_model']} " if get_num_samples() == 1 and get_semibin_mode() == "single" else "",
+        semibin_subcommand = "multi_easy_bin" if get_semibin_mode() == "multi" else "single_easy_bin",
         semibin_sequencing_type = "--sequencing-type=long_read" if config["long_reads"] != "none" else "",
         pixi_env = "semibin-gpu" if config["request_gpu"] else "semibin",
         touch = "" if config["strict"] else "|| touch data/semibin_bins/done",
         really_done = "data/semibin_bins/really_done",
+        bam_dir = "data/semibin_multi_bams" if get_semibin_mode() == "multi" else "data/binning_bams",
     output:
         "data/semibin_bins/done"
     threads:
@@ -683,9 +794,9 @@ rule semibin:
         pixi_run + " -e {params.pixi_env} bash -e -o pipefail -c '"
         "rm -rf data/semibin_bins/; "
         "mkdir -p data/semibin_bins/output_bins/ && "
-        "SemiBin2 single_easy_bin "
+        "SemiBin2 {params.semibin_subcommand} "
         "-i {input.fasta} "
-        "-b data/binning_bams/*.bam "
+        "-b {params.bam_dir}/*.bam "
         "-o data/semibin_bins "
         "{params.semibin_model} "
         "-p {threads} "
@@ -693,6 +804,27 @@ rule semibin:
         "--compression none "
         "{params.semibin_sequencing_type} "
         "> {resources.log_path} 2>&1 "
+        "&& if [ \"{params.semibin_subcommand}\" = \"multi_easy_bin\" ]; then "
+        "bins_found=0; "
+        # Per sample, prefer the reclustered bins; fall back to output_bins ONLY
+        # when a sample has no recluster bins. Globbing both dirs together would
+        # copy the same contigs twice (recluster is the refined superset of
+        # output_bins), handing DAS_Tool overlapping semibin bins.
+        "for sample_dir in data/semibin_bins/samples/*/; do "
+        "[ -d \"$sample_dir\" ] || continue; "
+        "sample=$(basename \"$sample_dir\"); "
+        "bin_dir=\"$sample_dir/output_recluster_bins\"; "
+        "ls \"$bin_dir\"/*.fa >/dev/null 2>&1 || bin_dir=\"$sample_dir/output_bins\"; "
+        "for f in \"$bin_dir\"/*.fa; do "
+        "[ -e \"$f\" ] || continue; bins_found=1; "
+        "cp \"$f\" \"data/semibin_bins/output_bins/${{sample}}_$(basename \"$f\")\"; "
+        "done; "
+        "done; "
+        "if [ \"$bins_found\" -eq 0 ]; then "
+        "echo \"SemiBin2 multi_easy_bin did not produce bins in samples/*/output_recluster_bins or samples/*/output_bins\" >> {resources.log_path}; "
+        "exit 1; "
+        "fi; "
+        "fi "
         "&& touch {output[0]} {params.really_done} {params.touch}'"
 
 

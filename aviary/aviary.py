@@ -772,6 +772,20 @@ def main():
     )
 
     binning_options.add_argument(
+        '--semibin-mode', '--semibin_mode',
+        help='SemiBin2 binning mode. "single" (default) runs single_easy_bin on one assembly. '
+             '"multi" runs multi_easy_bin to co-bin several assemblies together, letting SemiBin2 '
+             'learn across samples; provide the assemblies as multiple --assembly files. Contig names '
+             'that collide across assemblies (e.g. NODE_1 in each) are kept distinct internally by a '
+             'per-sample prefix, so identically-named contigs from different samples are handled '
+             'correctly. Multi mode ignores --semibin-model, as pre-trained environments are not '
+             'supported for multi-sample binning.',
+        dest='semibin_mode',
+        choices=['single', 'multi'],
+        default='single'
+    )
+
+    binning_options.add_argument(
         '--refinery-max-iterations', '--refinery_max_iterations',
         help='Maximum number of iterations for Rosella refinery. Set to 0 to skip refinery. Lower values will run faster but may result in lower quality MAGs.',
         dest='refinery_max_iterations',
@@ -1113,9 +1127,10 @@ def main():
     recover_input_group = recover_options.add_argument_group(title='Input options')
     recover_input_group.add_argument(
         '-a', '--assembly',
-        help='Optional FASTA file containing scaffolded contigs of the metagenome assembly',
+        help='One or more FASTA files containing scaffolded contigs of metagenome assemblies. '
+             'Provide multiple assemblies for SemiBin2 multi-sample binning (requires --semibin-mode multi).',
         dest="assembly",
-        nargs=1,
+        nargs='+',
         required=False,
     )
 
@@ -1228,9 +1243,10 @@ def main():
     complete_input_group = complete_options.add_argument_group(title='Input options')
     complete_input_group.add_argument(
         '-a', '--assembly',
-        help='Optional FASTA file containing scaffolded contigs of the metagenome assembly',
+        help='One or more FASTA files containing scaffolded contigs of metagenome assemblies. '
+             'Provide multiple assemblies for SemiBin2 multi-sample binning (requires --semibin-mode multi).',
         dest="assembly",
-        nargs=1,
+        nargs='+',
         required=False,
     )
 
@@ -1443,16 +1459,18 @@ def main():
 
 def manage_env_vars(args):
     try:
-        if args.gtdb_path is None:
-            args.gtdb_path = Config.get_software_db_path('GTDBTK_DATA_PATH', '--gtdb-path')
-        if args.eggnog_db_path is None:
-            args.eggnog_db_path = Config.get_software_db_path('EGGNOG_DATA_DIR', '--eggnog-db-path')
+        binning_only = getattr(args, 'binning_only', False)
         if args.checkm2_db_path is None:
             args.checkm2_db_path = Config.get_software_db_path('CHECKM2DB', '--checkm2-db-path')
-        if args.singlem_metapackage_path is None:
-            args.singlem_db_path = Config.get_software_db_path('SINGLEM_METAPACKAGE_PATH', '--singlem-metapackage-path')
-        if args.metabuli_db_path is None:
-            args.metabuli_db_path = Config.get_software_db_path('METABULI_DB_PATH', '--metabuli-db-path')
+        if not binning_only:
+            if args.gtdb_path is None:
+                args.gtdb_path = Config.get_software_db_path('GTDBTK_DATA_PATH', '--gtdb-path')
+            if args.eggnog_db_path is None:
+                args.eggnog_db_path = Config.get_software_db_path('EGGNOG_DATA_DIR', '--eggnog-db-path')
+            if args.singlem_metapackage_path is None:
+                args.singlem_db_path = Config.get_software_db_path('SINGLEM_METAPACKAGE_PATH', '--singlem-metapackage-path')
+            if args.metabuli_db_path is None:
+                args.metabuli_db_path = Config.get_software_db_path('METABULI_DB_PATH', '--metabuli-db-path')
     except AttributeError:
         pass
 
