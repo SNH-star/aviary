@@ -6,7 +6,7 @@ title: aviary cluster
 
 Dereplicate and choose representative genomes from multiple aviary runs using Galah.
 
-```
+```bash
 aviary cluster --input-runs aviary_output_folder_1/ aviary_output_folder_2/
 ```
 
@@ -82,7 +82,7 @@ aviary cluster --input-runs aviary_output_folder_1/ aviary_output_folder_2/
 
 The basic shape — dereplicate the final bins from two or more finished `recover`/`complete`
 runs down to one representative genome per cluster:
-```
+```bash
 aviary cluster --input-runs run1/ run2/
 ```
 
@@ -95,7 +95,7 @@ elsewhere). If you have loose FASTA files instead, use `aviary recover`/`annotat
 
 `--ani` sets the FastANI cutoff for the final clustering step. Lower it for broader,
 species-level groups; raise it to only merge near-identical strains:
-```
+```bash
 aviary cluster --input-runs run1/ run2/ run3/ --ani 95   # species-level
 aviary cluster --input-runs run1/ run2/ run3/ --ani 99.5 # strain-level
 ```
@@ -103,7 +103,7 @@ aviary cluster --input-runs run1/ run2/ run3/ --ani 99.5 # strain-level
 `--precluster-ani` is a separate, cheaper first pass (rough ANI via dashing/finch sketching)
 that groups obviously-similar genomes before the expensive FastANI all-vs-all step — it should
 normally stay below `--ani`, not be tuned to the same value:
-```
+```bash
 aviary cluster --input-runs run1/ run2/ run3/ --ani 97 --precluster-ani 90
 ```
 
@@ -112,7 +112,7 @@ aviary cluster --input-runs run1/ run2/ run3/ --ani 97 --precluster-ani 90
 `dashing` (HyperLogLog sketching, the default) is the faster choice for large genome
 collections. `finch` (MinHash) is worth trying if preclustering seems to be merging genomes it
 shouldn't, since the two sketching approaches can disagree at the margins:
-```
+```bash
 aviary cluster --input-runs run1/ run2/ run3/ --precluster-method finch
 ```
 
@@ -121,7 +121,7 @@ aviary cluster --input-runs run1/ run2/ run3/ --precluster-method finch
 Drop low-quality genomes from consideration entirely, and trust CheckM2's scores (rather than
 the default CheckM1-derived ones already in `bins/checkm.out`) when Galah picks the cluster
 representative:
-```
+```bash
 aviary cluster --input-runs run1/ run2/ \
   --min-completeness 70 --max-contamination 5 --use-checkm2-scores
 ```
@@ -131,6 +131,6 @@ aviary cluster --input-runs run1/ run2/ \
 Aviary can run `pggb` per cluster to build a pangenome graph across its member genomes; tune its
 divergence/segment-length parameters for genome sets that are more diverged than pggb's defaults
 expect:
-```
+```bash
 aviary cluster --input-runs run1/ run2/ run3/ --pggb-params "-k 47 -G 4057,4229"
 ```

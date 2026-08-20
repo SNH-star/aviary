@@ -19,13 +19,13 @@ cluster-cancel: qdel
 
 Then run Aviary with:
 
-```
+```bash
 aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz --snakemake-profile cluster
 ```
 
 Use `--cluster-retries` to automatically retry failed jobs with increasing time and memory:
 
-```
+```bash
 aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz --snakemake-profile cluster --cluster-retries 3
 ```
 
@@ -37,7 +37,7 @@ Job resources were set based on [empirical data from 1,000 Aviary runs](https://
 
 For simpler cluster setups, pass cluster options directly:
 
-```
+```bash
 aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz \
     --long-read-type ont -t 24 -p 24 -n 24 --snakemake-cmds '--cluster qsub '
 ```
@@ -50,7 +50,7 @@ aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz \
 
 When using cluster submission, Snakemake acts as a lightweight coordinator that submits individual rules as jobs. Submit the coordinator itself with minimal resources:
 
-```
+```bash
 mqsub -m 8 -t 1 -w 48:00:00 --name aviary_recover -- \
     aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz --snakemake-profile aqua
 ```
@@ -59,7 +59,7 @@ mqsub -m 8 -t 1 -w 48:00:00 --name aviary_recover -- \
 
 To run multiple rules in parallel locally, set `--n-cores` to a multiple of `--max-threads`:
 
-```
+```bash
 aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz -t 8 -n 32
 ```
 

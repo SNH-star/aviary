@@ -6,7 +6,7 @@ title: aviary configure
 
 Set conda environment variables for database paths used by future aviary runs. Settings are persisted across sessions.
 
-```
+```bash
 aviary configure --gtdb-path ~/gtdbtk/release232/ --tmpdir /path/to/tmp/
 ```
 
@@ -50,7 +50,7 @@ aviary configure --gtdb-path ~/gtdbtk/release232/ --tmpdir /path/to/tmp/
 
 Use `--download` to fetch databases automatically:
 
-```
+```bash
 aviary configure --download gtdb eggnog singlem checkm2 metabuli
 ```
 
@@ -107,21 +107,21 @@ directory. Delete that sentinel (or the whole database directory) to force a re-
 ## Examples
 
 Configure GTDB and temp directory:
-```
+```bash
 aviary configure --gtdb-path ~/gtdbtk/release232/ --tmpdir /scratch/tmp/
 ```
 
 Download all databases:
-```
+```bash
 aviary configure --download
 ```
 
 Download specific databases:
-```
+```bash
 aviary configure --download gtdb checkm2
 ```
 
 View current configuration (run with no arguments):
-```
+```bash
 aviary configure
 ```

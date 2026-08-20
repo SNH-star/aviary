@@ -8,7 +8,7 @@ title: Workflow control
 
 Aviary uses Snakemake under the hood, which means you can target specific rules rather than running a full module. Use `-w/--workflow` to specify the rule to run up to:
 
-```
+```bash
 aviary recover -w rosella --assembly scaffolds.fasta \
     -1 reads_1.fq.gz -2 reads_2.fq.gz --output output_dir/ --max-threads 12
 ```
@@ -38,7 +38,7 @@ Do not unlock an active run.
 
 Test the workflow order and verify conda environments without executing any rules:
 
-```
+```bash
 aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz --dry-run
 ```
 
@@ -58,7 +58,7 @@ Several steps can be skipped to speed up runs when not needed:
 
 By default Aviary removes temporary files (BAM files, intermediate FASTQs) on completion. To keep them for partial reruns:
 
-```
+```bash
 aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz --clean false
 ```
 

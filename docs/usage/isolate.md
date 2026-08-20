@@ -6,7 +6,7 @@ title: aviary isolate
 
 Step-down hybrid assembly for isolated pure culture sequencing results. For use with isolate (not metagenomic) sequencing data.
 
-```
+```bash
 aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
 ```
 
@@ -128,7 +128,7 @@ paths. The hidden `--semibin-multi` alias means `--semibin-mode multi`.
 
 The minimum viable input — Flye assembly, racon and medaka polishing, then dnaapler
 reorientation. No illumina polishing round runs, since no short reads are given:
-```
+```bash
 aviary isolate --longreads reads.fastq.gz --long-read-type ont
 ```
 
@@ -136,12 +136,12 @@ aviary isolate --longreads reads.fastq.gz --long-read-type ont
 
 The typical case for a bacterial isolate closed with ONT and cleaned up with Illumina — adds one
 extra Pilon/racon polishing round using the short reads on top of the long-read assembly:
-```
+```bash
 aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
 ```
 
 Short reads accept the same input shapes as the other subcommands:
-```
+```bash
 aviary isolate -i sample_interleaved.fq.gz --longreads reads.fastq.gz --long-read-type ont
 aviary isolate -c sample_1.fq.gz sample_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
 ```
@@ -155,6 +155,6 @@ user-selectable, since it targets a single pure-culture genome rather than a mix
 `--genome-size` is present in the CLI but is not currently consumed by the
 workflow, so changing it does not alter the assembly. The following is accepted
 for compatibility but behaves like the default invocation:
-```
+```bash
 aviary isolate --longreads reads.fastq.gz --long-read-type ont --genome-size 4500000
 ```

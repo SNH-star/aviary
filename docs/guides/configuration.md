@@ -8,7 +8,7 @@ title: Configuration
 
 On first run, Aviary will prompt for database locations if they haven't been set. Use `aviary configure` to set or update them at any time:
 
-```
+```bash
 aviary configure --gtdb-path /path/to/gtdb/ --checkm2-db-path /path/to/checkm2/
 ```
 
@@ -40,7 +40,7 @@ Controls total cores given to Snakemake. Setting this higher than `--max-threads
 Pplacer gets its own parameter because it can deadlock with too many threads and is memory-intensive at high thread counts.
 
 Example — run up to 4 rules in parallel:
-```
+```bash
 aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz -t 8 -n 32
 ```
 
@@ -48,7 +48,7 @@ aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz -t 8 -n 32
 
 Set maximum memory with `-m/--max-memory` (in gigabytes):
 
-```
+```bash
 aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz -m 500
 ```
 
@@ -60,12 +60,12 @@ When using HPC cluster submission, requested job memory increases with each retr
 
 By default Aviary uses `/tmp`. To change it for a single run:
 
-```
+```bash
 aviary recover -1 reads_1.fq.gz -2 reads_2.fq.gz --tmpdir /scratch/tmp/
 ```
 
 To set it permanently:
 
-```
+```bash
 aviary configure --tmpdir /scratch/tmp/
 ```

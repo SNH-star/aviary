@@ -6,7 +6,7 @@ title: aviary complete
 
 Performs all steps in the Aviary pipeline: Assembly → Binning → Refinement → Annotation.
 
-```
+```bash
 aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
 ```
 
@@ -63,7 +63,7 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 
 **`--medaka-model`** MODEL
 
-  Medaka model for long read polishing. [default: r941_min_hac_g507]
+  Medaka model for long-read polishing. [default: r941_min_hac_g507]
 
 **`--use-unicycler`**
 
@@ -178,7 +178,7 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 
 **`--semibin-model`** MODEL
 
-  SemiBin environment model: `human_gut`, `dog_gut`, `ocean`, `soil`, `cat_gut`, `human_oral`, `mouse_gut`, `pig_gut`, `built_environment`, `wastewater`, `global`. [default: global]
+  SemiBin2 environment model: `human_gut`, `dog_gut`, `ocean`, `soil`, `cat_gut`, `human_oral`, `mouse_gut`, `pig_gut`, `built_environment`, `wastewater`, `global`. [default: global]
 
 **`--semibin-mode`** `{single,multi}`
 
@@ -187,7 +187,7 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
   `--semibin-multi` is accepted as a hidden compatibility alias for
   `--semibin-mode multi`; use the explicit form in new scripts.
 
-  ```
+  ```bash
   aviary complete --assembly sample1.fasta sample2.fasta sample3.fasta \
     -1 sample1_1.fq.gz sample2_1.fq.gz sample3_1.fq.gz \
     -2 sample1_2.fq.gz sample2_2.fq.gz sample3_2.fq.gz \
@@ -218,7 +218,7 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 
 **`--skip-singlem`**
 
-  Skip SingleM post-binning recovery assessment. [default: True]
+  Skip SingleM post-binning recovery assessment. [default: true]
 
 **`--min-completeness`** FLOAT
 
@@ -324,7 +324,7 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 
     **`--clean`**
 
-      Clean up temporary files. [default: True]
+      Clean up temporary files. [default: true]
 
     **`--strict`**
 
@@ -341,7 +341,7 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 ## Examples
 
 The basic shape — assembly, binning and annotation in one call:
-```
+```bash
 aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz
 ```
 
@@ -356,7 +356,7 @@ in a single `complete` call is the actual point, rather than running each stage 
 
 Long and short reads for three related samples, coassembled per-sample, SemiBin2 multi-sample
 binning to use cross-sample abundance, and a stricter completeness cutoff before annotation:
-```
+```bash
 aviary complete \
   -1 week1_1.fq.gz week2_1.fq.gz week3_1.fq.gz \
   -2 week1_2.fq.gz week2_2.fq.gz week3_2.fq.gz \
@@ -370,12 +370,12 @@ aviary complete \
 
 Skip taxonomy and abundance to get bins quickly for a first look, without wiring up GTDB-tk or
 running CoverM abundance yet:
-```
+```bash
 aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --binning-only
 ```
 
 Or keep abundance but drop only the slowest annotation step:
-```
+```bash
 aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --skip-taxonomy
 ```
 
@@ -383,7 +383,7 @@ aviary complete -1 reads_1.fq.gz -2 reads_2.fq.gz --skip-taxonomy
 
 If you already assembled separately (e.g. to inspect it first, or because you built it with
 another tool), `complete` skips straight to binning and annotation:
-```
+```bash
 aviary complete --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz
 ```
 
@@ -391,7 +391,7 @@ aviary complete --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz
 
 SemiBin2 multi-sample binning also works when `complete` builds the assemblies itself, given
 one read set per sample:
-```
+```bash
 aviary complete --assembly sample1.fasta sample2.fasta \
   -1 sample1_1.fq.gz sample2_1.fq.gz -2 sample1_2.fq.gz sample2_2.fq.gz \
   --semibin-mode multi

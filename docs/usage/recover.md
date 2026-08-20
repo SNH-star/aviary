@@ -6,7 +6,7 @@ title: aviary recover
 
 Recover metagenome-assembled genomes (MAGs) from an assembly using multiple binning algorithms, followed by quality assessment and taxonomic classification.
 
-```
+```bash
 aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz
 ```
 
@@ -65,7 +65,7 @@ If no assembly is provided, aviary will first run the assembly pipeline.
 
 **`--medaka-model`** MODEL
 
-  Medaka model for long read polishing. [default: r941_min_hac_g507]
+  Medaka model for long-read polishing. [default: r941_min_hac_g507]
 
 **`--use-unicycler`**
 
@@ -193,13 +193,13 @@ These five flags all decide which Flye contigs make it into the assembly before 
 
 **`--semibin-model`** MODEL
 
-  SemiBin environment model: `human_gut`, `dog_gut`, `ocean`, `soil`, `cat_gut`, `human_oral`, `mouse_gut`, `pig_gut`, `built_environment`, `wastewater`, `global`. [default: global]
+  SemiBin2 environment model: `human_gut`, `dog_gut`, `ocean`, `soil`, `cat_gut`, `human_oral`, `mouse_gut`, `pig_gut`, `built_environment`, `wastewater`, `global`. [default: global]
 
 **`--semibin-mode`** `{single,multi}`
 
   SemiBin2 mode to use. `single` runs `single_easy_bin` on one assembly at a time. `multi` runs `multi_easy_bin`, co-binning multiple assemblies together — pass two or more files to `--assembly` to use it. Multi mode ignores `--semibin-model`, as pre-trained environments aren't supported for multi-sample binning. [default: single]
 
-  ```
+  ```bash
   aviary recover --assembly sample1.fasta sample2.fasta sample3.fasta \
     -1 sample1_1.fq.gz sample2_1.fq.gz sample3_1.fq.gz \
     -2 sample1_2.fq.gz sample2_2.fq.gz sample3_2.fq.gz \
@@ -233,7 +233,7 @@ These five flags all decide which Flye contigs make it into the assembly before 
 
 **`--skip-singlem`**
 
-  Skip SingleM post-binning recovery assessment. [default: True]
+  Skip SingleM post-binning recovery assessment. [default: true]
 
 **`--min-completeness`** FLOAT
 
@@ -339,7 +339,7 @@ These five flags all decide which Flye contigs make it into the assembly before 
 
     **`--clean`**
 
-      Clean up temporary files. [default: True]
+      Clean up temporary files. [default: true]
 
     **`--strict`**
 
@@ -356,7 +356,7 @@ These five flags all decide which Flye contigs make it into the assembly before 
 ## Examples
 
 The basic shape — an existing assembly plus reads for coverage:
-```
+```bash
 aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz
 ```
 
@@ -372,7 +372,7 @@ SemiBin2 is configured, and what happens after binning.
 `rosella`, `semibin`, `metabat1`/`metabat2` and `vamb` run by default; `maxbin2`, `concoct`,
 `comebin`, `taxvamb` and `quickbin` are skipped by default because of their runtime. Turn extras
 on, or drop defaults you don't want (e.g. `vamb` is memory-hungry on large assemblies):
-```
+```bash
 aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
   --extra-binners concoct comebin
 
@@ -385,7 +385,7 @@ aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
 `--semibin-model` selects a pre-trained SemiBin2 environment model instead of the generic
 `global` default, which usually improves binning when the sample's environment is one SemiBin2
 has a model for:
-```
+```bash
 aviary recover --assembly gut_sample.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
   --semibin-model human_gut
 
@@ -396,7 +396,7 @@ aviary recover --assembly seawater_sample.fasta -1 reads_1.fq.gz -2 reads_2.fq.g
 For a time series or multiple related samples, co-bin them instead of picking one model —
 SemiBin2 learns cross-sample abundance correlation, which `--semibin-model` doesn't need for
 this mode and is ignored:
-```
+```bash
 aviary recover --assembly week1.fasta week2.fasta week3.fasta \
   -1 week1_1.fq.gz week2_1.fq.gz week3_1.fq.gz \
   -2 week1_2.fq.gz week2_2.fq.gz week3_2.fq.gz \
@@ -407,14 +407,14 @@ aviary recover --assembly week1.fasta week2.fasta week3.fasta \
 
 Raise the completeness bar and tighten contamination for a stricter final bin set (defaults are
 50% / 5%):
-```
+```bash
 aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
   --min-completeness 70 --max-contamination 5
 ```
 
 Rosella's refinement step iterates by default; disable it for a faster, less-refined pass, or
 give it more retries on a difficult assembly:
-```
+```bash
 aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
   --refinery-max-iterations 0
 
@@ -426,7 +426,7 @@ aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz \
 
 Coverage calculation is normally submitted as one job per rule; with many samples, splitting it
 into smaller parallel jobs shortens wall time on a cluster:
-```
+```bash
 aviary recover --assembly scaffolds.fasta -1 s01_1.fq.gz ... s40_1.fq.gz -2 s01_2.fq.gz ... s40_2.fq.gz \
   --coverage-job-strategy always --coverage-samples-per-job 8
 ```
@@ -434,12 +434,12 @@ aviary recover --assembly scaffolds.fasta -1 s01_1.fq.gz ... s40_1.fq.gz -2 s01_
 ### Skip individual downstream steps
 
 Stop after binning (skip SingleM, GTDB-tk and CoverM abundance calculation entirely):
-```
+```bash
 aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz --binning-only
 ```
 
 Keep binning and abundance, but skip taxonomy assignment specifically (useful when GTDB-tk's
 database isn't configured yet, or its runtime isn't needed for a given run):
-```
+```bash
 aviary recover --assembly scaffolds.fasta -1 reads_1.fq.gz -2 reads_2.fq.gz --skip-taxonomy
 ```
