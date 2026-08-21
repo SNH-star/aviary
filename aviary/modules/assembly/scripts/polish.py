@@ -484,11 +484,14 @@ def run_polish(
                     elif getseq:
                         o.write(line)
 
-            # minimap2/rammap's handling of an existing /1 or /2 mate suffix on this
-            # (non-interleaved, R1-then-R2-concatenated) read path is not reliable to
-            # predict per mapper: verified against the installed minimap2 2.30 binary,
-            # it strips the suffix entirely rather than doubling it, which is what an
-            # earlier version of this code assumed for minimap2/rammap specifically.
+            # minimap2/rammap's handling of an existing /1 or /2 mate suffix is not
+            # reliable to predict per mapper or per read layout: verified against the
+            # installed minimap2 2.30 binary, genuinely interleaved input (R1,R2,R1,R2,...)
+            # gets its suffix doubled (read/1 -> read/1/1, matching what an earlier
+            # version of this code assumed for minimap2/rammap specifically), while this
+            # non-interleaved, R1-then-R2-concatenated path leaves the suffix untouched
+            # instead. Neither behaviour can be relied on to stay put across mapper
+            # versions, so both are handled the same way below rather than assuming one.
             # bwa-mem/bwa-mem2 have the same problem here too, for a different reason:
             # bwa_mem_paf_cmd() only passes bwa mem the -p flag that makes it set the
             # SAM FLAG bits sam2paf's own suffix restoration relies on when the reads
