@@ -240,6 +240,28 @@ Each is checked against the reads you supply and the mapper you selected the
 same way `--minibwa-params` always was — giving one without the matching
 mapper selected is an error rather than a silently ignored flag.
 
+### Can I bin multiple assemblies together with SemiBin2?
+
+Yes, via `--semibin-mode multi`. By default (`--semibin-mode single`, unchanged
+from before) SemiBin2 bins a single assembly with `single_easy_bin`. Passing
+`--semibin-mode multi` instead runs `multi_easy_bin`, which co-bins several
+assemblies together and lets SemiBin2 learn across samples — supply the
+assemblies as multiple `--assembly` files:
+
+```
+aviary recover --assembly sample1.fasta sample2.fasta \
+  -1 sample1_R1.fastq.gz sample2_R1.fastq.gz \
+  -2 sample1_R2.fastq.gz sample2_R2.fastq.gz \
+  --semibin-mode multi ...
+```
+
+`--semibin-model` is ignored in multi mode, since SemiBin2's pre-trained
+environments only apply to single-sample binning. Contig names that collide
+across assemblies (e.g. `NODE_1` appearing in more than one sample, which is
+normal for independently-assembled samples) are kept distinct internally by a
+per-sample prefix, so this is safe even when assemblies were not given
+pre-uniquified contig names.
+
 ### Why the name "Aviary"? Why the bird names in general?
 
 Put all your birds in one place.

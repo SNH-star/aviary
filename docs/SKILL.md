@@ -338,7 +338,7 @@ aviary recover \
 
 | Flag                              | Description                                                         | Default    |
 |-----------------------------------|---------------------------------------------------------------------|------------|
-| `--assembly PATH`                 | Input assembled contigs (.fasta) — required                         | —          |
+| `--assembly PATH..`                | Input assembled contigs (.fasta) — required. Multiple files allowed with `--semibin-mode multi` | —          |
 | `-1 / -2`                         | Short reads for coverage calculation                                | —          |
 | `-l / --longreads`                | Long reads for coverage calculation                                 | —          |
 | `-z / --longread-type`            | Long read type (see Section 5)                                      | `ont`      |
@@ -356,7 +356,8 @@ aviary recover \
 | `--min-bin-size INT`              | Minimum MAG size (bp)                                               | `200000`   |
 | `--min-completeness FLOAT`        | Minimum CheckM2 completeness % for bins passed to annotation        | `50.0`     |
 | `--max-contamination FLOAT`       | Maximum CheckM2 contamination % for bins passed to annotation       | `5.0`      |
-| `--semibin-model NAME`            | SemiBin2 environment model                                          | `global`   |
+| `--semibin-model NAME`            | SemiBin2 environment model. Ignored when `--semibin-mode multi`     | `global`   |
+| `--semibin-mode single\|multi`    | `single` bins one assembly with `single_easy_bin`. `multi` co-bins multiple `--assembly` files with `multi_easy_bin`, letting SemiBin2 learn across samples | `single`   |
 | `--refinery-max-iterations INT`   | Rosella refinery max iterations                                     | `5`        |
 | `--refinery-max-retries INT`      | Rosella refinery max retries                                        | `3`        |
 | `--coverage-job-strategy STR`     | Strategy for coverage jobs: `default` \| `never` \| `always`       | `default`  |
