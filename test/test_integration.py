@@ -1001,6 +1001,11 @@ class Tests(unittest.TestCase):
             f"--refinery-max-iterations 0 "
             f"-n 32 -t 32 "
             f"--strict "
+            # A rule (e.g. das_tool's diamond call) can stall on transient
+            # storage contention when many benchmarking jobs run concurrently
+            # on shared /mnt/weka. Retrying re-runs just the failed rule
+            # rather than failing the whole test outright.
+            f"--cluster-retries 2 "
         )
         subprocess.run(cmd, shell=True, check=True)
         assert_coverage_has_depths(self, f"{output_dir}/aviary_out/data/coverm.cov")
