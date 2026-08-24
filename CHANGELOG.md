@@ -1,128 +1,54 @@
 # Changelog
 
-## v0.13.3 - 2026-08-13
+## v0.13.3 - 2026-08-24
 
 ### Added
 
-- **`--short-read-mapper`** — aligner for short-read coverage, abundance and
-  racon polishing: `strobealign` (default), `minimap2`, `rammap`, `minibwa`,
-  `bwa-mem`, `bwa-mem2` or `strobealign-aemb`. bwa-mem/bwa-mem2 have no PAF
-  output mode, so polishing converts their SAM output with
-  `paftools.js sam2paf`, and both need a fresh on-disk index built for every
-  racon round since the reference changes each round — meaningfully slower
-  for polishing than the other options. `strobealign-aemb` uses CoverM's
-  `-m strobealign-aemb` fast direct abundance estimator instead of a normal
-  alignment; it only applies to the per-contig binning coverage step, has no
-  selectable model, and per-genome abundance/polishing always fall back to
-  plain `strobealign` since CoverM cannot run it through `coverm genome`.
+- **`--semibin-mode`** — `single` (default, unchanged) or `multi` to co-bin
+  several assemblies together (pass multiple `--assembly` files). Multi mode
+  ignores `--semibin-model`.
 
-- **`--long-read-mapper`** — aligner for long-read coverage and abundance:
-  `rammap` (default), `minimap2` or `minibwa`. For rammap/minimap2 the preset
-  is chosen from `--long-read-type` by default, or explicitly via
-  `--long-read-mapper-model`. `minibwa` has no long-read preset in CoverM;
-  steer it with `--minibwa-params` (e.g. `-x lr`) instead. `minibwa` is not
-  used for racon polishing.
+- **`--short-read-mapper`** — `strobealign` (default), `minimap2`, `rammap`,
+  `minibwa`, `bwa-mem`, `bwa-mem2`, or `strobealign-aemb` (fast direct
+  abundance estimate; coverage-only, no polishing/model support).
+
+- **`--long-read-mapper`** — `rammap` (default), `minimap2`, or `minibwa`
+  (not used for polishing).
 
 - **`--short-read-mapper-model` / `--long-read-mapper-model`** — explicit
-  CoverM preset (`sr`, `lr-hq`, `ont`, `pb`, `hifi`, `no-preset`) for mappers
-  that support more than one (`minimap2`, `rammap`). Errors if given for a
-  mapper with no selectable model.
+  CoverM preset for mappers that support more than one (`minimap2`, `rammap`).
 
-- **`--minibwa-params`** — raw passthrough parameters for minibwa, forwarded
-  to CoverM's own `--minibwa-params`. Only meaningful when minibwa is
-  selected as the short- or long-read mapper.
-
-- **`--bwa-params` / `--strobealign-params` / `--minimap2-params` /
-  `--rammap-params`** — raw per-aligner passthrough parameters, mirroring
-  `--minibwa-params`, forwarded to CoverM's own equivalent flag. Each only
-  applies when the matching mapper is actually selected (`--strobealign-params`
-  does not apply to `strobealign-aemb`, which does not accept it).
+- **`--minibwa-params`**, **`--bwa-params`**, **`--strobealign-params`**,
+  **`--minimap2-params`**, **`--rammap-params`** — raw passthrough parameters
+  for the matching aligner.
 
 ### Changed
 
-- **`ont_hq` and `hifi` now use their own CoverM presets** — `get_coverage.py`,
-  `get_abundances.py` and `fraction_recovered.py` each independently lumped
-  `ont_hq` in with `ont` and `hifi` in with `rs`/`sq`/`ccs`, so CoverM's
-  `lr-hq` and `hifi` presets existed but were never actually reachable. Long
-  reads of type `ont_hq` or `hifi` now resolve to those presets by default,
-  which will shift coverage/abundance numbers slightly for those two read
-  types compared to earlier versions of this flag; other read types are
-  unaffected. Override with `--long-read-mapper-model` to reproduce the old
-  behaviour explicitly if needed.
+- **`ont_hq` and `hifi` now use their own CoverM presets** (`lr-hq`/`hifi`)
+  instead of being lumped with `ont`/`ccs` — shifts coverage/abundance
+  numbers slightly for those two read types. Override with
+  `--long-read-mapper-model` to reproduce old behaviour.
 
-- **Mapper flags are now validated against the reads supplied** — naming a
-  mapper for reads that were not provided (`--short-read-mapper` with no
-  `-1/-2`, `--long-read-mapper` with no `-l`) used to be silently ignored; it
-  is now an error. Mapper models are also checked against read length: `sr` and
-  `no-preset` for short reads, `lr-hq`/`ont`/`pb`/`hifi`/`no-preset` for long
-  reads. Crossing them previously reached CoverM, which accepts the
-  combination and returns a well-formed table of near-zero depths — a wrong
-  number rather than a failure. Defaults are unchanged (`strobealign` short,
-  `rammap` long) and a run that passes no mapper flags is unaffected.
+- **Default aligners are now strobealign (short) and rammap (long)**,
+  matching CoverM 0.8's own default.
 
-- **Default aligners are now strobealign (short) and rammap (long)** — CoverM
-  bumped to `>=0.8`, which defaults short reads to strobealign. Aviary now names
-  its mapper explicitly at every call site rather than relying on that default,
-  so a non-default mapper can be selected when needed.
-
-- **Bin abundances use the same mapper as the binners** — `get_abundances.py`
-  hardcoded `minimap2-sr`, so the binners saw strobealign-derived depths while
-  reported abundances came from minimap2. Both now follow
-  `--short-read-mapper`.
-
-- The coverage, abundance and polishing scripts log the command they run, so the
-  aligner actually used is recoverable from a completed run.
+- **Bin abundances now use the same mapper as the binners** (previously
+  hardcoded to `minimap2-sr`, causing a mismatch with binner-side coverage).
 
 ### Fixed
 
-- **`--short-read-mapper-model` produced an invalid aligner command for every
-  preset except `sr`** — CoverM's `-p` suffix is not the aligner's own `-x`
-  value (CoverM `lr-hq` is minimap2's `lr:hq`, `ont` is `map-ont`, and
-  `no-preset` means no `-x` at all), but `polish.py` passed the suffix straight
-  through. racon polishing therefore died with `unknown preset 'lr-hq'` partway
-  through a run. The translation is now explicit and shared.
+- **GPU rules now schedule correctly on both SLURM and PBS** — `taxvamb`,
+  `semibin`, `comebin`, `polish_metagenome_flye` were missing SLURM's `gpu`
+  resource key (only `gpus`, which PBS reads), so SLURM silently ran them on
+  CPU nodes.
 
-- **`--minibwa-params` could never be used** — the value is passed through to
-  the coverage scripts by the Snakemake rules, unquoted, so any real value
-  (which begins with `-`, e.g. `-x lr`) was parsed as a flag rather than a
-  value and the rule failed immediately with an argparse error.
+- **concoct now runs** — a numpy/scipy version mismatch was crashing its
+  own version check at startup.
 
-- **`--long-read-mapper minibwa` failed during racon polishing** — minibwa
-  takes a `map` subcommand rather than minimap2's bare `-x <preset>`, so it
-  cannot emit the PAF racon needs. Runs that would polish are now rejected up
-  front with an explanation instead of failing after assembly.
+- **`assembly_quality` can be built again** — two rules produced the same
+  output file, blocking the whole DAG.
 
-- **bwa-mem/bwa-mem2 racon polishing produced empty PAFs** — `bwa mem` was run
-  without `-p`, so it never ran in paired mode and never set the SAM FLAG bits
-  (`0x1`/`0x40`/`0x80`) that `paftools.js sam2paf` relies on to restore `/1`/`/2`
-  mate suffixes, so racon's read lookup matched nothing and it died with
-  `error: empty sequences set!`. `-p` is now passed only when the reads are
-  genuinely interleaved (not the paired-R1-then-R2-concatenated block that
-  `clean_short_reads()` produces, where `-p` would wrongly pair up two R1
-  reads).
-
-- **GPU rules are scheduled correctly on both SLURM and PBS** — Snakemake has no
-  portable GPU resource, so its SLURM executor plugin reads `gpu` while
-  `snakemake_mqsub` reads `gpus`. Declaring only `gpus` makes SLURM silently
-  schedule the rule onto a CPU node, where the CUDA environment fails to
-  activate before any log file is written. `taxvamb`, `semibin`, `comebin` and
-  `polish_metagenome_flye` now declare both keys; each scheduler ignores the
-  one it does not recognise, so there is no conflict.
-
-- **concoct now runs** — it needs numpy below version 2, but pinning numpy
-  alone was not enough: newer scipy versions ask for numpy 2, which made
-  concoct's own version check fail at runtime. Scipy is now pinned as well, and
-  concoct's error messages go to its log instead of being discarded.
-
-- **`assembly_quality` can be built again** — two rules both produced
-  `www/assembly_stats.txt`, which snakemake refuses, so nothing needing that
-  file could run. Only one is now defined at a time, depending on whether the
-  assembly was supplied or built by aviary.
-
-- **`read_fraction_recovered` now completes** — the rule failed at several
-  points and had never produced output. Its script, output path, arguments and
-  CoverM call have all been corrected. It reports the fraction of reads mapping
-  back to the assembly, and is reached by requesting its output file directly.
+- **`read_fraction_recovered` now completes** and produces real output.
 
 
 ---
