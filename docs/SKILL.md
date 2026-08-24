@@ -9,7 +9,7 @@ Supports short-read, long-read, and hybrid workflows. Each module runs independe
 
 > **GitHub:** https://github.com/rhysnewell/aviary
 > **Docs:** https://rhysnewell.github.io/aviary
-> **Latest version:** 0.13.0
+> **Latest version:** 0.13.3
 
 
 ---
