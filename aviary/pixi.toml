@@ -151,6 +151,8 @@ pilon = ["pilon", "cpu"]
 dnaapler = ["dnaapler", "cpu"]
 minimap2 = ["minimap2", "cpu"]
 spades = ["spades", "cpu"]
+megahit = ["spades", "cpu"]
+stageguard = ["stageguard", "cpu"]
 pysam = ["pysam", "cpu"]
 mfqe = ["mfqe", "cpu"]
 final-assembly = ["final-assembly", "cpu"]
@@ -267,6 +269,22 @@ megahit = ">=1.2.9"
 pyyaml = ">=6.0.2"
 joblib = ">=1.4.2"
 agtools = ">=1.0.0"
+
+[feature.stageguard.dependencies]
+python = ">=3.8"
+# assembly_checkpointing makes a nested `pixi run` against this manifest, so the
+# in-env pixi must be new enough to parse the rich-platform tables (cuda on
+# platforms entries). Unpinned "*" let a stale 0.69.0 in, which failed with
+# "expected a string, found table". Match [feature.main] >=0.71.
+pixi = ">=0.71"
+snakemake = ">=7,<8"
+snakemake-executor-plugin-cluster-generic = "*"
+
+[feature.stageguard.pypi-dependencies]
+# On release: publish assembly_checkpointing to PyPI, tag v0.1.0, then replace
+# the git line below with the PyPI spec:
+# assembly-checkpointing = ">=0.1.0"
+assembly-checkpointing = { git = "https://github.com/SNH-star/assembly_checkpointing.git", branch = "assembly-stageguard" }
 
 [feature.pysam.dependencies]
 python = ">=3.6"
