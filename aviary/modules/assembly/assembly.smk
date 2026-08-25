@@ -582,11 +582,13 @@ if NEEDS_READ_CONCATENATION:
         output:
             reads1 = "data/short_reads.1.fastq.gz",
             reads2 = "data/short_reads.2.fastq.gz" if config["short_reads_2"] != ["none"] else []
-        log:
-            f"{logs_dir}/concatenate_reads_for_stageguard.log"
+        resources:
+            mem_mb = lambda wildcards, attempt: 4096 * attempt,
+            runtime = lambda wildcards, attempt: 6*60*attempt,
+            log_path = lambda wildcards, attempt: setup_log(f"{logs_dir}/concatenate_reads_for_stageguard", attempt),
         shell:
-            "cat {input.reads1} > {output.reads1} 2> {log} && "
-            "cat {input.reads2} > {output.reads2} 2>> {log}"
+            "cat {input.reads1} > {output.reads1} 2> {resources.log_path} && "
+            "cat {input.reads2} > {output.reads2} 2>> {resources.log_path}"
 
 
 rule assemble_short_reads:
