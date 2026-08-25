@@ -30,6 +30,8 @@ import unittest
 import glob
 import random
 import re
+import signal
+import time
 
 data = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -1430,6 +1432,139 @@ class Tests(unittest.TestCase):
         if printed_paths:
             # Normalize whitespace and test for existence of at least one printed log
             self.assertTrue(any(os.path.exists(p.strip()) for p in printed_paths))
+
+    def test_assembly_stageguard_checkpoint_resume(self):
+        """Verify that aviary assembly resumes correctly after SIGTERM mid-run.
+
+        Starts aviary assemble with megahit (skip-qc for speed), kills it after
+        the first stageguard checkpoint done file appears, then restarts. The
+        second run must resume from the checkpoint and produce a valid assembly.
+        """
+        output_dir = os.path.join("example", "test_assembly_stageguard_resume")
+        setup_output_dir(output_dir)
+        aviary_out = os.path.join(output_dir, "aviary_out")
+
+        stageguard_done_dir = os.path.join(
+            aviary_out, "data", "stageguard_short_read_assembly", "megahit", "done"
+        )
+        # Watch for k21.done: triggered when megahit finishes the k21 iteration
+        # and starts k29. At this point megahit has written k21 intermediate
+        # files, so --continue can genuinely resume from k29.
+        kill_checkpoint = os.path.join(stageguard_done_dir, "k21.done")
+        final_assembly = os.path.join(aviary_out, "data", "final_contigs.fasta")
+
+        base_cmd = (
+            f"aviary assemble "
+            f"-o {aviary_out} "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--use-megahit --skip-qc "
+            f"-n 32 -t 32 "
+        )
+
+        # ── Phase 1: start aviary, kill the whole process group once k21 is done ──
+        # start_new_session=True puts aviary and all its children (inner snakemake,
+        # megahit) in a new process group so os.killpg reaches them all.
+        proc = subprocess.Popen(base_cmd, shell=True, start_new_session=True)
+        deadline = time.time() + 1800  # 30-minute safety timeout
+
+        while not os.path.exists(kill_checkpoint):
+            if time.time() > deadline:
+                os.killpg(proc.pid, signal.SIGKILL)
+                proc.wait()
+                self.fail("Timed out waiting for stageguard k21 checkpoint")
+            rc = proc.poll()
+            if rc is not None:
+                # Aviary finished before we could catch it — only acceptable if
+                # it completed successfully (fast machine / tiny dataset).
+                if rc == 0 and os.path.isfile(final_assembly):
+                    self.skipTest(
+                        "Aviary completed before k21 checkpoint could be caught; "
+                        "resume test skipped (try on a slower machine or larger dataset)"
+                    )
+                self.fail(
+                    f"Aviary exited with rc={rc} before k21 checkpoint appeared"
+                )
+            time.sleep(5)
+
+        # Kill the entire process group (aviary + inner snakemake + megahit).
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass  # already exited
+        try:
+            proc.wait(timeout=60)
+        except subprocess.TimeoutExpired:
+            os.killpg(proc.pid, signal.SIGKILL)
+            proc.wait()
+
+        # Aviary uses --nolock so no Snakemake lock remains; clear it anyway
+        # in case the lock behaviour changes.
+        lock_dir = os.path.join(aviary_out, ".snakemake", "locks")
+        if os.path.exists(lock_dir):
+            shutil.rmtree(lock_dir)
+
+        # ── Phase 2: restart — must resume from the existing checkpoint ──────
+        subprocess.run(base_cmd, shell=True, check=True)
+
+        self.assertTrue(
+            os.path.isfile(final_assembly),
+            "Final assembly missing after stageguard checkpoint resume",
+        )
+
+        # Every megahit checkpoint done file must be present after a full run.
+        # Note: preprocess2 was removed — megahit internally checkpoints k21 before
+        # printing 'Start assembly', so --continue skips k21 and there is no reachable
+        # string to intercept between preprocess and k29 starting.
+        megahit_checkpoints = [
+            "preprocess", "k21", "k29", "k39", "k59", "k79", "k99", "done"
+        ]
+        for cp in megahit_checkpoints:
+            self.assertTrue(
+                os.path.exists(os.path.join(stageguard_done_dir, f"{cp}.done")),
+                f"Checkpoint {cp}.done missing after resume",
+            )
+
+    def test_assembly_stageguard_spades_multi_read_coassemble(self):
+        """Verify SPAdes coassembly with skip-qc and multiple readsets works.
+
+        This tests the concatenate_reads_for_stageguard rule which was added to
+        replace the old assemble_short_reads.py concatenation behaviour. Two
+        distinct file paths are required — aviary deduplicates identical paths,
+        which would collapse the readsets to one and skip concatenation.
+        """
+        output_dir = os.path.join("example", "test_assembly_stageguard_spades_coassemble")
+        setup_output_dir(output_dir)
+        aviary_out = os.path.join(output_dir, "aviary_out")
+
+        # Create copies of the test reads under distinct paths so aviary sees
+        # two separate readsets and does not deduplicate them.
+        reads2_1 = os.path.join(output_dir, "reads2.1.fq.gz")
+        reads2_2 = os.path.join(output_dir, "reads2.2.fq.gz")
+        shutil.copy(f"{data}/wgsim.1.fq.gz", reads2_1)
+        shutil.copy(f"{data}/wgsim.2.fq.gz", reads2_2)
+
+        final_assembly = os.path.join(aviary_out, "data", "final_contigs.fasta")
+        concatenated_reads = os.path.join(aviary_out, "data", "short_reads.1.fastq.gz")
+
+        subprocess.run(
+            f"aviary assemble "
+            f"-o {aviary_out} "
+            f"-1 {data}/wgsim.1.fq.gz {reads2_1} "
+            f"-2 {data}/wgsim.2.fq.gz {reads2_2} "
+            f"--skip-qc --coassemble "
+            f"-n 32 -t 32 ",
+            shell=True, check=True
+        )
+
+        self.assertTrue(
+            os.path.isfile(final_assembly),
+            "Final assembly missing after SPAdes multi-read coassemble with skip-qc"
+        )
+        self.assertTrue(
+            os.path.isfile(concatenated_reads),
+            "Concatenated reads file missing — concatenate_reads_for_stageguard did not run"
+        )
 
 if __name__ == "__main__":
     unittest.main()
