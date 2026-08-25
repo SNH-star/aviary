@@ -23,10 +23,10 @@ biopython = "*"
 pigz = ">=2.6"
 parallel = "*"
 extern = "*"
-pyopenssl = ">22.1.0"
+pyopenssl = ">=26.0.0"
 pixi = ">=0.71" # Must understand rich platforms (cuda on platforms entries)
-pip = "*"
-setuptools = "*"
+pip = ">=26.1.2"
+setuptools = ">=83.0.0"
 bird_tool_utils_python = "*"
 
 [feature.web.dependencies]
