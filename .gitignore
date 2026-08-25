@@ -19,6 +19,9 @@ logs
 
 # pixi environments
 .pixi
+
+# subagent-driven-development scratch workspace
+.superpowers/
 *.egg-info
 db
 mqsub.out
