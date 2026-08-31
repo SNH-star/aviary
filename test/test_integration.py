@@ -1186,6 +1186,31 @@ class Tests(unittest.TestCase):
             f"{output_dir}/aviary_out/data/final_contigs.fasta"))
         assert_mapper_logged(self, output_dir, "polish_meta_racon_ill", "minibwa map")
 
+    def test_long_read_polishing_with_minibwa(self):
+        # minibwa's -x preset belongs to its own `map` subcommand, not a
+        # top-level flag like minimap2's -- calling it the minimap2 way
+        # (`minibwa -x lr ...`) fails with "unknown command '-x'". This
+        # exercises the working `minibwa map -f -x lr` invocation end to end
+        # via the long-read racon polishing rule (polish_metagenome_flye),
+        # which is the code path that previously refused this combination.
+        output_dir = os.path.join("example", "test_long_read_polishing_minibwa")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary assemble "
+            f"-o {output_dir}/aviary_out "
+            f"-l {data}/pbsim.fq.gz "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"--longread-type ccs "
+            f"--long-read-mapper minibwa "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertTrue(os.path.isfile(
+            f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+        assert_mapper_logged(self, output_dir, "polish_metagenome_flye", "minibwa map -f -x lr")
+
     def test_long_read_coverage_rammap_default(self):
         # rammap is the new long-read default and nothing else exercises it.
         # --longread-type ont with no --long-read-mapper-model override

@@ -64,6 +64,17 @@ def short_read_paf_cmd(mapper: str, reference: str, reads: str, threads: int) ->
     raise ValueError(f"No PAF mode known for short-read mapper {mapper!r}")
 
 
+# minibwa's PAF mode for long reads, mirroring short_read_paf_cmd()'s minibwa
+# branch above but with -x lr instead of -x sr. -x belongs to `map`'s own
+# option loop, not a top-level flag -- calling it minimap2-style as
+# `minibwa -x lr ...` fails with "unknown command '-x'". Verified against the
+# installed minibwa 0.6 binary end-to-end: `minibwa map -f -x lr` against
+# test/data/pbsim.fq.gz mapped all 1869 reads to test/data/assembly.fasta,
+# and the resulting PAF fed straight into racon without modification.
+def minibwa_long_read_paf_cmd(reference: str, reads: str, threads: int) -> str:
+    return f"minibwa map -f -x lr -t {threads} {reference} {reads}"
+
+
 def index_reference(mapper: str, reference: str, log: str) -> None:
     """bwa/bwa-mem2/minibwa require a prebuilt on-disk index before `mem`/`map`
     can run, unlike strobealign/minimap2/rammap which index inline from the
@@ -418,14 +429,23 @@ def run_polish(
                     sys.exit("ONT reads are not supported for racon polishing")
                 elif long_read_mapper == "minibwa":
                     # minibwa takes a `map` subcommand rather than minimap2's
-                    # bare `-x <preset>`, so minimap2_process() below would call
-                    # it as `minibwa -x map-pb ...` and get "unknown command
-                    # '-x'". processor.py rejects this combination up front; this
-                    # is the backstop for a hand-written config.yaml.
-                    sys.exit(
-                        "minibwa cannot generate the PAF racon needs for long-read polishing. "
-                        "Use --long-read-mapper rammap or minimap2 for runs that polish."
-                    )
+                    # bare `-x <preset>`, so minimap2_process() below cannot be
+                    # reused for it (that would call `minibwa -x map-pb ...`
+                    # and get "unknown command '-x'"). See
+                    # minibwa_long_read_paf_cmd() for the working invocation.
+                    index_reference(long_read_mapper, reference, log)
+                    cmd = minibwa_long_read_paf_cmd(reference, reads, threads)
+                    with open(log, "a") as logf:
+                        logf.write(f"Long-read PAF command: {cmd}\n")
+                        logf.flush()
+                        with open(paf, 'w') as out:
+                            returncode = Popen(cmd.split(), stdout=out, stderr=logf).wait()
+                        logf.write(f"{long_read_mapper} return: {returncode}\n")
+                        if returncode != 0:
+                            raise RuntimeError(
+                                f"{long_read_mapper} failed (exit {returncode}) generating "
+                                f"{paf}; see {log} for details"
+                            )
                 else:
                     minimap2_process("map-pb", reference, reads, threads, paf, log,
                                      mapper=long_read_mapper)

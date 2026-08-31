@@ -555,24 +555,6 @@ class Processor:
             )
             sys.exit(-1)
 
-        # minibwa takes a `map` subcommand instead of minimap2's bare
-        # `-x <preset>`, so polish.py cannot build a racon PAF command for it.
-        # Racon long-read polishing runs when aviary does the assembly itself
-        # (a supplied --assembly skips it) and the reads are PacBio-family --
-        # ONT bails out of racon earlier with its own message.
-        polishes_long_reads = (
-            has_long_reads
-            and (self.assembly == 'none' or self.assembly is None)
-            and self.longread_type not in ('ont', 'ont_hq')
-        )
-        if self.long_read_mapper == "minibwa" and polishes_long_reads:
-            logging.error(
-                "--long-read-mapper minibwa cannot be used on a run that racon-polishes: "
-                "minibwa cannot emit the PAF racon needs. Use rammap or minimap2, or supply "
-                "a pre-built assembly with --assembly to skip polishing."
-            )
-            sys.exit(-1)
-
 
     def make_config(self):
         """

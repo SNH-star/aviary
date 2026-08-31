@@ -191,7 +191,7 @@ aviary assemble \
 | `-z / --longread-type TYPE`   | Read type: `ont` \| `ont_hq` \| `rs` \| `sq` \| `ccs` \| `hifi` (default: `ont`) |
 | `--short-read-mapper NAME`    | Short-read aligner: `strobealign` (default) \| `minimap2` \| `rammap` \| `minibwa` \| `bwa-mem` \| `bwa-mem2` \| `strobealign-aemb` (fast direct abundance estimator, binning coverage only -- see [FAQ](faqs.md)) |
 | `--short-read-mapper-model MODEL` | Explicit CoverM preset for `--short-read-mapper` (`minimap2`/`rammap` only): `sr`\|`no-preset` |
-| `--long-read-mapper NAME`     | Long-read aligner: `rammap` (default) \| `minimap2` \| `minibwa`. Preset comes from `--longread-type` unless overridden. `minibwa` cannot be used on runs that racon-polish |
+| `--long-read-mapper NAME`     | Long-read aligner: `rammap` (default) \| `minimap2` \| `minibwa`. Preset comes from `--longread-type` unless overridden |
 | `--long-read-mapper-model MODEL` | Explicit CoverM preset for `--long-read-mapper` (`minimap2`/`rammap` only): `lr-hq`\|`hifi`\|`ont` [LEGACY: Deprecated for `lr-hq`]\|`pb` [LEGACY: Deprecated for `hifi`]\|`no-preset` |
 | `--minibwa-params PARAMS`     | Raw passthrough params for minibwa (e.g. `-x lr`); only used when minibwa is selected |
 | `--bwa-params PARAMS`         | Raw CoverM `--bwa-params` passthrough; only used when `--short-read-mapper` is `bwa-mem`/`bwa-mem2` |

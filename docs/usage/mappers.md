@@ -156,12 +156,9 @@ scope than the other `--short-read-mapper` values:
 aviary recover --long-read-mapper minibwa --minibwa-params "-x lr" ...
 ```
 
-`minibwa` cannot be used for racon polishing: racon needs PAF, and minibwa
-takes a `map` subcommand rather than minimap2's bare `-x <preset>`, so aviary
-cannot build a PAF command for it. A run that would polish — one where aviary
-does the assembly itself and the reads are PacBio-family — is rejected up
-front with an error. Use `rammap` or `minimap2`, or pass a pre-built
-`--assembly` to skip polishing.
+`minibwa` can be used for racon polishing too: aviary calls `minibwa map -f -x
+lr` (`map` is minibwa's own subcommand for read alignment; `-x` is one of its
+options, not a top-level flag like minimap2's) to get the PAF racon needs.
 
 ## Raw per-aligner passthrough params
 

@@ -278,6 +278,21 @@ class TestShortReadPafCommand(unittest.TestCase):
             polish.short_read_paf_cmd("bwa-mem2", "ref.fa", "r.fq.gz", 8)
 
 
+class TestMinibwaLongReadPafCommand(unittest.TestCase):
+    """minibwa's long-read PAF command, used by run_polish() when
+    --long-read-mapper minibwa. Mirrors short_read_paf_cmd()'s minibwa branch
+    (same 'map' subcommand, same -f) but with -x lr instead of -x sr -- -x
+    belongs to minibwa map's own option loop, not a top-level flag, so
+    `minibwa -x lr ...` (the minimap2 calling convention) is not equivalent
+    and fails with "unknown command '-x'".
+    """
+
+    def test_minibwa_uses_map_subcommand_f_and_lr_preset(self):
+        self.assertEqual(
+            polish.minibwa_long_read_paf_cmd("ref.fa", "r.fq.gz", 8),
+            "minibwa map -f -x lr -t 8 ref.fa r.fq.gz")
+
+
 class TestBwaMemPafCommand(unittest.TestCase):
     """bwa mem/bwa-mem2 mem only emit SAM, so racon PAF generation needs an
     index step and a sam2paf conversion that short_read_paf_cmd's
