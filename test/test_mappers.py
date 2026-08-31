@@ -394,7 +394,7 @@ class TestLongReadMapperGuard(unittest.TestCase):
                     minimap2_type=bad, long_reads=True, **self.BASE)
 
     def test_accepts_long_read_mappers(self):
-        for good in ("minimap2-ont", "minimap2-pb", "minimap2-lr-hq", "minimap2-hifi",
+        for good in ("minibwa", "minimap2-ont", "minimap2-pb", "minimap2-lr-hq", "minimap2-hifi",
                      "rammap-ont", "rammap-pb", "rammap-lr-hq", "rammap-hifi"):
             self.assertIn(good, get_abundances.LONG_READ_MAPPERS)
 

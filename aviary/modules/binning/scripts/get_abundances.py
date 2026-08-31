@@ -10,9 +10,16 @@ from aviary import resolve_mapper_model, LONG_READ_MODELS, short_read_mapper_ext
 
 # Long-read aligners coverm accepts. rammap is a minimap2-compatible Rust
 # implementation and takes the same -x presets; --long-read-mapper selects
-# which family is used. minibwa has no preset suffix of its own -- it is
-# steered via --minibwa-params instead, so it is checked separately below
-# rather than being listed here.
+# which family is used. minibwa has no preset suffix of its own here -- CoverM
+# just runs `minibwa map` with default parameters (its own adaptive "adap"
+# mode, which auto-detects short vs long reads via a length threshold rather
+# than taking an explicit preset), so it is passed through as a bare
+# "minibwa" -p value rather than a "<family>-<model>" one. Verified against
+# the installed minibwa 0.6 binary: adap and an explicit -x lr produce
+# equivalent alignments on long reads (same reads mapped, same mean MAPQ), so
+# this is a real, working long-read mapper choice, not a fallback that
+# silently produces bad numbers -- unlike an unlisted mapper name, which
+# CoverM would default to strobealign (short-read only) for.
 #
 # Built from LONG_READ_MODELS (aviary/__init__.py), the single source of
 # truth --long-read-mapper-model is validated against in processor.py, rather
@@ -21,7 +28,7 @@ from aviary import resolve_mapper_model, LONG_READ_MODELS, short_read_mapper_ext
 # passed CLI validation but was then rejected here as "not an explicit
 # long-read mapper", even though resolve_mapper_model() had correctly
 # resolved it to e.g. "minimap2-no-preset".
-LONG_READ_MAPPERS = tuple(
+LONG_READ_MAPPERS = ("minibwa",) + tuple(
     f"{family}-{model}"
     for family in ("minimap2", "rammap")
     for model in LONG_READ_MODELS
@@ -46,10 +53,10 @@ def run_coverm(
     # -p would map them with strobealign, which returns a well-formed coverage
     # table of near-zero depths rather than failing, so the mistake would show
     # up as wrong abundances rather than an error.
-    if long_reads and minimap2_type != "minibwa" and minimap2_type not in LONG_READ_MAPPERS:
+    if long_reads and minimap2_type not in LONG_READ_MAPPERS:
         raise ValueError(
             "Long reads require an explicit long-read mapper "
-            f"({' or '.join(LONG_READ_MAPPERS)} or minibwa), got {minimap2_type!r}."
+            f"({' or '.join(LONG_READ_MAPPERS)}), got {minimap2_type!r}."
         )
 
     strain_analysis_flag = f"--bam-file-cache-directory {output_dir} --discard-unmapped" if strain_analysis else ""
