@@ -13,6 +13,43 @@ aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --lo
 > This subcommand also accepts the common workflow, resource, output and
 > execution options described under [Shared options](centralised_commands.md).
 
+## Examples
+
+### Long-read only
+
+The minimum viable input — Flye assembly, racon and medaka polishing, then dnaapler
+reorientation. No illumina polishing round runs, since no short reads are given:
+```bash
+aviary isolate --longreads reads.fastq.gz --long-read-type ont
+```
+
+### Hybrid: long reads + short reads for polishing
+
+The typical case for a bacterial isolate closed with ONT and cleaned up with Illumina — adds one
+extra Pilon/racon polishing round using the short reads on top of the long-read assembly:
+```bash
+aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
+```
+
+Short reads accept the same input shapes as the other subcommands:
+```bash
+aviary isolate -i sample_interleaved.fq.gz --longreads reads.fastq.gz --long-read-type ont
+aviary isolate -c sample_1.fq.gz sample_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
+```
+
+`aviary isolate` has no `--long-read-assembler`/`--use-megahit`/`--use-unicycler` flags — unlike
+`assemble`/`recover`/`complete`, the isolate assembly path is fixed to Flye rather than
+user-selectable, since it targets a single pure-culture genome rather than a mixed community.
+
+### Sizing the assembly
+
+`--genome-size` is present in the CLI but is not currently consumed by the
+workflow, so changing it does not alter the assembly. The following is accepted
+for compatibility but behaves like the default invocation:
+```bash
+aviary isolate --longreads reads.fastq.gz --long-read-type ont --genome-size 4500000
+```
+
 ## Input options (short reads)
 
 Long reads (below) are required — isolate assembly is Flye-based and has no short-read-only
@@ -121,40 +158,3 @@ metagenome workflows. The default `dnaapler` isolate target does not use them:
 See [`aviary recover`](recover.md#binning-options) for the binning values and
 [`aviary annotate`](annotate.md#annotation-bin-processing-options) for database
 paths. The hidden `--semibin-multi` alias means `--semibin-mode multi`.
-
-## Examples
-
-### Long-read only
-
-The minimum viable input — Flye assembly, racon and medaka polishing, then dnaapler
-reorientation. No illumina polishing round runs, since no short reads are given:
-```bash
-aviary isolate --longreads reads.fastq.gz --long-read-type ont
-```
-
-### Hybrid: long reads + short reads for polishing
-
-The typical case for a bacterial isolate closed with ONT and cleaned up with Illumina — adds one
-extra Pilon/racon polishing round using the short reads on top of the long-read assembly:
-```bash
-aviary isolate -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
-```
-
-Short reads accept the same input shapes as the other subcommands:
-```bash
-aviary isolate -i sample_interleaved.fq.gz --longreads reads.fastq.gz --long-read-type ont
-aviary isolate -c sample_1.fq.gz sample_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
-```
-
-`aviary isolate` has no `--long-read-assembler`/`--use-megahit`/`--use-unicycler` flags — unlike
-`assemble`/`recover`/`complete`, the isolate assembly path is fixed to Flye rather than
-user-selectable, since it targets a single pure-culture genome rather than a mixed community.
-
-### Sizing the assembly
-
-`--genome-size` is present in the CLI but is not currently consumed by the
-workflow, so changing it does not alter the assembly. The following is accepted
-for compatibility but behaves like the default invocation:
-```bash
-aviary isolate --longreads reads.fastq.gz --long-read-type ont --genome-size 4500000
-```

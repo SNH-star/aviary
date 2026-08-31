@@ -16,6 +16,28 @@ aviary configure --gtdb-path ~/gtdbtk/release232/ --tmpdir /path/to/tmp/
 > and `--download` are the effective options. See
 > [Shared options](centralised_commands.md).
 
+## Examples
+
+Configure GTDB and temp directory:
+```bash
+aviary configure --gtdb-path ~/gtdbtk/release232/ --tmpdir /scratch/tmp/
+```
+
+Download all databases:
+```bash
+aviary configure --download
+```
+
+Download specific databases:
+```bash
+aviary configure --download gtdb checkm2
+```
+
+View current configuration (run with no arguments):
+```bash
+aviary configure
+```
+
 ## Database path options
 
 **`--gtdb-path`** PATH
@@ -103,25 +125,3 @@ already extracts to that layout, but a manually-built database needs to match it
 **Re-running `--download` for a database that already succeeded is a no-op**, since each
 download rule is marked done via a `.download.done` sentinel file next to the database
 directory. Delete that sentinel (or the whole database directory) to force a re-download.
-
-## Examples
-
-Configure GTDB and temp directory:
-```bash
-aviary configure --gtdb-path ~/gtdbtk/release232/ --tmpdir /scratch/tmp/
-```
-
-Download all databases:
-```bash
-aviary configure --download
-```
-
-Download specific databases:
-```bash
-aviary configure --download gtdb checkm2
-```
-
-View current configuration (run with no arguments):
-```bash
-aviary configure
-```

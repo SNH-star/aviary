@@ -13,19 +13,6 @@ aviary build
 Unlike the analysis commands, `build` does not accept the shared performance,
 output or Snakemake options.
 
-## Options
-
-**`--gpu`** `[BOOL]`
-
-  Also build GPU-enabled environments. A bare `--gpu` means `true`; an
-  explicit boolean value is also accepted. A compatible GPU must be present.
-  [default: false]
-
-**`-w`**, **`--workflow`** TARGET [TARGET ...]
-
-  Snakemake target to run. This is exposed for parser consistency; the default
-  and intended target is `build`. [default: `build`]
-
 ## Examples
 
 Build the CPU environments:
@@ -44,3 +31,16 @@ The analysis commands also expose `--build` and `--build-gpu`, which build
 environments and exit before starting that command's workflow. Prefer the
 dedicated `aviary build` command when no analysis invocation is otherwise
 needed.
+
+## Options
+
+**`--gpu`** `[BOOL]`
+
+  Also build GPU-enabled environments. A bare `--gpu` means `true`; an
+  explicit boolean value is also accepted. A compatible GPU must be present.
+  [default: false]
+
+**`-w`**, **`--workflow`** TARGET [TARGET ...]
+
+  Snakemake target to run. This is exposed for parser consistency; the default
+  and intended target is `build`. [default: `build`]

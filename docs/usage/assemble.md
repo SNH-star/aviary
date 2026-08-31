@@ -13,6 +13,73 @@ aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
 > This subcommand also accepts the common workflow, resource, output and
 > execution options described under [Shared options](centralised_commands.md).
 
+## Examples
+
+### Short-read only
+
+Paired forward/reverse files (`-1`/`-2`) — the most common input shape:
+```bash
+aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz
+```
+
+Interleaved reads (`-i`), one file per sample with forward/reverse records alternating:
+```bash
+aviary assemble -i sample_interleaved.fq.gz
+```
+
+Coupled list (`-c`), forward and reverse files given as a single alternating list — an
+alternative to `-1`/`-2` for tools that already produce reads in this shape:
+```bash
+aviary assemble -c sample_1.fq.gz sample_2.fq.gz
+```
+
+`-1`/`-2`, `-i` and `-c` are mutually exclusive: pick the one that matches how your reads are
+laid out, not a combination.
+
+By default, short-read-only assembly uses metaSPAdes. Swap to MEGAHIT (faster, lower memory,
+often the practical choice for very large or very deep datasets) or ask for a Unicycler
+re-assembly on top of the metaSPAdes result:
+```bash
+aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --use-megahit
+aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --use-unicycler
+```
+
+### Long-read only
+
+```bash
+aviary assemble --longreads reads.fastq.gz --long-read-type ont
+```
+
+Match `--long-read-type` to the actual chemistry — `ont`, `ont_hq` (Guppy5+/Q20 basecalling),
+`rs`/`sq`/`ccs` (PacBio) or `hifi` (PacBio HiFi). This also selects the read-mapper preset used
+for coverage calculation later, so an incorrect value affects more than just assembly.
+
+Long-read assembly defaults to myloasm. Swap to Flye instead:
+```bash
+aviary assemble --longreads reads.fastq.gz --long-read-type ont --long-read-assembler flye
+```
+
+### Hybrid (short + long reads)
+
+```bash
+aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
+```
+
+Hybrid assembly uses the long reads to build a scaffold (via `--long-read-assembler`) and the
+short reads to polish it; `--use-megahit`/`--use-unicycler` and `--long-read-assembler` both
+still apply and combine freely with the flags above.
+
+### Multiple samples, coassembled
+
+`--coassemble` is required (not just defaulted) whenever more than one read set is given —
+aviary refuses to guess and exits with an error until you say explicitly whether to combine
+them into one assembly or use only the first set for assembly (the rest are still used for
+differential-coverage binning downstream):
+```bash
+aviary assemble -1 s1_1.fq.gz s2_1.fq.gz -2 s1_2.fq.gz s2_2.fq.gz --coassemble
+aviary assemble -1 s1_1.fq.gz s2_1.fq.gz -2 s1_2.fq.gz s2_2.fq.gz --coassemble no
+```
+
 ## Input options (short reads)
 
 **`-1`**, **`--pe-1`** FILE [FILE ...]
@@ -226,70 +293,3 @@ aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --l
     **`--snakemake-cmds`** STRING
 
       Additional snakemake commands as a single string.
-
-## Examples
-
-### Short-read only
-
-Paired forward/reverse files (`-1`/`-2`) — the most common input shape:
-```bash
-aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz
-```
-
-Interleaved reads (`-i`), one file per sample with forward/reverse records alternating:
-```bash
-aviary assemble -i sample_interleaved.fq.gz
-```
-
-Coupled list (`-c`), forward and reverse files given as a single alternating list — an
-alternative to `-1`/`-2` for tools that already produce reads in this shape:
-```bash
-aviary assemble -c sample_1.fq.gz sample_2.fq.gz
-```
-
-`-1`/`-2`, `-i` and `-c` are mutually exclusive: pick the one that matches how your reads are
-laid out, not a combination.
-
-By default, short-read-only assembly uses metaSPAdes. Swap to MEGAHIT (faster, lower memory,
-often the practical choice for very large or very deep datasets) or ask for a Unicycler
-re-assembly on top of the metaSPAdes result:
-```bash
-aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --use-megahit
-aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --use-unicycler
-```
-
-### Long-read only
-
-```bash
-aviary assemble --longreads reads.fastq.gz --long-read-type ont
-```
-
-Match `--long-read-type` to the actual chemistry — `ont`, `ont_hq` (Guppy5+/Q20 basecalling),
-`rs`/`sq`/`ccs` (PacBio) or `hifi` (PacBio HiFi). This also selects the read-mapper preset used
-for coverage calculation later, so an incorrect value affects more than just assembly.
-
-Long-read assembly defaults to myloasm. Swap to Flye instead:
-```bash
-aviary assemble --longreads reads.fastq.gz --long-read-type ont --long-read-assembler flye
-```
-
-### Hybrid (short + long reads)
-
-```bash
-aviary assemble -1 reads_1.fq.gz -2 reads_2.fq.gz --longreads reads.fastq.gz --long-read-type ont
-```
-
-Hybrid assembly uses the long reads to build a scaffold (via `--long-read-assembler`) and the
-short reads to polish it; `--use-megahit`/`--use-unicycler` and `--long-read-assembler` both
-still apply and combine freely with the flags above.
-
-### Multiple samples, coassembled
-
-`--coassemble` is required (not just defaulted) whenever more than one read set is given —
-aviary refuses to guess and exits with an error until you say explicitly whether to combine
-them into one assembly or use only the first set for assembly (the rest are still used for
-differential-coverage binning downstream):
-```bash
-aviary assemble -1 s1_1.fq.gz s2_1.fq.gz -2 s1_2.fq.gz s2_2.fq.gz --coassemble
-aviary assemble -1 s1_1.fq.gz s2_1.fq.gz -2 s1_2.fq.gz s2_2.fq.gz --coassemble no
-```
