@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.13.3 - 2026-08-24
+## v0.13.3 - 2026-09-01
 
 ### Added
 
@@ -34,6 +34,8 @@
 
 - **Bin abundances now use the same mapper as the binners** (previously
   hardcoded to `minimap2-sr`, causing a mismatch with binner-side coverage).
+
+- **Bird_tool_utils_python updated to v0.7.0**
 
 ### Fixed
 
