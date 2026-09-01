@@ -17,13 +17,13 @@ RUN curl -fsSL https://pixi.sh/install.sh | bash
 ENV PATH="/root/.pixi/bin:${PATH}"
 ENV PYTHONNOUSERSITE=1
 # re-add the first line when setup here - the second line enables running from arbitrary commits rather than a tag
-RUN git clone https://github.com/rhysnewell/aviary . && git checkout vAVIARY_VERSION
-# RUN git clone https://github.com/rhysnewell/aviary . && git checkout AVIARY_VERSION
+RUN git clone https://github.com/rhysnewell/aviary . && git checkout v0.13.2
+# RUN git clone https://github.com/rhysnewell/aviary . && git checkout 0.13.2
 # We install through pip, because installing via pip install -e . causes issues for apptainer
 # https://github.com/prefix-dev/pixi/issues/1387
 # bird-tool-utils is installed explicitly here because it is a missing pip dependency
 # that otherwise causes downstream failures
-RUN rm -rf .pixi && pixi run --frozen bash -c 'pip install aviary-genome==AVIARY_VERSION bird-tool-utils'
+RUN rm -rf .pixi && pixi run --frozen bash -c 'pip install aviary-genome==0.13.2 bird-tool-utils'
 # Build all non-GPU pixi environments. Aviary workflows invoke these at runtime.
 RUN pixi run --frozen aviary build
 # Download core databases (SingleM, CheckM2, and CheckM v1).
