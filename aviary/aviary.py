@@ -653,7 +653,7 @@ def main():
     medaka_default = "r941_min_hac_g507"
     long_read_group.add_argument(
         '--long-read-assembler', '--long_read_assembler', '--longread-assembler',
-        help='Long-read assembler to use. Defaults to myloasm; set to flye to retain the previous behaviour.',
+        help='Long-read assembler to use. Defaults to myloasm; set to flye to retain the previous behaviour, or metamdbg for HiFi/ONT-R10+ reads.',
         dest='long_read_assembler',
         default='myloasm',
         choices=LONG_READ_ASSEMBLERS,

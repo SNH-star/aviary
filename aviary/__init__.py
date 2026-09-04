@@ -18,7 +18,7 @@ except ImportError:  # pragma: no cover - only hit in an unbuilt checkout
 
 # CONSTANTS
 LONG_READ_TYPES = ["ont", "ont_hq", "rs", "sq", "ccs", "hifi"]
-LONG_READ_ASSEMBLERS = ["myloasm", "flye"]
+LONG_READ_ASSEMBLERS = ["myloasm", "flye", "metamdbg"]
 # Aligner family used for long reads. rammap is a minimap2-compatible Rust
 # implementation and accepts the same -x presets, so switching families does
 # not change which preset is chosen for a given --long-read-type. minibwa has
