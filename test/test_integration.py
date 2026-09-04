@@ -381,6 +381,152 @@ class Tests(unittest.TestCase):
         self.assertTrue(os.path.isfile(f"{output_dir}/aviary_out/data/final_contigs.fasta"))
         self.assertTrue(os.path.islink(f"{output_dir}/aviary_out/assembly/final_contigs.fasta"))
 
+    def test_long_read_assembly_myloasm_explicit(self):
+        output_dir = os.path.join("example", "test_long_read_assembly_myloasm_explicit")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary assemble "
+            f"-o {output_dir}/aviary_out "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"-l {data}/pbsim.fq.gz "
+            f"--longread-type ont "
+            f"--long-read-assembler myloasm "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+
+        self.assertTrue(os.path.isdir(f"{output_dir}/aviary_out"))
+        self.assertTrue(os.path.isfile(f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+        self.assertTrue(os.path.islink(f"{output_dir}/aviary_out/assembly/final_contigs.fasta"))
+        self.assertTrue(os.path.isfile(f"{output_dir}/aviary_out/data/myloasm/assembly.fasta"))
+
+    def test_long_read_assembly_metamdbg_ont_hq(self):
+        output_dir = os.path.join("example", "test_long_read_assembly_metamdbg_ont_hq")
+        setup_output_dir(output_dir)
+        cmd = (
+            f"aviary assemble "
+            f"-o {output_dir}/aviary_out "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"-l {data}/pbsim.fq.gz "
+            f"--longread-type ont_hq "
+            f"--long-read-assembler metamdbg "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+        subprocess.run(cmd, shell=True, check=True)
+
+        self.assertTrue(os.path.isdir(f"{output_dir}/aviary_out"))
+        self.assertTrue(os.path.isfile(f"{output_dir}/aviary_out/data/final_contigs.fasta"))
+        self.assertTrue(os.path.islink(f"{output_dir}/aviary_out/assembly/final_contigs.fasta"))
+
+        # Verify run_metamdbg.py's own output contract directly, not just the
+        # downstream post-processed final_contigs.fasta.
+        metamdbg_dir = f"{output_dir}/aviary_out/data/metamdbg"
+        self.assertTrue(os.path.isfile(f"{metamdbg_dir}/assembly.fasta"))
+        self.assertTrue(os.path.isfile(f"{metamdbg_dir}/assembly_graph.gfa"))
+        info_path = f"{metamdbg_dir}/assembly_info.txt"
+        self.assertTrue(os.path.isfile(info_path))
+        with open(info_path) as f:
+            header = f.readline()
+        self.assertEqual(
+            header,
+            "#seq_name\tlength\tcov.\tcirc.\trepeat\tmult.\talt_group\tgraph_path\n",
+        )
+
+    def test_long_read_assembly_myloasm_checkpoint_resume(self):
+        """Verify that a myloasm long-read assembly resumes correctly after SIGTERM mid-run.
+
+        Starts aviary assemble with myloasm, kills it once myloasm's earliest
+        checkpoint (binary_temp/snpmer_info.bin) appears, then restarts. The
+        second run must resume from that checkpoint (not restart from scratch)
+        and produce a valid assembly.
+        """
+        output_dir = os.path.join("example", "test_long_read_assembly_myloasm_resume")
+        setup_output_dir(output_dir)
+        aviary_out = os.path.join(output_dir, "aviary_out")
+
+        myloasm_dir = os.path.join(aviary_out, "data", "myloasm")
+        kill_checkpoint = os.path.join(myloasm_dir, "binary_temp", "snpmer_info.bin")
+        final_assembly = os.path.join(aviary_out, "data", "final_contigs.fasta")
+        myloasm_log = os.path.join(aviary_out, "logs", "myloasm_assembly.log")
+
+        base_cmd = (
+            f"aviary assemble "
+            f"-o {aviary_out} "
+            f"-1 {data}/wgsim.1.fq.gz "
+            f"-2 {data}/wgsim.2.fq.gz "
+            f"-l {data}/pbsim.fq.gz "
+            f"--longread-type ont "
+            f"--long-read-assembler myloasm "
+            f"--min-read-size 10 --min-mean-q 1 "
+            f"-n 32 -t 32 "
+        )
+
+        # ── Phase 1: start aviary, kill the whole process group once myloasm's
+        # earliest checkpoint is written ──
+        # start_new_session=True puts aviary and all its children (inner
+        # snakemake, myloasm) in a new process group so os.killpg reaches them all.
+        proc = subprocess.Popen(base_cmd, shell=True, start_new_session=True)
+        deadline = time.time() + 1800  # 30-minute safety timeout
+
+        while not os.path.exists(kill_checkpoint):
+            if time.time() > deadline:
+                os.killpg(proc.pid, signal.SIGKILL)
+                proc.wait()
+                self.fail("Timed out waiting for myloasm's snpmer_info.bin checkpoint")
+            rc = proc.poll()
+            if rc is not None:
+                # Aviary finished before we could catch it -- only acceptable if
+                # it completed successfully (fast machine / tiny dataset).
+                if rc == 0 and os.path.isfile(final_assembly):
+                    self.skipTest(
+                        "Aviary completed before the myloasm checkpoint could be "
+                        "caught; resume test skipped (try on a slower machine or "
+                        "larger dataset)"
+                    )
+                self.fail(
+                    f"Aviary exited with rc={rc} before the myloasm checkpoint appeared"
+                )
+            time.sleep(5)
+
+        # Kill the entire process group (aviary + inner snakemake + myloasm).
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass  # already exited
+        try:
+            proc.wait(timeout=60)
+        except subprocess.TimeoutExpired:
+            os.killpg(proc.pid, signal.SIGKILL)
+            proc.wait()
+
+        # Aviary uses --nolock so no Snakemake lock remains; clear it anyway
+        # in case the lock behaviour changes.
+        lock_dir = os.path.join(aviary_out, ".snakemake", "locks")
+        if os.path.exists(lock_dir):
+            shutil.rmtree(lock_dir)
+
+        # ── Phase 2: restart — must resume from the existing checkpoint ──────
+        subprocess.run(base_cmd, shell=True, check=True)
+
+        self.assertTrue(
+            os.path.isfile(final_assembly),
+            "Final assembly missing after myloasm checkpoint resume",
+        )
+        self.assertTrue(os.path.isfile(myloasm_log))
+        with open(myloasm_log) as f:
+            log_contents = f.read()
+        self.assertIn(
+            "Loaded contig graph from file",
+            log_contents,
+            "Expected myloasm's own resume-path log message after restart -- "
+            "its absence means myloasm recomputed everything from scratch "
+            "instead of actually resuming from the checkpoint",
+        )
+
     def test_long_read_assembly_no_short_reads(self):
         output_dir = os.path.join("example", "test_long_read_assembly_no_short_reads")
         setup_output_dir(output_dir)

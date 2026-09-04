@@ -354,5 +354,17 @@ class Tests(unittest.TestCase):
             self.assertTrue("logs/myloasm_assembly.log" in output)
             self.assertTrue("logs/flye_assembly.log" not in output)
 
+    def test_assemble_long_reads_metamdbg(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = self.run_dryrun(
+                f"-l {LONG_READS} --longread-type ont_hq --long-read-assembler metamdbg",
+                tmpdir,
+            )
+
+            self.assertTrue("long_read_assembly" in output)
+            self.assertTrue("logs/metamdbg_assembly.log" in output)
+            self.assertTrue("logs/flye_assembly.log" not in output)
+            self.assertTrue("logs/myloasm_assembly.log" not in output)
+
 if __name__ == '__main__':
     unittest.main()
