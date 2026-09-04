@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **MetaMDBG assembler support** — MetaMDBG added as an additional
+  opt-in long-read assembler alongside Flye and myloasm (myloasm remains
+  default).
+
+- **Aviary-Stageguard** - Aviary has a new built in feature for checkpoiting for short reads assemblies (Megahit/Metaspade). 
+
+---
+
 ## v0.13.3 - 2026-08-24
 
 ### Added
