@@ -18,6 +18,8 @@ if LONG_READ_ASSEMBLER == "flye":
     ASSEMBLER_ENV = "flye"
 elif LONG_READ_ASSEMBLER == "myloasm":
     ASSEMBLER_ENV = "myloasm"
+elif LONG_READ_ASSEMBLER == "metamdbg":
+    ASSEMBLER_ENV = "metamdbg"
 else:
     raise Exception("Programming error: unexpected long_read_assembler value.")
 
@@ -169,6 +171,36 @@ if LONG_READ_ASSEMBLER == "flye":
             --input-fastq {input.fastq} \
             --output-dir {params.output_dir} \
             --meta-flag \
+            --threads {threads} \
+            --log {log}
+            """
+elif LONG_READ_ASSEMBLER == "metamdbg":
+    # Assembly long reads with metaMDBG
+    rule long_read_assembly:
+        input:
+            fastq = "data/long_reads.fastq.gz"
+        output:
+            fasta = LONG_ASSEMBLY_FASTA,
+            graph = LONG_ASSEMBLY_GRAPH,
+            info = LONG_ASSEMBLY_INFO,
+        params:
+            long_read_type = config["long_read_type"],
+            output_dir = LONG_ASSEMBLY_DIR
+        threads:
+            config["max_threads"]
+        resources:
+            mem_mb = lambda wildcards, attempt: min(int(config["max_memory"])*1024, 512*1024*attempt),
+            runtime = lambda wildcards, attempt: 24*60 + 24*60*attempt,
+        log:
+            "logs/metamdbg_assembly.log"
+        benchmark:
+            "benchmarks/metamdbg_assembly.benchmark.txt"
+        shell:
+            f'{pixi_run} -e {ASSEMBLER_ENV} {ASSEMBLY_SCRIPTS_DIR}/'+\
+            """run_metamdbg.py \
+            --long-read-type {params.long_read_type} \
+            --input-fastq {input.fastq} \
+            --output-dir {params.output_dir} \
             --threads {threads} \
             --log {log}
             """

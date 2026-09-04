@@ -573,6 +573,19 @@ class Processor:
             )
             sys.exit(-1)
 
+        # metaMDBG only accepts HiFi/CCS and modern ONT (lr:hq-tier) reads --
+        # it has no mode for PacBio CLR-style (rs/sq) input. Checked here,
+        # fail-fast, rather than only inside run_metamdbg.py's own
+        # select_read_flag, so a bad combination is caught before the
+        # pipeline burns hours on upstream QC/read-prep. The run_metamdbg.py
+        # ValueError stays in place as a defence-in-depth backstop.
+        if self.long_read_assembler == "metamdbg" and self.longread_type not in ("hifi", "ccs", "ont", "ont_hq"):
+            logging.error(
+                f"--long-read-assembler metamdbg does not support --longread-type {self.longread_type}; "
+                "use hifi/ccs/ont/ont_hq, or choose myloasm or flye."
+            )
+            sys.exit(-1)
+
 
     def make_config(self):
         """
@@ -884,6 +897,8 @@ class Processor:
                 print("logs/flye_assembly.log")
             elif self.long_read_assembler == 'myloasm':
                 print("logs/myloasm_assembly.log")
+            elif self.long_read_assembler == 'metamdbg':
+                print("logs/metamdbg_assembly.log")
             else:
                 raise Exception("Programming error: unexpected long_read_assembler value.")
 

@@ -62,6 +62,16 @@ def ensure_placeholder(path: str) -> None:
     Path(path).touch()
 
 
+def has_resumable_checkpoint(output_dir: str) -> bool:
+    # myloasm's earliest checkpoint (binary_temp/snpmer_info.bin) is the only
+    # safe signal for resume: binary_temp/ itself is created unconditionally
+    # at the start of every run, so its mere presence doesn't mean anything
+    # is actually resumable. Passing myloasm's "exist" sentinel without this
+    # file present makes myloasm exit(1) with "No input files provided"
+    # instead of falling back to a fresh run.
+    return os.path.exists(os.path.join(output_dir, "binary_temp", "snpmer_info.bin"))
+
+
 def run_myloasm(input_fastq: str, output_dir: str, long_read_type: str, threads: int, log: str) -> None:
     os.makedirs(output_dir, exist_ok=True)
     assembly_fasta = os.path.join(output_dir, "assembly.fasta")
@@ -71,9 +81,14 @@ def run_myloasm(input_fastq: str, output_dir: str, long_read_type: str, threads:
     assembly_info = os.path.join(output_dir, "assembly_info.txt")
 
     allow_empty = False
+    # Resume from a prior interrupted run in this same output_dir if myloasm
+    # already saved a checkpoint there; myloasm's own "exist" sentinel input
+    # tells it to load serialized state instead of re-parsing reads from
+    # scratch. See has_resumable_checkpoint() for why this specific file.
+    positional_input = "exist" if has_resumable_checkpoint(output_dir) else input_fastq
     cmd = [
         "myloasm",
-        input_fastq,
+        positional_input,
         "--output-dir",
         output_dir,
         "--threads",
