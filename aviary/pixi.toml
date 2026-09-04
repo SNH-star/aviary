@@ -146,6 +146,7 @@ bbmap = ["bbmap", "cpu"]
 # Assembly
 flye = ["flye", "cpu"]
 myloasm = ["myloasm", "cpu"]
+metamdbg = ["metamdbg", "cpu"]
 polishing = ["polishing", "cpu"]
 pilon = ["pilon", "cpu"]
 dnaapler = ["dnaapler", "cpu"]
@@ -220,6 +221,10 @@ biopython = "*"
 
 [feature.myloasm.dependencies]
 myloasm = "*"
+biopython = "*"
+
+[feature.metamdbg.dependencies]
+metamdbg = ">=1.4"
 biopython = "*"
 
 [feature.polishing.dependencies]
