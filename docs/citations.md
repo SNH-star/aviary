@@ -29,6 +29,7 @@ modules are added to aviary.
 - **MEGAHIT**: Li, D., Liu, C.-M., Luo, R., Sadakane, K. & Lam, T.-W. MEGAHIT: an ultra-fast single-node solution for large and complex metagenomics assembly via succinct de Bruijn graph. Bioinformatics 31, 1674–1676 (2015). https://doi.org/10.1093/bioinformatics/btv033
 - **Dnaapler**: Bouras, G., Houtak, G., Wick, R.R., Mallawaarachchi, V., Roach, M.J., Papudeshi, B., Judd, L.M., Sheppard, A.E., Edwards, R.A. & Vreugde, S. Dnaapler: A tool to reorient circular microbial genomes. Journal of Open Source Software 9, 6736 (2024). https://doi.org/10.21105/joss.06736
 - **myloasm**: Shaw, J., Marin, M.G. & Li, H. High-resolution metagenome assembly for modern long reads with myloasm. bioRxiv (2025). https://doi.org/10.1101/2025.09.05.674543
+- **MetaMDBG**: Benoit, G., Raguideau, S., James, R., Phillippy, A.M., Chikhi, R. & Quince, C. High-quality metagenome assembly from long accurate reads with metaMDBG. Nature Biotechnology 42, 1378–1383 (2024). https://doi.org/10.1038/s41587-023-01983-6
 
 ## Read mapping
 - **Minimap2**: Li, H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics 34, 3094–3100 (2018). https://doi.org/10.1093/bioinformatics/bty191

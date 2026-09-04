@@ -199,7 +199,7 @@ aviary assemble \
 
 | Flag                       | Description                                                        | Default    |
 |----------------------------|--------------------------------------------------------------------|------------|
-| `--long-read-assembler`    | `myloasm` \| `flye`                                                | `myloasm`  |
+| `--long-read-assembler`    | `myloasm` \| `flye` \| `metamdbg` (requires `--longread-type` `hifi`\|`ccs`\|`ont`\|`ont_hq`; not `rs`/`sq`) | `myloasm`  |
 | `--use-megahit`            | Use MEGAHIT instead of metaSPAdes for short reads                  | off        |
 | `--use-unicycler`          | Use Unicycler for metaSPAdes reassembly                            | off        |
 | `--coassemble`             | Co-assemble multiple input read sets                               | off        |
